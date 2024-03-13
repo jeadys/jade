@@ -1,6 +1,6 @@
 import maya.cmds as cmds
 import mechanisms.leg_stretch as leg_stretch_module
-from joints.arm_bind import bake_transform_to_offset_parent_matrix
+from utilities.bake_transform import bake_transform_to_offset_parent_matrix
 from controllers.control_shape import ControlShape
 from importlib import reload
 import controllers.control_shape as control_shape
