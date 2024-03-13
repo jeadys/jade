@@ -1,101 +1,103 @@
 import maya.cmds as cmds
+import mechanisms.arm_stretch as arm_stretch_module
+from joints.arm_bind import bake_transform_to_offset_parent_matrix
 from controllers.control_shape import ControlShape
 from importlib import reload
 import controllers.control_shape as control_shape
-import mechanisms.arm_stretch as arm_stretch_module
+from utilities.enums import RotateOrder
+from dataclasses import dataclass
 
 reload(control_shape)
 reload(arm_stretch_module)
 
 
+@dataclass(frozen=True)
+class ArmSegment:
+    name: str
+    shape: str
+
+
 class IKArm:
     def __init__(self, prefix) -> None:
         self.prefix = prefix
+        self.arm_segments = (
+            ArmSegment(name="upperarm", shape="circle"),
+            ArmSegment(name="lowerarm", shape="circle"),
+            ArmSegment(name="wrist", shape="star"),
+        )
 
-    def create_ik_arm_control(self, control_name: str, connected_limb: str):
-        ik_offset = cmds.group(empty=True, name=f"{self.prefix}_IK_OFFSET_{control_name}")
-
-        ik_ctrl = ControlShape.curve_wrist(name=f"{self.prefix}_IK_CTRL_{control_name}")
-
-        cmds.setAttr(f"{ik_ctrl}.overrideEnabled", 1)
-        cmds.setAttr(f"{ik_ctrl}.overrideColor", 14)
-
-        cmds.parent(ik_ctrl, ik_offset)
-
-        match control_name:
-            case "arm":
-                self.create_ik_arm_handle()
-                self.create_ik_arm(ik_offset=ik_offset, connected_limb=connected_limb)
-                self.create_ik_arm_constraint(ik_ctrl=ik_ctrl)
-            case "elbow":
-                self.create_ik_elbow(ik_offset=ik_offset, connected_limb=connected_limb, control_name=control_name)
-                self.create_ik_elbow_constraint(ik_ctrl=ik_ctrl)
-
-        return ik_offset, ik_ctrl
-
-    def create_ik_arm_handle(self):
-        cmds.ikHandle(name=f"{self.prefix}_ikHandle_arm", startJoint=f"{self.prefix}_IK_humerus",
-                      endEffector=f"{self.prefix}_IK_wrist", solver="ikRPsolver")
-
-    def create_ik_arm(self, ik_offset, connected_limb):
-        cmds.matchTransform(ik_offset, f"{self.prefix}_DEF_{connected_limb}", position=True, rotation=True, scale=False)
-        cmds.parent(f"{self.prefix}_ikHandle_arm", f"{self.prefix}_IK_CTRL_arm")
-
-    def create_ik_arm_constraint(self, ik_ctrl):
-        cmds.parentConstraint(f"{self.prefix}_IK_humerus", f"{self.prefix}_DEF_humerus", maintainOffset=False)
-        cmds.parentConstraint(f"{self.prefix}_IK_radius", f"{self.prefix}_DEF_radius", maintainOffset=False)
-        cmds.parentConstraint(f"{self.prefix}_IK_wrist", f"{self.prefix}_DEF_wrist", maintainOffset=False)
-        # wrist orientation
-        cmds.orientConstraint(ik_ctrl, f"{self.prefix}_IK_wrist", maintainOffset=True)
-
-    # ELBOW
-    def create_ik_elbow(self, ik_offset, connected_limb, control_name):
-        cmds.matchTransform(ik_offset, f"{self.prefix}_DEF_{connected_limb}", position=True, rotation=False,
-                            scale=False)
-        position = cmds.xform(ik_offset, query=True, translation=True, worldSpace=True)
-        cmds.rotate(90, 0, 0, ik_offset, relative=True)
-        cmds.move(position[0], position[1], position[2] - 75, ik_offset)
-
-        # IK > FK SNAP LOCATOR
-        elbow_loc_position = cmds.spaceLocator(name=f"{self.prefix}_LOC_{control_name}_position")
-        cmds.matchTransform(elbow_loc_position, f"{self.prefix}_IK_CTRL_{control_name}", position=True, rotation=True,
-                            scale=False)
-        cmds.scale(6, 6, 6, elbow_loc_position)
-        cmds.parent(elbow_loc_position, f"{self.prefix}_FK_radius")
-
-    def create_ik_elbow_constraint(self, ik_ctrl):
-        cmds.poleVectorConstraint(ik_ctrl, f"{self.prefix}_ikHandle_arm")
+        self.kinematic_parent_group = f"{self.prefix}_arm_kinematics"
+        self.control_parent_group = f"{self.prefix}_arm_controls"
+        self.control_shape: ControlShape = ControlShape()
 
     def create_ik_arm_joints(self):
-        if not cmds.objExists(f"{self.prefix}_arm_group"):
-            cmds.group(empty=True, name=f"{self.prefix}_arm_group")
-            cmds.matchTransform(f"{self.prefix}_arm_group", f"{self.prefix}_DEF_humerus")
-            cmds.parent(f"{self.prefix}_arm_group", "rig_systems")
+        if not cmds.objExists(self.kinematic_parent_group):
+            cmds.group(empty=True, name=self.kinematic_parent_group)
+            cmds.parent(self.kinematic_parent_group, "rig_systems")
 
-        ik_humerus = cmds.duplicate(f"{self.prefix}_DEF_humerus", parentOnly=True, name=f"{self.prefix}_IK_humerus")
-        ik_radius = cmds.duplicate(f"{self.prefix}_DEF_radius", parentOnly=True, name=f"{self.prefix}_IK_radius")
-        ik_wrist = cmds.duplicate(f"{self.prefix}_DEF_wrist", parentOnly=True, name=f"{self.prefix}_IK_wrist")
+        previous_ik_joint = self.kinematic_parent_group
+        for count, joint in enumerate(self.arm_segments):
+            current_ik_joint = cmds.duplicate(f"{self.prefix}_DEF_{joint.name}", parentOnly=True, name=f"{self.prefix}_IK_{joint.name}")[0]
+            cmds.parentConstraint(f"{self.prefix}_IK_{joint.name}", f"{self.prefix}_DEF_{joint.name}", maintainOffset=True)
+            cmds.parent(current_ik_joint, previous_ik_joint)
 
-        cmds.parent(ik_humerus, f"{self.prefix}_arm_group")
-        cmds.parent(ik_radius, ik_humerus)
-        cmds.parent(ik_wrist, ik_radius)
+            bake_transform_to_offset_parent_matrix(current_ik_joint)
 
-    def create_ik_arm_controls(self) -> None:
-        self.create_ik_arm_joints()
+            previous_ik_joint = current_ik_joint
 
-        fk_offset_arm, _fk_ctrl_arm = self.create_ik_arm_control(control_name="arm", connected_limb="wrist")
-        fk_offset_elbow, _fk_ctrl_elbow = self.create_ik_arm_control(control_name="elbow", connected_limb="radius")
+    def create_ik_arm_controls(self):
+        if not cmds.objExists(self.control_parent_group):
+            cmds.group(empty=True, name=self.control_parent_group)
+            cmds.parent(self.control_parent_group, "controls")
 
-        cmds.parent(fk_offset_arm, f"{self.prefix}_arm_controls")
-        cmds.parent(fk_offset_elbow, f"{self.prefix}_arm_controls")
+        ik_arm_ctrl = self.control_shape.select_control_shape(shape="circle", name=f"{self.prefix}_IK_CTRL_arm")
+        cmds.setAttr(f"{ik_arm_ctrl}.rotateOrder", RotateOrder.ZXY.value)
 
-        if cmds.objExists("L_DEF_humerus") and cmds.objExists("IK_CTRL_shoulder") and not cmds.objExists("L_arm_group_IK"):
-            cmds.group(empty=True, name="L_arm_group_IK")
-            cmds.matchTransform("L_arm_group_IK", "L_DEF_humerus", position=True, rotation=True, scale=False)
-            cmds.parent("L_arm_group_IK", "IK_CTRL_shoulder")
-            cmds.parentConstraint("L_arm_group_IK", "L_FK_OFFSET_humerus", maintainOffset=True)
-            cmds.parentConstraint("L_arm_group_IK", "L_arm_group", maintainOffset=True)
+        ik_elbow_ctrl = self.control_shape.select_control_shape(shape="star", name=f"{self.prefix}_IK_CTRL_elbow")
+        cmds.setAttr(f"{ik_elbow_ctrl}.rotateOrder", RotateOrder.ZXY.value)
 
+        ik_handle = cmds.ikHandle(
+            name=f"{self.prefix}_ikHandle_arm",
+            startJoint=f"{self.prefix}_IK_upperarm",
+            endEffector=f"{self.prefix}_IK_wrist",
+            solver="ikRPsolver")[0]
 
-if __name__ == "__main__":
-    pass
+        # WRIST
+        cmds.matchTransform(ik_arm_ctrl, f"{self.prefix}_IK_wrist", position=True, rotation=True,scale=False)
+        cmds.parent(ik_handle, ik_arm_ctrl)
+        cmds.orientConstraint(ik_arm_ctrl, f"{self.prefix}_IK_wrist", maintainOffset=True)
+        cmds.parent(ik_arm_ctrl, self.control_parent_group)
+
+        bake_transform_to_offset_parent_matrix(ik_arm_ctrl)
+
+        # POLE
+        cmds.matchTransform(ik_elbow_ctrl, f"{self.prefix}_IK_lowerarm", position=True, rotation=False, scale=False)
+        cmds.rotate(90, 0, 0, ik_elbow_ctrl, relative=True)
+        position = cmds.xform(ik_elbow_ctrl, query=True, translation=True, worldSpace=True)
+        cmds.move(position[0], position[1], position[2] - 75, ik_elbow_ctrl)
+        cmds.poleVectorConstraint(ik_elbow_ctrl, ik_handle)
+        cmds.parent(ik_elbow_ctrl, self.control_parent_group)
+
+        bake_transform_to_offset_parent_matrix(ik_elbow_ctrl)
+
+    def create_elbow_space_swap(self):
+        cmds.addAttr(
+            f"{self.prefix}_IK_CTRL_elbow", attributeType="enum", enumName=f"WORLD=0:HAND=1", niceName="ELBOW_FOLLOW",
+            longName="ELBOW_FOLLOW", defaultValue=0, keyable=True
+        )
+
+        elbow_space_swap = cmds.createNode("blendMatrix", name=f"{self.prefix}_blend_matrix_elbow_space_swap")
+        offset_matrix = cmds.getAttr(f"{self.prefix}_IK_CTRL_elbow.offsetParentMatrix")
+        cmds.setAttr(f"{elbow_space_swap}.inputMatrix", offset_matrix, type="matrix")
+
+        ik_arm_swap_position = cmds.spaceLocator(name=f"{self.prefix}_ik_arm_swap_position")
+        cmds.matchTransform(ik_arm_swap_position, f"{self.prefix}_IK_CTRL_elbow", position=True, rotation=True, scale=False)
+        cmds.parent(ik_arm_swap_position, f"{self.prefix}_IK_CTRL_arm")
+
+        bake_transform_to_offset_parent_matrix(ik_arm_swap_position[0])
+
+        cmds.connectAttr(f"{ik_arm_swap_position[0]}.worldMatrix[0]", f"{elbow_space_swap}.target[0].targetMatrix")
+        cmds.connectAttr(f"{elbow_space_swap}.outputMatrix", f"{self.prefix}_IK_CTRL_elbow.offsetParentMatrix")
+        cmds.connectAttr(f"{self.prefix}_IK_CTRL_elbow.ELBOW_FOLLOW", f"{elbow_space_swap}.envelope")
+
+        cmds.addAttr(f"{self.prefix}_IK_CTRL_arm", longName="ELBOW_FOLLOW", proxy=f"{self.prefix}_IK_CTRL_elbow.ELBOW_FOLLOW")
