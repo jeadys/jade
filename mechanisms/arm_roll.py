@@ -16,7 +16,7 @@ class ArmRoll:
             worldUpObject=f"{self.prefix}_LOC_upperarm_roll_aim",
         )
 
-        cmds.parentConstraint(f"{self.prefix}_DEF_upperarm", f"{self.prefix}_MCH_upperarm_follow_start", maintainOffset=True)
+        cmds.parentConstraint(f"{self.prefix}_DEF_clavicle", f"{self.prefix}_MCH_upperarm_follow_start", maintainOffset=True)
 
         # Lower Part Of Arm
         cmds.aimConstraint(

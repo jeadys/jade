@@ -3,9 +3,11 @@ from importlib import reload
 
 import controllers.control_shape as control_shape
 from mechanisms.arm_roll import ArmRoll
+import mechanisms.arm_roll as arm_roll
 from typing import Literal
 from dataclasses import dataclass
 
+reload(arm_roll)
 reload(control_shape)
 
 
