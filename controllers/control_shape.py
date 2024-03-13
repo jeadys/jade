@@ -99,6 +99,15 @@ class ControlShape:
         (0, 0, 3),
     ]
 
+    def select_control_shape(self, shape, name):
+        match shape:
+            case "circle":
+                return self.curve_circle(name=name)
+            case "star":
+                return self.curve_star(name=name)
+            case _:
+                return self.curve_circle(name=name)
+
     @staticmethod
     def curve_arrow(name):
         curve = cmds.curve(
@@ -154,7 +163,7 @@ class ControlShape:
         # cmds.scale(curve, [1, 1, 1])
         cmds.makeIdentity(curve, apply=True, scale=True)
 
-        return curve
+        return curve[0]
 
     @staticmethod
     def curve_star(name):
@@ -165,7 +174,7 @@ class ControlShape:
                 cmds.select(vertex)
                 cmds.scale(0.75, 0.75, 0.75, vertex)
 
-        return curve
+        return curve[0]
 
     @staticmethod
     def curve_head(name):
