@@ -41,16 +41,6 @@ class MUDOperation(CustomEnum):
     POWER = 3
 
 
-class Color(CustomEnum):
-    GRAY = 0
-    BLACK = 1
-    BLUE = 6
-    RED = 13
-    GREEN = 14
-    WHITE = 16
-    YELLOW = 18
-
-
 class WorldUpType(CustomEnum):
     SCENE_UP = 0
     OBJECT_UP = 1
@@ -81,3 +71,9 @@ class UpAxis(CustomEnum):
     POSITIVE_X = 6
     NEGATIVE_X = 7
     CLOSEST_X = 8
+
+
+class Stretch(Enum):
+    BOTH = 1
+    STRETCH = 3
+    SQUASH = 5
