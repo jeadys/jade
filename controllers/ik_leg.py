@@ -1,106 +1,103 @@
 import maya.cmds as cmds
+import mechanisms.arm_stretch as arm_stretch_module
+from joints.arm_bind import bake_transform_to_offset_parent_matrix
 from controllers.control_shape import ControlShape
 from importlib import reload
 import controllers.control_shape as control_shape
+from utilities.enums import RotateOrder
+from dataclasses import dataclass
 
 reload(control_shape)
+reload(arm_stretch_module)
+
+
+@dataclass(frozen=True)
+class LegSegment:
+    name: str
+    shape: str
 
 
 class IKLeg:
     def __init__(self, prefix) -> None:
         self.prefix = prefix
+        self.leg_segments = (
+            LegSegment(name="upperleg", shape="circle"),
+            LegSegment(name="lowerleg", shape="circle"),
+            LegSegment(name="ankle", shape="star"),
+        )
 
-    def create_ik_leg_control(self, control_name: str, connected_limb: str):
-        ik_offset = cmds.group(empty=True, name=f"{self.prefix}_IK_OFFSET_{control_name}")
-
-        ik_ctrl = ControlShape.curve_wrist(name=f"{self.prefix}_IK_CTRL_{control_name}")
-
-        cmds.setAttr(f"{ik_ctrl}.overrideEnabled", 1)
-        cmds.setAttr(f"{ik_ctrl}.overrideColor", 14)
-
-        cmds.parent(ik_ctrl, ik_offset)
-
-        match control_name:
-            case "leg":
-                self.create_ik_leg_handle()
-                self.create_ik_leg(ik_offset=ik_offset, connected_limb=connected_limb, control_name=control_name)
-                self.create_ik_leg_constraint(ik_ctrl=ik_ctrl)
-            case "knee":
-                self.create_ik_knee(ik_offset=ik_offset, connected_limb=connected_limb, control_name=control_name)
-                self.create_ik_knee_constraint(ik_ctrl=ik_ctrl)
-
-        return ik_offset, ik_ctrl
-
-    # LEG
-    def create_ik_leg_handle(self):
-        cmds.ikHandle(name=f"{self.prefix}_ikHandle_leg", startJoint=f"{self.prefix}_IK_femur",
-                      endEffector=f"{self.prefix}_IK_ankle", solver="ikRPsolver")
-
-    def create_ik_leg(self, ik_offset, connected_limb, control_name):
-        cmds.matchTransform(ik_offset, f"{self.prefix}_DEF_{connected_limb}", position=True, rotation=False,
-                            scale=False)
-        cmds.parent(f"{self.prefix}_ikHandle_leg", f"{self.prefix}_IK_CTRL_leg")
-
-        # IK > FK SNAP LOCATOR
-        ankle_loc_position = cmds.spaceLocator(name=f"{self.prefix}_LOC_{connected_limb}_position")
-        cmds.matchTransform(ankle_loc_position, f"{self.prefix}_IK_CTRL_{control_name}", position=True, rotation=True,
-                            scale=False)
-        cmds.scale(6, 6, 6, ankle_loc_position)
-        cmds.parent(ankle_loc_position, f"{self.prefix}_FK_ankle")
-
-    def create_ik_leg_constraint(self, ik_ctrl):
-        cmds.parentConstraint(f"{self.prefix}_IK_femur", f"{self.prefix}_DEF_femur", maintainOffset=False)
-        cmds.parentConstraint(f"{self.prefix}_IK_tibia", f"{self.prefix}_DEF_tibia", maintainOffset=False)
-        cmds.parentConstraint(f"{self.prefix}_IK_ankle", f"{self.prefix}_DEF_ankle", maintainOffset=False)
-        cmds.parentConstraint(f"{self.prefix}_IK_ball", f"{self.prefix}_DEF_ball", maintainOffset=False)
-        cmds.parentConstraint(f"{self.prefix}_IK_ball_end", f"{self.prefix}_DEF_ball_end", maintainOffset=False)
-        # ankle orientation
-        cmds.orientConstraint(ik_ctrl, f"{self.prefix}_IK_ankle", maintainOffset=True)
-
-    # KNEE
-    def create_ik_knee(self, ik_offset, connected_limb, control_name):
-        cmds.matchTransform(ik_offset, f"{self.prefix}_DEF_{connected_limb}", position=True, rotation=False,
-                            scale=False)
-        position = cmds.xform(ik_offset, query=True, translation=True, worldSpace=True)
-        cmds.rotate(90, 0, 0, ik_offset, relative=True)
-        cmds.move(position[0], position[1], position[2] + 75, ik_offset)
-
-        # IK > FK SNAP LOCATOR
-        knee_loc_position = cmds.spaceLocator(name=f"{self.prefix}_LOC_{control_name}_position")
-        cmds.matchTransform(knee_loc_position, f"{self.prefix}_IK_CTRL_{control_name}", position=True, rotation=True,
-                            scale=False)
-        cmds.scale(6, 6, 6, knee_loc_position)
-        cmds.parent(knee_loc_position, f"{self.prefix}_FK_tibia")
-
-    def create_ik_knee_constraint(self, ik_ctrl):
-        cmds.poleVectorConstraint(ik_ctrl, f"{self.prefix}_ikHandle_leg")
+        self.kinematic_parent_group = f"{self.prefix}_leg_kinematics"
+        self.control_parent_group = f"{self.prefix}_leg_controls"
+        self.control_shape: ControlShape = ControlShape()
 
     def create_ik_leg_joints(self):
-        if not cmds.objExists(f"{self.prefix}_leg_group"):
-            cmds.group(empty=True, name=f"{self.prefix}_leg_group")
-            cmds.parent(f"{self.prefix}_leg_group", "rig_systems")
+        if not cmds.objExists(self.kinematic_parent_group):
+            cmds.group(empty=True, name=self.kinematic_parent_group)
+            cmds.parent(self.kinematic_parent_group, "rig_systems")
 
-        ik_femur = cmds.duplicate(f"{self.prefix}_DEF_femur", parentOnly=True, name=f"{self.prefix}_IK_femur")
-        ik_tibia = cmds.duplicate(f"{self.prefix}_DEF_tibia", parentOnly=True, name=f"{self.prefix}_IK_tibia")
-        ik_ankle = cmds.duplicate(f"{self.prefix}_DEF_ankle", parentOnly=True, name=f"{self.prefix}_IK_ankle")
-        ik_ball = cmds.duplicate(f"{self.prefix}_DEF_ball", parentOnly=True, name=f"{self.prefix}_IK_ball")
-        ik_ball_end = cmds.duplicate(f"{self.prefix}_DEF_ball_end", parentOnly=True, name=f"{self.prefix}_IK_ball_end")
+        previous_ik_joint = self.kinematic_parent_group
+        for count, joint in enumerate(self.leg_segments):
+            current_ik_joint = cmds.duplicate(f"{self.prefix}_DEF_{joint.name}", parentOnly=True, name=f"{self.prefix}_IK_{joint.name}")[0]
+            cmds.parentConstraint(f"{self.prefix}_IK_{joint.name}", f"{self.prefix}_DEF_{joint.name}", maintainOffset=True)
+            cmds.parent(current_ik_joint, previous_ik_joint)
 
-        cmds.parent(ik_femur, f"{self.prefix}_leg_group")
-        cmds.parent(ik_tibia, ik_femur)
-        cmds.parent(ik_ankle, ik_tibia)
-        cmds.parent(ik_ball, ik_ankle)
-        cmds.parent(ik_ball_end, ik_ball)
+            bake_transform_to_offset_parent_matrix(current_ik_joint)
 
-    def create_ik_leg_controls(self) -> None:
-        self.create_ik_leg_joints()
+            previous_ik_joint = current_ik_joint
 
-        fk_offset_leg, _fk_ctrl_leg = self.create_ik_leg_control(control_name="leg", connected_limb="ankle")
-        fk_offset_knee, _fk_ctrl_knee = self.create_ik_leg_control(control_name="knee", connected_limb="tibia")
+    def create_ik_leg_controls(self):
+        if not cmds.objExists(self.control_parent_group):
+            cmds.group(empty=True, name=self.control_parent_group)
+            cmds.parent(self.control_parent_group, "controls")
 
-        cmds.parent(fk_offset_leg, f"{self.prefix}_leg_controls")
-        cmds.parent(fk_offset_knee, f"{self.prefix}_leg_controls")
+        ik_leg_ctrl = self.control_shape.select_control_shape(shape="circle", name=f"{self.prefix}_IK_CTRL_leg")
+        cmds.setAttr(f"{ik_leg_ctrl}.rotateOrder", RotateOrder.ZXY.value)
 
+        ik_knee_ctrl = self.control_shape.select_control_shape(shape="star", name=f"{self.prefix}_IK_CTRL_knee")
+        cmds.setAttr(f"{ik_knee_ctrl}.rotateOrder", RotateOrder.ZXY.value)
 
-if __name__ == "__main__":
-    pass
+        ik_handle = cmds.ikHandle(
+            name=f"{self.prefix}_ikHandle_leg",
+            startJoint=f"{self.prefix}_IK_upperleg",
+            endEffector=f"{self.prefix}_IK_ankle",
+            solver="ikRPsolver")[0]
+
+        # ANKLE
+        cmds.matchTransform(ik_leg_ctrl, f"{self.prefix}_IK_ankle", position=True, rotation=True,scale=False)
+        cmds.parent(ik_handle, ik_leg_ctrl)
+        cmds.orientConstraint(ik_leg_ctrl, f"{self.prefix}_IK_ankle", maintainOffset=True)
+        cmds.parent(ik_leg_ctrl, self.control_parent_group)
+
+        bake_transform_to_offset_parent_matrix(ik_leg_ctrl)
+
+        # POLE
+        cmds.matchTransform(ik_knee_ctrl, f"{self.prefix}_IK_lowerleg", position=True, rotation=False, scale=False)
+        cmds.rotate(90, 0, 0, ik_knee_ctrl, relative=True)
+        position = cmds.xform(ik_knee_ctrl, query=True, translation=True, worldSpace=True)
+        cmds.move(position[0], position[1], position[2] + 75, ik_knee_ctrl)
+        cmds.poleVectorConstraint(ik_knee_ctrl, ik_handle)
+        cmds.parent(ik_knee_ctrl, self.control_parent_group)
+
+        bake_transform_to_offset_parent_matrix(ik_knee_ctrl)
+
+    def create_knee_space_swap(self):
+        cmds.addAttr(
+            f"{self.prefix}_IK_CTRL_knee", attributeType="enum", enumName=f"WORLD=0:FOOT=1", niceName="KNEE_FOLLOW",
+            longName="KNEE_FOLLOW", defaultValue=0, keyable=True
+        )
+
+        knee_space_swap = cmds.createNode("blendMatrix", name=f"{self.prefix}_blend_matrix_knee_space_swap")
+        offset_matrix = cmds.getAttr(f"{self.prefix}_IK_CTRL_knee.offsetParentMatrix")
+        cmds.setAttr(f"{knee_space_swap}.inputMatrix", offset_matrix, type="matrix")
+
+        ik_leg_swap_position = cmds.spaceLocator(name=f"{self.prefix}_ik_leg_swap_position")
+        cmds.matchTransform(ik_leg_swap_position, f"{self.prefix}_IK_CTRL_knee", position=True, rotation=True, scale=False)
+        cmds.parent(ik_leg_swap_position, f"{self.prefix}_IK_CTRL_leg")
+
+        bake_transform_to_offset_parent_matrix(ik_leg_swap_position[0])
+
+        cmds.connectAttr(f"{ik_leg_swap_position[0]}.worldMatrix[0]", f"{knee_space_swap}.target[0].targetMatrix")
+        cmds.connectAttr(f"{knee_space_swap}.outputMatrix", f"{self.prefix}_IK_CTRL_knee.offsetParentMatrix")
+        cmds.connectAttr(f"{self.prefix}_IK_CTRL_knee.KNEE_FOLLOW", f"{knee_space_swap}.envelope")
+
+        cmds.addAttr(f"{self.prefix}_IK_CTRL_leg", longName="KNEE_FOLLOW", proxy=f"{self.prefix}_IK_CTRL_knee.KNEE_FOLLOW")
