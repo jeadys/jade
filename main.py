@@ -209,123 +209,109 @@ class MainWindow:
             cmds.group(empty=True, name="rig_systems")
             cmds.parent("rig_systems", "DO_NOT_TOUCH")
 
-        if cmds.objExists("L_DEF_clavicle") and cmds.objExists("L_DEF_humerus") and cmds.objExists(
-                "L_DEF_radius") and cmds.objExists("L_DEF_wrist") and not cmds.objExists("L_arm_group"):
-
-            # FK ARM GROUP
-            if not cmds.objExists("L_arm_controls"):
-                cmds.group(empty=True, name="L_arm_controls")
-
-            cmds.parent("L_arm_controls", "controls")
+        if cmds.objExists("L_DEF_clavicle") and cmds.objExists("L_DEF_upperarm") and cmds.objExists(
+                "L_DEF_lowerarm") and cmds.objExists("L_DEF_wrist") and not cmds.objExists("L_arm_kinematics"):
 
             # FK ARM
             fk_arm_instance = fk_arm_module.FKArm(prefix="L")
+            fk_arm_instance.create_fk_arm_joints()
             fk_arm_instance.create_fk_arm_controls()
 
             # IK ARM
             ik_arm_instance = ik_arm_module.IKArm(prefix="L")
+            ik_arm_instance.create_ik_arm_joints()
             ik_arm_instance.create_ik_arm_controls()
+            ik_arm_instance.create_elbow_space_swap()
+            #
+            # # SWITCH ARM
+            # switch_arm_instance = switch_arm_module.SwitchArm(prefix="L")
+            # switch_arm_instance.create_ik_fk_switch_arm_controls()
+            #
+            # # STRETCH ARM
+            # if is_stretch_limb:
+            #     arm_stretch_instance = arm_stretch_module.ArmStretch(prefix="L")
+            #     arm_stretch_instance.create_arm_stretch_locators()
+            #     arm_stretch_instance.create_arm_stretch_joints()
+            #     arm_stretch_instance.create_arm_stretch_attributes()
+            #     arm_stretch_instance.create_arm_stretch_nodes()
 
-            # SWITCH ARM
-            switch_arm_instance = switch_arm_module.SwitchArm(prefix="L")
-            switch_arm_instance.create_ik_fk_switch_arm_controls()
-
-            # STRETCH ARM
-            if is_stretch_limb:
-                arm_stretch_instance = arm_stretch_module.ArmStretch(prefix="L")
-                arm_stretch_instance.create_arm_stretch_locators()
-                arm_stretch_instance.create_arm_stretch_joints()
-                arm_stretch_instance.create_arm_stretch_attributes()
-                arm_stretch_instance.create_arm_stretch_nodes()
-
-        if cmds.objExists("R_DEF_clavicle") and cmds.objExists("R_DEF_humerus") and cmds.objExists(
-                "R_DEF_radius") and cmds.objExists("R_DEF_wrist") and not cmds.objExists("R_arm_group"):
-
-            # FK ARM GROUP
-            if not cmds.objExists("R_arm_controls"):
-                cmds.group(empty=True, name="R_arm_controls")
-
-            cmds.parent("R_arm_controls", "controls")
+        if cmds.objExists("R_DEF_clavicle") and cmds.objExists("R_DEF_upperarm") and cmds.objExists(
+                "R_DEF_lowerarm") and cmds.objExists("R_DEF_wrist") and not cmds.objExists("R_arm_kinematics"):
 
             # FK ARM
             fk_arm_instance = fk_arm_module.FKArm(prefix="R")
+            fk_arm_instance.create_fk_arm_joints()
             fk_arm_instance.create_fk_arm_controls()
 
             # IK ARM
             ik_arm_instance = ik_arm_module.IKArm(prefix="R")
+            ik_arm_instance.create_ik_arm_joints()
             ik_arm_instance.create_ik_arm_controls()
-
-            # SWITCH ARM
-            switch_arm_instance = switch_arm_module.SwitchArm(prefix="R")
-            switch_arm_instance.create_ik_fk_switch_arm_controls()
-
+            ik_arm_instance.create_elbow_space_swap()
+            #
+            # # SWITCH ARM
+            # switch_arm_instance = switch_arm_module.SwitchArm(prefix="L")
+            # switch_arm_instance.create_ik_fk_switch_arm_controls()
+            #
             # STRETCH ARM
-            if is_stretch_limb:
-                arm_stretch_instance = arm_stretch_module.ArmStretch(prefix="R")
-                arm_stretch_instance.create_arm_stretch_locators()
-                arm_stretch_instance.create_arm_stretch_joints()
-                arm_stretch_instance.create_arm_stretch_attributes()
-                arm_stretch_instance.create_arm_stretch_nodes()
+            # if is_stretch_limb:
+            #     arm_stretch_instance = arm_stretch_module.ArmStretch(prefix="R")
+            #     arm_stretch_instance.create_arm_stretch_locators()
+            #     arm_stretch_instance.create_arm_stretch_joints()
+            #     arm_stretch_instance.create_arm_stretch_attributes()
+            #     arm_stretch_instance.create_arm_stretch_nodes()
 
-        if cmds.objExists("L_DEF_femur") and cmds.objExists("L_DEF_tibia") and cmds.objExists(
-                "L_DEF_ankle") and cmds.objExists("L_DEF_ball") and cmds.objExists(
-                "L_DEF_ball_end") and not cmds.objExists("L_leg_group"):
-
-            # FK LEG GROUP
-            if not cmds.objExists("L_leg_controls"):
-                cmds.group(empty=True, name="L_leg_controls")
-
-            cmds.parent("L_leg_controls", "controls")
+        if cmds.objExists("L_DEF_upperleg") and cmds.objExists("L_DEF_lowerleg") and cmds.objExists(
+                "L_DEF_ankle") and not cmds.objExists("L_leg_kinematics"):
 
             # FK LEG
             fk_leg_instance = fk_leg_module.FKLeg(prefix="L")
-            fk_leg_instance.create_fk_arm_controls()
+            fk_leg_instance.create_fk_leg_joints()
+            fk_leg_instance.create_fk_leg_controls()
 
             # IK LEG
-            ik_leg_instance = ik_leg_module.IKLeg(prefix="L")
-            ik_leg_instance.create_ik_leg_controls()
+            fk_leg_instance = ik_leg_module.IKLeg(prefix="L")
+            fk_leg_instance.create_ik_leg_joints()
+            fk_leg_instance.create_ik_leg_controls()
+            fk_leg_instance.create_knee_space_swap()
 
-            # SWITCH LEG
-            switch_leg_instance = switch_leg_module.SwitchLeg(prefix="L")
-            switch_leg_instance.create_ik_fk_switch_leg_controls()
+            # # SWITCH LEG
+            # switch_leg_instance = switch_leg_module.SwitchLeg(prefix="L")
+            # switch_leg_instance.create_ik_fk_switch_leg_controls()
+            #
+            # # STRETCH LEG
+            # if is_stretch_limb:
+            #     leg_stretch_instance = leg_stretch_module.LegStretch(prefix="L")
+            #     leg_stretch_instance.create_leg_stretch_locators()
+            #     leg_stretch_instance.create_leg_stretch_joints()
+            #     leg_stretch_instance.create_leg_stretch_nodes()
+            #     leg_stretch_instance.create_leg_stretch_nodes()
 
-            # STRETCH LEG
-            if is_stretch_limb:
-                leg_stretch_instance = leg_stretch_module.LegStretch(prefix="L")
-                leg_stretch_instance.create_leg_stretch_locators()
-                leg_stretch_instance.create_leg_stretch_joints()
-                leg_stretch_instance.create_leg_stretch_attributes()
-                leg_stretch_instance.create_leg_stretch_nodes()
-
-        if cmds.objExists("R_DEF_femur") and cmds.objExists("R_DEF_tibia") and cmds.objExists(
-                "R_DEF_ankle") and cmds.objExists("R_DEF_ball") and cmds.objExists(
-                "R_DEF_ball_end") and not cmds.objExists("R_leg_group"):
-
-            # FK LEG GROUP
-            if not cmds.objExists("R_leg_controls"):
-                cmds.group(empty=True, name="R_leg_controls")
-
-            cmds.parent("R_leg_controls", "controls")
+        if cmds.objExists("R_DEF_upperleg") and cmds.objExists("R_DEF_lowerleg") and cmds.objExists(
+                "R_DEF_ankle") and not cmds.objExists("R_leg_kinematics"):
 
             # FK LEG
             fk_leg_instance = fk_leg_module.FKLeg(prefix="R")
-            fk_leg_instance.create_fk_arm_controls()
+            fk_leg_instance.create_fk_leg_joints()
+            fk_leg_instance.create_fk_leg_controls()
 
             # IK LEG
-            ik_leg_instance = ik_leg_module.IKLeg(prefix="R")
-            ik_leg_instance.create_ik_leg_controls()
+            fk_leg_instance = ik_leg_module.IKLeg(prefix="R")
+            fk_leg_instance.create_ik_leg_joints()
+            fk_leg_instance.create_ik_leg_controls()
+            fk_leg_instance.create_knee_space_swap()
 
-            # SWITCH LEG
-            switch_leg_instance = switch_leg_module.SwitchLeg(prefix="R")
-            switch_leg_instance.create_ik_fk_switch_leg_controls()
-
-            # STRETCH LEG
-            if is_stretch_limb:
-                leg_stretch_instance = leg_stretch_module.LegStretch(prefix="R")
-                leg_stretch_instance.create_leg_stretch_locators()
-                leg_stretch_instance.create_leg_stretch_joints()
-                leg_stretch_instance.create_leg_stretch_attributes()
-                leg_stretch_instance.create_leg_stretch_nodes()
+            # # SWITCH LEG
+            # switch_leg_instance = switch_leg_module.SwitchLeg(prefix="L")
+            # switch_leg_instance.create_ik_fk_switch_leg_controls()
+            #
+            # # STRETCH LEG
+            # if is_stretch_limb:
+            #     leg_stretch_instance = leg_stretch_module.LegStretch(prefix="R")
+            #     leg_stretch_instance.create_leg_stretch_locators()
+            #     leg_stretch_instance.create_leg_stretch_joints()
+            #     leg_stretch_instance.create_leg_stretch_nodes()
+            #     leg_stretch_instance.create_leg_stretch_nodes()
 
         if cmds.objExists("DEF_cog") and cmds.objExists("DEF_pelvis") and cmds.objExists(
                 "DEF_spine_01") and cmds.objExists("DEF_spine_02") and cmds.objExists(
