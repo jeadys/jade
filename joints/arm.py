@@ -1,114 +1,86 @@
 import maya.cmds as cmds
 from importlib import reload
 
-import mechanisms.arm_roll as arm_roll_module
+import controllers.control_shape as control_shape
+from mechanisms.arm_roll import ArmRoll
+from typing import Literal
+from dataclasses import dataclass
 
-reload(arm_roll_module)
+reload(control_shape)
+
+
+@dataclass(frozen=True)
+class ArmSegment:
+    name: str
+    shape: str
+    position: tuple[float, float, float]
 
 
 class Arm:
-    def __init__(self, prefix):
+    locator_parent_group = "locators"
+    joint_parent_group = "skeleton"
+
+    def __init__(self, prefix: Literal["L", "R"]):
         self.prefix = prefix
+        self.multiplier = 1 if self.prefix == "L" else -1
+        self.arm_segments = (
+            ArmSegment(name="clavicle", shape="circle", position=(self.multiplier * 10, 225, 7.5)),
+            ArmSegment(name="upperarm", shape="circle", position=(self.multiplier * 25, 225, -10)),
+            ArmSegment(name="lowerarm", shape="circle", position=(self.multiplier * 55, 190, -17.5)),
+            ArmSegment(name="wrist", shape="star", position=(self.multiplier * 85, 155, 0)),
+        )
+        self.arm_roll: ArmRoll = ArmRoll(prefix=self.prefix)
 
-    def create_arm_locators(self):
-        if cmds.objExists(f"{self.prefix}_LOC_arm_group"):
-            return
+    def create_arm_locators(self) -> None:
+        arm_locators_exist: bool = any(cmds.objExists(f"{self.prefix}_LOC_{locator}") for locator in self.arm_segments)
 
-        cmds.group(empty=True, name=f"{self.prefix}_LOC_arm_group")
+        if arm_locators_exist:
+            cmds.error(f"{self.prefix} arm locators already exist in {self.locator_parent_group}.")
 
-        if not cmds.objExists("locators"):
-            cmds.group(empty=True, name="locators")
+        if not cmds.objExists(self.locator_parent_group):
+            cmds.group(empty=True, name=self.locator_parent_group)
 
-        cmds.parent(f"{self.prefix}_LOC_arm_group", "locators")
+        previous_locator = self.locator_parent_group
+        for index, locator in enumerate(self.arm_segments):
+            current_locator = cmds.spaceLocator(name=f"{self.prefix}_LOC_{locator.name}")
+            cmds.scale(2, 2, 2, current_locator)
+            cmds.move(*locator.position, current_locator)
+            cmds.parent(current_locator, previous_locator)
 
-        # Default start positions of the arm locators
-        if self.prefix == "L":
-            clavicle_move = (10, 225, 7.5)
-            humerus_move = (25, 225, -10)
-            radius_move = (55, 190, -17.5)
-            wrist_move = (85, 155, 0)
-        else:
-            clavicle_move = (-10, 225, 7.5)
-            humerus_move = (-25, 225, -10)
-            radius_move = (-55, 190, -17.5)
-            wrist_move = (-85, 155, 0)
+            previous_locator = current_locator
 
-        # clavicle
-        loc_clavicle = cmds.spaceLocator(name=f"{self.prefix}_LOC_clavicle")
-        cmds.scale(2, 2, 2, loc_clavicle)
-        cmds.move(*clavicle_move, loc_clavicle)
-        cmds.parent(loc_clavicle, f"{self.prefix}_LOC_arm_group")
+    def create_arm_joints(self, is_auto_parent: bool, is_roll_limb: bool) -> None:
+        arm_joints_exist: bool = any(cmds.objExists(f"{self.prefix}_DEF_{joint}") for joint in self.arm_segments)
 
-        # humerus
-        loc_humerus = cmds.spaceLocator(name=f"{self.prefix}_LOC_humerus")
-        cmds.scale(2, 2, 2, loc_humerus)
-        cmds.move(*humerus_move, loc_humerus)
-        cmds.parent(loc_humerus, loc_clavicle)
+        if arm_joints_exist:
+            cmds.error(f"{self.prefix} arm joints already exist in {self.joint_parent_group}")
 
-        # radius
-        loc_radius = cmds.spaceLocator(name=f"{self.prefix}_LOC_radius")
-        cmds.scale(2, 2, 2, loc_radius)
-        cmds.move(*radius_move, loc_radius)
-        cmds.parent(loc_radius, loc_humerus)
+        if not cmds.objExists(self.joint_parent_group):
+            cmds.group(empty=True, name=self.joint_parent_group)
 
-        # wrist
-        loc_wrist = cmds.spaceLocator(name=f"{self.prefix}_LOC_wrist")
-        cmds.scale(2, 2, 2, loc_wrist)
-        cmds.move(*wrist_move, loc_wrist)
-        cmds.parent(loc_wrist, loc_radius)
+        previous_joint = self.joint_parent_group
+        for index, joint in enumerate(self.arm_segments):
+            # Prevent Maya from auto parenting joint to selected item in scene.
+            cmds.select(deselect=True)
+            current_joint = cmds.joint(radius=3, rotationOrder="zxy", name=f"{self.prefix}_DEF_{joint.name}")
+            cmds.matchTransform(current_joint, f"{self.prefix}_LOC_{joint.name}", position=True, rotation=True, scale=False)
+            cmds.parent(current_joint, previous_joint)
 
-    def create_arm_joints(self, is_auto_parent: bool, is_roll_limb: bool):
-        if cmds.objExists(f"{self.prefix}_DEF_clavicle") and cmds.objExists(
-                f"{self.prefix}_DEF_humerus") and cmds.objExists(f"{self.prefix}_DEF_radius") and cmds.objExists(
-                f"{self.prefix}_DEF_wrist") or not cmds.objExists(f"{self.prefix}_LOC_arm_group"):
-            return
+            previous_joint = current_joint
 
-        if not cmds.objExists("skeleton"):
-            cmds.group(empty=True, name="skeleton")
+        for index, joint in enumerate(self.arm_segments):
+            if index == len(self.arm_segments) - 1:
+                cmds.joint(f"{self.prefix}_DEF_{joint.name}", edit=True, orientJoint="none", zeroScaleOrient=True)
+            else:
+                cmds.joint(f"{self.prefix}_DEF_{joint.name}", edit=True, orientJoint="yzx", secondaryAxisOrient="zup",
+                           zeroScaleOrient=True)
 
-        # Prevent Maya from auto parenting elements to newly created group
-        cmds.select(deselect=True)
-
-        # clavicle
-        def_clavicle = cmds.joint(radius=3, rotationOrder="zxy", name=f"{self.prefix}_DEF_clavicle")
-        cmds.matchTransform(def_clavicle, f"{self.prefix}_LOC_clavicle", position=True, rotation=True, scale=False)
-
-        # humerus
-        def_humerus = cmds.joint(radius=3, rotationOrder="zxy", name=f"{self.prefix}_DEF_humerus")
-        cmds.matchTransform(def_humerus, f"{self.prefix}_LOC_humerus", position=True, rotation=True, scale=False)
-
-        # radius
-        def_radius = cmds.joint(radius=3, rotationOrder="zxy", name=f"{self.prefix}_DEF_radius")
-        cmds.matchTransform(def_radius, f"{self.prefix}_LOC_radius", position=True, rotation=True, scale=False)
-
-        # wrist
-        def_wrist = cmds.joint(radius=3, rotationOrder="zxy", name=f"{self.prefix}_DEF_wrist")
-        cmds.matchTransform(def_wrist, f"{self.prefix}_LOC_wrist", position=True, rotation=True, scale=False)
-
-        # Parent joint chain
-        cmds.parent(def_clavicle, "skeleton")
-
-        # orient arm joints
-        cmds.joint(f"{self.prefix}_DEF_clavicle", edit=True, orientJoint="yzx", secondaryAxisOrient="zup",
-                   zeroScaleOrient=True)
-        cmds.joint(f"{self.prefix}_DEF_humerus", edit=True, orientJoint="yzx", secondaryAxisOrient="zup",
-                   zeroScaleOrient=True)
-        cmds.joint(f"{self.prefix}_DEF_radius", edit=True, orientJoint="yzx", secondaryAxisOrient="zup",
-                   zeroScaleOrient=True)
-        cmds.joint(f"{self.prefix}_DEF_wrist", edit=True, orientJoint="none", zeroScaleOrient=True)
-
-        if is_auto_parent and cmds.objExists("DEF_spine_03"):
-            cmds.parent(def_clavicle, "DEF_spine_03")
+        if is_auto_parent and cmds.objExists("C_DEF_spine_03"):
+            cmds.parent(f"{self.prefix}_DEF_clavicle", "C_DEF_spine_03")
 
         if is_roll_limb:
-            arm_roll_instance = arm_roll_module.ArmRoll(prefix=self.prefix)
-            arm_roll_instance.create_arm_roll_locators()
-            arm_roll_instance.create_arm_roll_joints()
-            arm_roll_instance.create_arm_roll_handles()
-            arm_roll_instance.create_arm_roll_constraints()
-            arm_roll_instance.create_arm_roll_hierarchy()
-            arm_roll_instance.create_arm_roll_nodes()
-
-
-if __name__ == "__main__":
-    pass
+            self.arm_roll.create_arm_roll_locators()
+            self.arm_roll.create_arm_roll_joints()
+            self.arm_roll.create_arm_roll_handles()
+            self.arm_roll.create_arm_roll_constraints()
+            self.arm_roll.create_arm_roll_nodes()
