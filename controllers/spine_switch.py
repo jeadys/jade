@@ -2,20 +2,20 @@ from importlib import reload
 
 import maya.cmds as cmds
 
-import controllers.control_shape as control_shape
-from controllers.control_shape import ControlShape
+import utilities.curve as control_shape
+from utilities.curve import Curve
 
 reload(control_shape)
 
 
 class SwitchSpine:
     def __init__(self) -> None:
-        pass
+        self.control_shape: Curve = Curve()
 
     def create_ik_fk_switch_spine_control(self, control_name: str, connected_limb: str):
         ik_fk_switch_offset = cmds.group(empty=True, name=f"SWITCH_OFFSET_{control_name}")
 
-        ik_fk_switch_ctrl = ControlShape.curve_double_arrow(name=f"SWITCH_CTRL_{control_name}")
+        ik_fk_switch_ctrl = self.control_shape.curve_two_way_arrow(name=f"SWITCH_CTRL_{control_name}")
 
         cmds.setAttr(f"{ik_fk_switch_ctrl}.overrideEnabled", 1)
         cmds.setAttr(f"{ik_fk_switch_ctrl}.overrideColor", 12)
@@ -30,11 +30,11 @@ class SwitchSpine:
             minValue=0, maxValue=1, keyable=True
         )
 
-        ik_text_curve = ControlShape.curve_text(name=f"IK_TEXT_{control_name}_curve", text="IK")
+        ik_text_curve = self.control_shape.curve_text(name=f"IK_TEXT_{control_name}_curve", text="IK")
         cmds.matchTransform(ik_text_curve, f"SWITCH_CTRL_{control_name}", position=True, rotation=False, scale=False)
         cmds.parent(ik_text_curve, ik_fk_switch_offset)
 
-        fk_text_curve = ControlShape.curve_text(name=f"FK_TEXT_{control_name}_curve", text="FK")
+        fk_text_curve = self.control_shape.curve_text(name=f"FK_TEXT_{control_name}_curve", text="FK")
         cmds.matchTransform(fk_text_curve, f"SWITCH_CTRL_{control_name}", position=True, rotation=False, scale=False)
         cmds.parent(fk_text_curve, ik_fk_switch_offset)
 
