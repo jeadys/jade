@@ -1,133 +1,132 @@
 import maya.cmds as cmds
-from utilities.enums import MUDOperation, Stretch
+
+from utilities.bake_transform import bake_transform_to_offset_parent_matrix
+from utilities.enums import Stretch, MUDOperation
 
 
 class ArmStretch:
-
     def __init__(self, prefix):
         self.prefix = prefix
+        self.arm_segments = [f"{self.prefix}_upperarm", f"{self.prefix}_lowerarm", f"{self.prefix}_wrist"]
+        self.kinematic_parent_group = f"{self.prefix}_arm_kinematics"
+
+    def create_arm_stretch(self):
+        self.create_arm_stretch_joints()
+        self.create_arm_stretch_attributes()
+        self.create_arm_stretch_nodes()
+
+    def create_arm_stretch_joints(self):
+        if not cmds.objExists(self.kinematic_parent_group):
+            cmds.group(empty=True, name=self.kinematic_parent_group)
+            cmds.parent(self.kinematic_parent_group, "rig_systems")
+
+        previous_stretch_joint = self.kinematic_parent_group
+        for index, joint in enumerate(self.arm_segments):
+            current_stretch_joint = cmds.duplicate(joint, parentOnly=True, name=f"{joint}_STRETCH")[0]
+            cmds.parent(current_stretch_joint, previous_stretch_joint)
+            cmds.setAttr(f"{current_stretch_joint}.visibility", False)
+
+            bake_transform_to_offset_parent_matrix(current_stretch_joint)
+
+            previous_stretch_joint = current_stretch_joint
 
     def create_arm_stretch_nodes(self):
-        # DISTANCE BETWEEN NODES
-        upperarm_to_lowerarm_distance = cmds.createNode("distanceBetween")
-        cmds.connectAttr(f"{self.prefix}_MCH_upperarm_stretch.worldMatrix[0]",
-                         f"{upperarm_to_lowerarm_distance}.inMatrix1")
-        cmds.connectAttr(f"{self.prefix}_MCH_lowerarm_stretch.worldMatrix[0]",
-                         f"{upperarm_to_lowerarm_distance}.inMatrix2")
+        arm_stretch_length = cmds.createNode("plusMinusAverage", name=f"{self.prefix}_arm_stretch_length")
+        arm_stretch_end_loc = cmds.spaceLocator(name=f"{self.prefix}_arm_stretch_end_LOC")[0]
+        cmds.matchTransform(arm_stretch_end_loc, f"{self.prefix}_arm_IK_CTRL", position=True, rotation=True, scale=False)
+        cmds.parent(arm_stretch_end_loc, f"{self.prefix}_arm_IK_CTRL")
 
-        lowerarm_to_wrist_distance = cmds.createNode("distanceBetween")
-        cmds.connectAttr(f"{self.prefix}_MCH_lowerarm_stretch.worldMatrix[0]",
-                         f"{lowerarm_to_wrist_distance}.inMatrix1")
-        cmds.connectAttr(f"{self.prefix}_MCH_wrist_stretch.worldMatrix[0]", f"{lowerarm_to_wrist_distance}.inMatrix2")
+        # JOINT TO JOINT DISTANCE OF ARM
+        for index, joint in enumerate(self.arm_segments[:-1]):
+            distance_between_joints = cmds.createNode("distanceBetween", name=f"{joint}_distance_node")
 
-        upperarm_to_ik_ctrl_distance = cmds.createNode("distanceBetween")
-        cmds.connectAttr(f"{self.prefix}_MCH_upperarm_stretch.worldMatrix[0]",
-                         f"{upperarm_to_ik_ctrl_distance}.inMatrix1")
-        cmds.connectAttr(f"{self.prefix}_LOC_arm_stretch_end.worldMatrix[0]",
-                         f"{upperarm_to_ik_ctrl_distance}.inMatrix2")
+            cmds.connectAttr(f"{joint}_STRETCH.worldMatrix", f"{distance_between_joints}.inMatrix1")
+            cmds.connectAttr(f"{self.arm_segments[index + 1]}_STRETCH.worldMatrix",
+                             f"{distance_between_joints}.inMatrix2")
 
-        # ADD DOUBLE LINEAR NODE
-        total_arm_length = cmds.createNode("addDoubleLinear")
-        cmds.connectAttr(f"{upperarm_to_lowerarm_distance}.distance", f"{total_arm_length}.input1")
-        cmds.connectAttr(f"{lowerarm_to_wrist_distance}.distance", f"{total_arm_length}.input2")
+            cmds.connectAttr(f"{joint}_STRETCH.rotatePivotTranslate", f"{distance_between_joints}.point1")
+            cmds.connectAttr(f"{self.arm_segments[index + 1]}_STRETCH.rotatePivotTranslate",
+                             f"{distance_between_joints}.point2")
 
-        # CONDITION NODES
-        arm_stretch_condition = cmds.createNode("condition", name=f"{self.prefix}_arm_stretch_condition")
-        cmds.connectAttr(f"{self.prefix}_IK_CTRL_arm.Stretch_Type", f"{arm_stretch_condition}.operation")
-        cmds.connectAttr(f"{upperarm_to_ik_ctrl_distance}.distance", f"{arm_stretch_condition}.firstTerm")
-        cmds.connectAttr(f"{total_arm_length}.output", f"{arm_stretch_condition}.secondTerm")
+            cmds.connectAttr(f"{joint}_distance_node.distance", f"{arm_stretch_length}.input1D[{index}]")
 
-        # MULTIPLY DIVIDE NODE
-        arm_scale_factor = cmds.createNode("multiplyDivide")
+        # ROOT JOINT TO LOCATOR DISTANCE
+        distance_between = cmds.createNode("distanceBetween", name=f"{self.prefix}_arm_distance_node")
+
+        cmds.connectAttr(f"{self.arm_segments[0]}_STRETCH.worldMatrix", f"{distance_between}.inMatrix1")
+        cmds.connectAttr(f"{arm_stretch_end_loc}.worldMatrix", f"{distance_between}.inMatrix2")
+
+        cmds.connectAttr(f"{self.arm_segments[0]}_STRETCH.rotatePivotTranslate", f"{distance_between}.point1")
+        cmds.connectAttr(f"{arm_stretch_end_loc}.rotatePivotTranslate", f"{distance_between}.point2")
+
+        # ARM SCALE FACTOR
+        arm_scale_factor = cmds.createNode("multiplyDivide", name=f"{self.prefix}_arm_scale_factor")
         cmds.setAttr(f"{arm_scale_factor}.operation", MUDOperation.DIVIDE.value)
-        cmds.connectAttr(f"{upperarm_to_ik_ctrl_distance}.distance", f"{arm_scale_factor}.input1.input1X")
-        cmds.connectAttr(f"{total_arm_length}.output", f"{arm_scale_factor}.input2.input2X")
+        cmds.connectAttr(f"{distance_between}.distance", f"{arm_scale_factor}.input1X")
+        cmds.connectAttr(f"{arm_stretch_length}.output1D", f"{arm_scale_factor}.input2X")
+
+        # ARM STRETCH CONDITION
+        arm_stretch_condition = cmds.createNode("condition", name=f"{self.prefix}_arm_stretch_condition")
+        cmds.setAttr(f"{arm_stretch_condition}.secondTerm", 1)
+        cmds.connectAttr(f"{self.prefix}_arm_IK_CTRL.Stretch_Type", f"{arm_stretch_condition}.operation")
+        cmds.connectAttr(f"{arm_scale_factor}.outputX", f"{arm_stretch_condition}.firstTerm")
 
         # BLEND COLOR NODES
         color_attributes = ["R", "G", "B"]
-
-        arm_stretch_ik_blend = cmds.createNode("blendColors", name=f"{self.prefix}_arm_stretch_ik_blend")
-        for color_attribute in color_attributes:
-            cmds.setAttr(f"{arm_stretch_ik_blend}.color1{color_attribute}", 1)
-            cmds.setAttr(f"{arm_stretch_ik_blend}.color2{color_attribute}", 1)
-
-        cmds.connectAttr(f"{self.prefix}_IK_CTRL_arm.IK_FK_SWITCH", f"{arm_stretch_ik_blend}.blender")
-
         arm_stretch_blend = cmds.createNode("blendColors", name=f"{self.prefix}_arm_stretch_blend")
+        cmds.connectAttr(f"{self.prefix}_arm_IK_CTRL.Stretchiness", f"{arm_stretch_blend}.blender")
+
         for color_attribute in color_attributes:
             cmds.setAttr(f"{arm_stretch_blend}.color1{color_attribute}", 1)
             cmds.setAttr(f"{arm_stretch_blend}.color2{color_attribute}", 1)
 
-        cmds.connectAttr(f"{self.prefix}_IK_CTRL_arm.Stretchiness", f"{arm_stretch_blend}.blender")
+        cmds.connectAttr(f"{arm_scale_factor}.outputX", f"{arm_stretch_blend}.color1R")
+        cmds.connectAttr(f"{arm_stretch_blend}.outputR", f"{arm_stretch_condition}.colorIfTrueR")
 
-        cmds.connectAttr(f"{arm_scale_factor}.output.outputX", f"{arm_stretch_blend}.color1.color1R")
-        cmds.connectAttr(f"{arm_stretch_blend}.output.outputR", f"{arm_stretch_condition}.colorIfTrue.colorIfTrueR")
-        cmds.connectAttr(f"{arm_stretch_condition}.outColor.outColorR", f"{arm_stretch_ik_blend}.color1.color1R")
+        arm_stretch_ik_blend = cmds.createNode("blendColors", name=f"{self.prefix}_arm_stretch_ik_blend")
 
-        # POSITION VOLUME NODES
-        cmds.connectAttr(f"{arm_stretch_ik_blend}.output.outputR", f"{self.prefix}_IK_upperarm.scale.scaleY")
-        cmds.connectAttr(f"{arm_stretch_ik_blend}.output.outputR", f"{self.prefix}_IK_lowerarm.scale.scaleY")
+        for color_attribute in color_attributes:
+            cmds.setAttr(f"{arm_stretch_ik_blend}.color1{color_attribute}", 1)
+            cmds.setAttr(f"{arm_stretch_ik_blend}.color2{color_attribute}", 1)
 
-        cmds.connectAttr(f"{arm_stretch_ik_blend}.output.outputR", f"{self.prefix}_DEF_lowerarm.scale.scaleY")
-        cmds.connectAttr(f"{arm_stretch_ik_blend}.output.outputR", f"{self.prefix}_DEF_wrist.scale.scaleY")
+        cmds.connectAttr(f"{self.prefix}_arm_IK_CTRL.IK_FK_SWITCH", f"{arm_stretch_ik_blend}.blender")
+        cmds.connectAttr(f"{arm_stretch_condition}.outColorR", f"{arm_stretch_ik_blend}.color1R")
 
-        cmds.connectAttr(f"{arm_stretch_ik_blend}.output.outputR",
-                         f"{self.prefix}_MCH_upperarm_roll_start.scale.scaleY")
-        cmds.connectAttr(f"{arm_stretch_ik_blend}.output.outputR", f"{self.prefix}_MCH_upperarm_roll_end.scale.scaleY")
-        cmds.connectAttr(f"{arm_stretch_ik_blend}.output.outputR", f"{self.prefix}_MCH_wrist_roll_end.scale.scaleY")
+        # POSITION JOINTS ON STRETCH
+        cmds.connectAttr(f"{arm_stretch_condition}.outColorR", f"{self.arm_segments[0]}_IK.scale.scaleY")
+        cmds.connectAttr(f"{arm_stretch_condition}.outColorR", f"{self.arm_segments[1]}_IK.scale.scaleY")
 
-        # PRESERVE VOLUME NODES
+        cmds.connectAttr(f"{arm_stretch_ik_blend}.outputR", f"{self.arm_segments[1]}.scale.scaleY")
+        cmds.connectAttr(f"{arm_stretch_ik_blend}.outputR", f"{self.arm_segments[-1]}.scale.scaleY")
+
+        twist_joints = ["a01", "b01", "c01", "d01", "a02", "b02", "c02", "d02"]
+        for twist_joint in twist_joints:
+            if cmds.objExists(f"{self.prefix}_arm_twist_{twist_joint}") and cmds.objExists(f"{self.prefix}_arm_twist_{twist_joint}"):
+                cmds.connectAttr(f"{arm_stretch_ik_blend}.outputR", f"{self.prefix}_arm_twist_{twist_joint}.scaleY")
+
+        # PRESERVE JOINTS VOLUME ON STRETCH
         arm_volume_preservation = cmds.createNode("multiplyDivide", name=f"{self.prefix}_arm_volume_preservation")
         cmds.setAttr(f"{arm_volume_preservation}.operation", MUDOperation.POWER.value)
-        cmds.setAttr(f"{arm_volume_preservation}.input2.input2X", -1)
-        cmds.connectAttr(f"{arm_stretch_condition}.outColor.outColorR", f"{arm_volume_preservation}.input1.input1X")
-        cmds.connectAttr(f"{arm_volume_preservation}.output.outputX", f"{arm_stretch_ik_blend}.color1.color1G")
+        cmds.connectAttr(f"{self.prefix}_arm_IK_CTRL.Volume", f"{arm_volume_preservation}.input2X")
+        cmds.connectAttr(f"{arm_stretch_blend}.outputR", f"{arm_volume_preservation}.input1.input1X")
+        cmds.connectAttr(f"{arm_volume_preservation}.outputX", f"{arm_stretch_condition}.colorIfTrueG")
 
-        cmds.connectAttr(f"{arm_stretch_ik_blend}.output.outputG", f"{self.prefix}_DEF_lowerarm.scale.scaleX")
-        cmds.connectAttr(f"{arm_stretch_ik_blend}.output.outputG", f"{self.prefix}_DEF_lowerarm.scale.scaleZ")
+        cmds.connectAttr(f"{arm_stretch_ik_blend}.outputG", f"{self.arm_segments[1]}.scale.scaleX")
+        cmds.connectAttr(f"{arm_stretch_ik_blend}.outputG", f"{self.arm_segments[1]}.scale.scaleZ")
 
-        cmds.connectAttr(f"{arm_stretch_ik_blend}.output.outputG", f"{self.prefix}_DEF_wrist.scale.scaleX")
-        cmds.connectAttr(f"{arm_stretch_ik_blend}.output.outputG", f"{self.prefix}_DEF_wrist.scale.scaleZ")
+        cmds.connectAttr(f"{arm_stretch_ik_blend}.outputG", f"{self.arm_segments[-1]}.scale.scaleX")
+        cmds.connectAttr(f"{arm_stretch_ik_blend}.outputG", f"{self.arm_segments[-1]}.scale.scaleZ")
 
-        cmds.connectAttr(f"{arm_stretch_ik_blend}.output.outputG",
-                         f"{self.prefix}_MCH_upperarm_roll_start.scale.scaleX")
-        cmds.connectAttr(f"{arm_stretch_ik_blend}.output.outputG",
-                         f"{self.prefix}_MCH_upperarm_roll_start.scale.scaleZ")
-        cmds.connectAttr(f"{arm_stretch_ik_blend}.output.outputG", f"{self.prefix}_MCH_upperarm_roll_end.scale.scaleX")
-        cmds.connectAttr(f"{arm_stretch_ik_blend}.output.outputG", f"{self.prefix}_MCH_upperarm_roll_end.scale.scaleZ")
-        cmds.connectAttr(f"{arm_stretch_ik_blend}.output.outputG", f"{self.prefix}_MCH_wrist_roll_end.scale.scaleX")
-        cmds.connectAttr(f"{arm_stretch_ik_blend}.output.outputG", f"{self.prefix}_MCH_wrist_roll_end.scale.scaleZ")
-
-    def create_arm_stretch_locators(self):
-        loc_arm_stretch_end = cmds.spaceLocator(name=f"{self.prefix}_LOC_arm_stretch_end")
-        # cmds.matchTransform(l_loc_arm_stretch_end, "L_IK_CTRL_arm", position=True, rotation=True, scale=False)
-        constraint = cmds.parentConstraint(f"{self.prefix}_IK_CTRL_arm", loc_arm_stretch_end)
-        cmds.delete(constraint)
-        cmds.parent(loc_arm_stretch_end, f"{self.prefix}_IK_CTRL_arm")
-
-    def create_arm_stretch_joints(self):
-        mch_upperarm_stretch = cmds.duplicate(f"{self.prefix}_DEF_upperarm", parentOnly=True,
-                                              name=f"{self.prefix}_MCH_upperarm_stretch")
-        mch_lowerarm_stretch = cmds.duplicate(f"{self.prefix}_DEF_lowerarm", parentOnly=True,
-                                              name=f"{self.prefix}_MCH_lowerarm_stretch")
-        mch_wrist_stretch = cmds.duplicate(f"{self.prefix}_DEF_wrist", parentOnly=True,
-                                           name=f"{self.prefix}_MCH_wrist_stretch")
-
-        cmds.parent(mch_upperarm_stretch, "rig_systems")
-        cmds.parent(mch_lowerarm_stretch, mch_upperarm_stretch)
-        cmds.parent(mch_wrist_stretch, mch_lowerarm_stretch)
+        for twist_joint in twist_joints:
+            if cmds.objExists(f"{self.prefix}_arm_twist_{twist_joint}"):
+                cmds.connectAttr(f"{arm_stretch_ik_blend}.outputG", f"{self.prefix}_arm_twist_{twist_joint}.scaleX")
+                cmds.connectAttr(f"{arm_stretch_ik_blend}.outputG", f"{self.prefix}_arm_twist_{twist_joint}.scaleZ")
 
     def create_arm_stretch_attributes(self):
-        # CATEGORY STRETCH
-        if not cmds.attributeQuery("STRETCH", node=f"{self.prefix}_IK_CTRL_arm", exists=True):
-            cmds.addAttr(f"{self.prefix}_IK_CTRL_arm", attributeType="enum", niceName="STRETCH", longName="STRETCH",
-                         enumName="---------")
-            cmds.setAttr(f"{self.prefix}_IK_CTRL_arm.STRETCH", keyable=False, lock=True, channelBox=True)
-
         # STRETCHINESS
-        if not cmds.attributeQuery("Stretchiness", node=f"{self.prefix}_IK_CTRL_arm", exists=True):
+        if not cmds.attributeQuery("Stretchiness", node=f"{self.prefix}_arm_IK_CTRL", exists=True):
             cmds.addAttr(
-                f"{self.prefix}_IK_CTRL_arm",
+                f"{self.prefix}_arm_IK_CTRL",
                 attributeType="float",
                 niceName="Stretchiness",
                 longName="Stretchiness",
@@ -137,9 +136,19 @@ class ArmStretch:
                 keyable=True,
             )
 
+        if not cmds.attributeQuery("Volume", node=f"{self.prefix}_arm_IK_CTRL", exists=True):
+            cmds.addAttr(
+                f"{self.prefix}_arm_IK_CTRL",
+                attributeType="float",
+                niceName="Volume",
+                longName="Volume",
+                defaultValue=-0.5,
+                keyable=True,
+            )
+
         # STRETCH TYPE
-        if not cmds.attributeQuery("Stretch_Type", node=f"{self.prefix}_IK_CTRL_arm", exists=True):
-            cmds.addAttr(f"{self.prefix}_IK_CTRL_arm",
+        if not cmds.attributeQuery("Stretch_Type", node=f"{self.prefix}_arm_IK_CTRL", exists=True):
+            cmds.addAttr(f"{self.prefix}_arm_IK_CTRL",
                          attributeType="enum",
                          niceName="Stretch_Type",
                          longName="Stretch_Type",
