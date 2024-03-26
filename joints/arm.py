@@ -16,10 +16,10 @@ class Arm:
         self.prefix = prefix
         side = 1 if self.prefix == "L" else -1
         self.arm_segments = (
-            ArmSegment(name=f"{self.prefix}_clavicle", position=(side * 10, 225, 7.5)),
-            ArmSegment(name=f"{self.prefix}_upperarm", position=(side * 25, 225, -10)),
-            ArmSegment(name=f"{self.prefix}_lowerarm", position=(side * 55, 225, -17.5)),
-            ArmSegment(name=f"{self.prefix}_wrist", position=(side * 85, 225, -17.5)),
+            ArmSegment(name=f"{self.prefix}_clavicle", position=(side * 5, 140, 7.5)),
+            ArmSegment(name=f"{self.prefix}_upperarm", position=(side * 15, 140, -7.5)),
+            ArmSegment(name=f"{self.prefix}_lowerarm", position=(side * 40, 140, -15)),
+            ArmSegment(name=f"{self.prefix}_wrist", position=(side * 60, 140, -15)),
         )
 
     def create_arm_locators(self) -> None:
