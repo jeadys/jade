@@ -16,9 +16,9 @@ class Leg:
         self.prefix = prefix
         side = 1 if self.prefix == "L" else -1
         self.leg_segments = (
-            LegSegment(name=f"{self.prefix}_upperleg", position=(side * 15, 145, 0)),
-            LegSegment(name=f"{self.prefix}_lowerleg", position=(side * 15, 80, 0)),
-            LegSegment(name=f"{self.prefix}_ankle", position=(side * 15, 15, -10)),
+            LegSegment(name=f"{self.prefix}_upperleg", position=(side * 10, 90, 0)),
+            LegSegment(name=f"{self.prefix}_lowerleg", position=(side * 10, 50, 0)),
+            LegSegment(name=f"{self.prefix}_ankle", position=(side * 10, 10, -7.5)),
         )
 
     def create_leg_locators(self) -> None:
