@@ -15,10 +15,10 @@ class Spine:
     def __init__(self, prefix, spine_count):
         self.prefix = prefix
         self.spine_count = spine_count
-        self.distance_between_spines = 60 / (self.spine_count - 1)  # Adjust for spacing between spines
+        self.distance_between_spines = 40 / (self.spine_count - 1)  # Adjust for spacing between spines
         self.spine_segments = tuple(
             SpineSegment(name=f"{self.prefix}_spine_0{spine + 1}",
-                         position=(0, 150 + (self.distance_between_spines * spine), 0))
+                         position=(0, 100 + (self.distance_between_spines * spine), 0))
             for spine in range(self.spine_count)
         )
 
