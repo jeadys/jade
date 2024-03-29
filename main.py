@@ -40,6 +40,13 @@ import mechanisms.foot_roll as foot_roll_module
 import windows.arm_window as arm_window_module
 import windows.leg_window as leg_window_module
 import os
+
+from ui.widgets.checkbox import create_checkbox
+from ui.widgets.combobox import create_combobox
+from ui.widgets.line_edit import create_line_edit
+from ui.widgets.slider import create_slider
+from ui.widgets.spinbox import create_spinbox
+
 reload(arm_window_module)
 reload(leg_window_module)
 
