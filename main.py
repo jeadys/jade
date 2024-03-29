@@ -95,11 +95,6 @@ class MayaUITemplate(QtWidgets.QWidget):
         super(MayaUITemplate, self).__init__(parent=parent)
         self.setWindowFlags(QtCore.Qt.Window)
         self.setFixedSize(250, 250)
-        self.selected_module = None
-        self.selected_side = None
-        self.slider_count = 5
-        self.add_twist = True
-        self.add_stretch = True
 
         script_dir = os.path.dirname(inspect.getframeinfo(inspect.currentframe()).filename)
         icon_path = os.path.join(script_dir, "src", "icons")
