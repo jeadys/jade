@@ -40,6 +40,13 @@ import mechanisms.foot_roll as foot_roll_module
 import windows.arm_window as arm_window_module
 import windows.leg_window as leg_window_module
 import os
+
+from ui.widgets.checkbox import create_checkbox
+from ui.widgets.combobox import create_combobox
+from ui.widgets.line_edit import create_line_edit
+from ui.widgets.slider import create_slider
+from ui.widgets.spinbox import create_spinbox
+
 reload(arm_window_module)
 reload(leg_window_module)
 
@@ -88,11 +95,6 @@ class MayaUITemplate(QtWidgets.QWidget):
         super(MayaUITemplate, self).__init__(parent=parent)
         self.setWindowFlags(QtCore.Qt.Window)
         self.setFixedSize(250, 250)
-        self.selected_module = None
-        self.selected_side = None
-        self.slider_count = 5
-        self.add_twist = True
-        self.add_stretch = True
 
         script_dir = os.path.dirname(inspect.getframeinfo(inspect.currentframe()).filename)
         icon_path = os.path.join(script_dir, "src", "icons")
