@@ -101,79 +101,67 @@ class MayaUITemplate(QtWidgets.QWidget):
 
         main_layout = QtWidgets.QVBoxLayout(self)
 
-        self.select_module_combo = QtWidgets.QComboBox()
-        self.select_module_combo.currentIndexChanged.connect(self.select_module)
-        self.select_module_combo.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        modules = ["arm", "leg", "spine"]
-        for module in modules:
-            self.select_module_combo.addItem(module)
-        main_layout.addWidget(self.select_module_combo)
+        module_group = QtWidgets.QGroupBox("modules")
+        module_layout = QtWidgets.QVBoxLayout()
+        module_group.setLayout(module_layout)
+        main_layout.addWidget(module_group)
 
-        self.select_side_layout = QtWidgets.QHBoxLayout()
-        main_layout.addLayout(self.select_side_layout)
-        self.select_side_label = QtWidgets.QLabel("Side")
-        self.select_side_layout.addWidget(self.select_side_label)
-        self.select_side_label.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
-        self.select_side_combo = QtWidgets.QComboBox()
-        self.select_side_combo.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.select_side_combo.currentIndexChanged.connect(self.select_side)
-        sides = ["L", "R"]
-        for side in sides:
-            self.select_side_combo.addItem(side)
-        self.select_side_layout.addWidget(self.select_side_combo)
+        limb_modules = ["arm", "leg", "spine"]
+        limb_module_widget, self.limb_module_combobox = create_combobox(name="limb", items=limb_modules)
+        self.limb_module_combobox.currentTextChanged.connect(self.limb_changed)
+        module_layout.addWidget(limb_module_widget)
 
-        self.create_locator_button = QtWidgets.QPushButton("Create locators")
-        self.create_locator_button.clicked.connect(self.create_locators)
-        main_layout.addWidget(self.create_locator_button)
+        limb_sides = ["L", "R"]
+        self.limb_side_widget, self.limb_side_combobox = create_combobox(name="side", items=limb_sides)
+        module_layout.addWidget(self.limb_side_widget)
 
-        self.create_joint_button = QtWidgets.QPushButton("Create joints")
-        self.create_joint_button.clicked.connect(self.create_joints)
-        main_layout.addWidget(self.create_joint_button)
+        self.spine_count_widget, self.spine_count_slider = create_slider(name="spine count", value=5, minimum=5,
+                                                                         maximum=10)
+        self.spine_count_widget.setVisible(False)
+        module_layout.addWidget(self.spine_count_widget)
 
-        self.create_control_button = QtWidgets.QPushButton("Create controls")
-        self.create_control_button.clicked.connect(self.create_controls)
-        main_layout.addWidget(self.create_control_button)
+        orientation_group = QtWidgets.QGroupBox("orientations")
+        orientation_layout = QtWidgets.QVBoxLayout()
+        orientation_group.setLayout(orientation_layout)
+        main_layout.addWidget(orientation_group)
 
-        layout = QtWidgets.QHBoxLayout(self)
-        main_layout.addLayout(layout)
+        rotation_orders = ["xyz", "yzx", "zxy", "zyx", "yxz", "xzy"]
+        rotation_order_widget, self.rotation_order_combobox = create_combobox(name="rotation order",
+                                                                              items=rotation_orders)
+        orientation_layout.addWidget(rotation_order_widget)
 
-        self.spin_box = QtWidgets.QSpinBox()
-        self.spin_box.setMinimum(5)
-        self.spin_box.setMaximum(10)
-        self.spin_box.setValue(5)
-        layout.addWidget(self.spin_box)
+        joint_orientations = ["yzx - zup", "yzx - zdown"]
+        joint_orientation_widget, self.joint_orientation_combobox = create_combobox(name="joint orientation",
+                                                                                    items=joint_orientations)
+        orientation_layout.addWidget(joint_orientation_widget)
 
-        self.slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
-        self.slider.setMinimum(5)
-        self.slider.setMaximum(10)
-        self.slider.setValue(5)
-        self.slider.setTickInterval(1)
-        self.slider.setTickPosition(QtWidgets.QSlider.TicksBelow)
-        layout.addWidget(self.slider)
+        mechanism_group = QtWidgets.QGroupBox("mechanisms")
+        mechanism_layout = QtWidgets.QVBoxLayout()
+        mechanism_group.setLayout(mechanism_layout)
+        main_layout.addWidget(mechanism_group)
 
-        self.slider.valueChanged.connect(self.spin_box.setValue)
-        self.spin_box.valueChanged.connect(self.slider.setValue)
+        twist_widget, self.twist_checkbox = create_checkbox(name="twist", is_checked=True)
+        mechanism_layout.addWidget(twist_widget)
 
-        twist_checkbox = QtWidgets.QCheckBox("twist")
-        twist_checkbox.setChecked(self.add_twist)
-        twist_checkbox.stateChanged.connect(self.add_twist_state)
-        main_layout.addWidget(twist_checkbox)
+        stretch_widget, self.stretch_checkbox = create_checkbox(name="stretch", is_checked=True)
+        mechanism_layout.addWidget(stretch_widget)
 
-        stretch_checkbox = QtWidgets.QCheckBox("stretch")
-        stretch_checkbox.setChecked(self.add_stretch)
-        stretch_checkbox.stateChanged.connect(self.add_stretch_state)
-        main_layout.addWidget(stretch_checkbox)
+        operation_group = QtWidgets.QGroupBox("operations")
+        operation_layout = QtWidgets.QVBoxLayout()
+        operation_group.setLayout(operation_layout)
+        main_layout.addWidget(operation_group)
 
-    def add_twist_state(self, state):
-        self.add_twist = state
+        locator_button = QtWidgets.QPushButton("create locators")
+        locator_button.clicked.connect(self.create_locators)
+        operation_layout.addWidget(locator_button)
 
-    def add_stretch_state(self, state):
-        self.add_stretch = state
+        joint_button = QtWidgets.QPushButton("create joints")
+        joint_button.clicked.connect(self.create_joints)
+        operation_layout.addWidget(joint_button)
 
-    def radio_selected(self):
-        sender = self.sender()
-        if sender.isChecked():
-            print("Selected option:", sender.text())
+        control_button = QtWidgets.QPushButton("create controls")
+        control_button.clicked.connect(self.create_controls)
+        operation_layout.addWidget(control_button)
 
     def select_module(self, index):
         self.selected_module = self.select_module_combo.itemText(index)
