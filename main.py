@@ -130,11 +130,10 @@ class MayaUITemplate(QtWidgets.QWidget):
                                                                               items=rotation_orders)
         orientation_layout.addWidget(rotation_order_widget)
 
-        self.spin_box = QtWidgets.QSpinBox()
-        self.spin_box.setMinimum(5)
-        self.spin_box.setMaximum(10)
-        self.spin_box.setValue(5)
-        layout.addWidget(self.spin_box)
+        joint_orientations = ["yzx - zup", "yzx - zdown"]
+        joint_orientation_widget, self.joint_orientation_combobox = create_combobox(name="joint orientation",
+                                                                                    items=joint_orientations)
+        orientation_layout.addWidget(joint_orientation_widget)
 
         self.slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         self.slider.setMinimum(5)
