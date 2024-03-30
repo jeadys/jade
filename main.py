@@ -151,8 +151,9 @@ class MayaUITemplate(QtWidgets.QWidget):
         operation_group.setLayout(operation_layout)
         main_layout.addWidget(operation_group)
 
-    def add_twist_state(self, state):
-        self.add_twist = state
+        locator_button = QtWidgets.QPushButton("create locators")
+        locator_button.clicked.connect(self.create_locators)
+        operation_layout.addWidget(locator_button)
 
     def add_stretch_state(self, state):
         self.add_stretch = state
