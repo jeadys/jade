@@ -155,8 +155,9 @@ class MayaUITemplate(QtWidgets.QWidget):
         locator_button.clicked.connect(self.create_locators)
         operation_layout.addWidget(locator_button)
 
-    def add_stretch_state(self, state):
-        self.add_stretch = state
+        joint_button = QtWidgets.QPushButton("create joints")
+        joint_button.clicked.connect(self.create_joints)
+        operation_layout.addWidget(joint_button)
 
     def radio_selected(self):
         sender = self.sender()
