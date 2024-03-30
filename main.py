@@ -106,18 +106,10 @@ class MayaUITemplate(QtWidgets.QWidget):
         module_group.setLayout(module_layout)
         main_layout.addWidget(module_group)
 
-        self.select_side_layout = QtWidgets.QHBoxLayout()
-        main_layout.addLayout(self.select_side_layout)
-        self.select_side_label = QtWidgets.QLabel("Side")
-        self.select_side_layout.addWidget(self.select_side_label)
-        self.select_side_label.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
-        self.select_side_combo = QtWidgets.QComboBox()
-        self.select_side_combo.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.select_side_combo.currentIndexChanged.connect(self.select_side)
-        sides = ["L", "R"]
-        for side in sides:
-            self.select_side_combo.addItem(side)
-        self.select_side_layout.addWidget(self.select_side_combo)
+        limb_modules = ["arm", "leg", "spine"]
+        limb_module_widget, self.limb_module_combobox = create_combobox(name="limb", items=limb_modules)
+        self.limb_module_combobox.currentTextChanged.connect(self.limb_changed)
+        module_layout.addWidget(limb_module_widget)
 
         self.create_locator_button = QtWidgets.QPushButton("Create locators")
         self.create_locator_button.clicked.connect(self.create_locators)
