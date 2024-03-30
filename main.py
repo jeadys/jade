@@ -120,9 +120,10 @@ class MayaUITemplate(QtWidgets.QWidget):
         self.spine_count_widget.setVisible(False)
         module_layout.addWidget(self.spine_count_widget)
 
-        self.create_control_button = QtWidgets.QPushButton("Create controls")
-        self.create_control_button.clicked.connect(self.create_controls)
-        main_layout.addWidget(self.create_control_button)
+        orientation_group = QtWidgets.QGroupBox("orientations")
+        orientation_layout = QtWidgets.QVBoxLayout()
+        orientation_group.setLayout(orientation_layout)
+        main_layout.addWidget(orientation_group)
 
         layout = QtWidgets.QHBoxLayout(self)
         main_layout.addLayout(layout)
