@@ -111,9 +111,9 @@ class MayaUITemplate(QtWidgets.QWidget):
         self.limb_module_combobox.currentTextChanged.connect(self.limb_changed)
         module_layout.addWidget(limb_module_widget)
 
-        self.create_locator_button = QtWidgets.QPushButton("Create locators")
-        self.create_locator_button.clicked.connect(self.create_locators)
-        main_layout.addWidget(self.create_locator_button)
+        limb_sides = ["L", "R"]
+        self.limb_side_widget, self.limb_side_combobox = create_combobox(name="side", items=limb_sides)
+        module_layout.addWidget(self.limb_side_widget)
 
         self.create_joint_button = QtWidgets.QPushButton("Create joints")
         self.create_joint_button.clicked.connect(self.create_joints)
