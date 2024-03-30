@@ -101,13 +101,10 @@ class MayaUITemplate(QtWidgets.QWidget):
 
         main_layout = QtWidgets.QVBoxLayout(self)
 
-        self.select_module_combo = QtWidgets.QComboBox()
-        self.select_module_combo.currentIndexChanged.connect(self.select_module)
-        self.select_module_combo.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        modules = ["arm", "leg", "spine"]
-        for module in modules:
-            self.select_module_combo.addItem(module)
-        main_layout.addWidget(self.select_module_combo)
+        module_group = QtWidgets.QGroupBox("modules")
+        module_layout = QtWidgets.QVBoxLayout()
+        module_group.setLayout(module_layout)
+        main_layout.addWidget(module_group)
 
         self.select_side_layout = QtWidgets.QHBoxLayout()
         main_layout.addLayout(self.select_side_layout)
