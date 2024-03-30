@@ -140,8 +140,8 @@ class MayaUITemplate(QtWidgets.QWidget):
         mechanism_group.setLayout(mechanism_layout)
         main_layout.addWidget(mechanism_group)
 
-        self.slider.valueChanged.connect(self.spin_box.setValue)
-        self.spin_box.valueChanged.connect(self.slider.setValue)
+        twist_widget, self.twist_checkbox = create_checkbox(name="twist", is_checked=True)
+        mechanism_layout.addWidget(twist_widget)
 
         twist_checkbox = QtWidgets.QCheckBox("twist")
         twist_checkbox.setChecked(self.add_twist)
