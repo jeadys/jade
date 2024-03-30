@@ -9,7 +9,7 @@ reload(control_shape)
 class LegSwitch:
     def __init__(self, prefix) -> None:
         self.prefix = prefix
-        self.leg_segments = [f"{self.prefix}_upperleg", f"{self.prefix}_lowerleg", f"{self.prefix}_ankle"]
+        self.leg_segments = [f"{self.prefix}_upperleg", f"{self.prefix}_lowerleg", f"{self.prefix}_ankle", f"{self.prefix}_ball", f"{self.prefix}_toe"]
         self.control_shape: Curve = Curve()
 
     def create_leg_switch(self):
@@ -30,11 +30,11 @@ class LegSwitch:
 
         cmds.parent(ik_fk_switch_ctrl, ik_fk_switch_offset)
 
-        cmds.matchTransform(ik_fk_switch_offset, self.leg_segments[-1], position=True, rotation=False,
+        cmds.matchTransform(ik_fk_switch_offset, self.leg_segments[-3], position=True, rotation=False,
                             scale=False)
         position = cmds.xform(ik_fk_switch_offset, query=True, translation=True, worldSpace=True)
         cmds.move(position[0] * 1.75, position[1], position[2] - 25, ik_fk_switch_offset)
-        cmds.pointConstraint(self.leg_segments[-1], ik_fk_switch_offset, maintainOffset=True)
+        cmds.pointConstraint(self.leg_segments[-3], ik_fk_switch_offset, maintainOffset=True)
 
         ik_text_curve = self.control_shape.curve_text(name=f"{self.prefix}_IK_TEXT_{control_name}_curve", text="IK")
         cmds.matchTransform(ik_text_curve, f"{self.prefix}_SWITCH_CTRL_{control_name}",
@@ -77,7 +77,7 @@ class LegSwitch:
 
     def create_ik_fk_switch_leg_attribute_proxies(self, ik_fk_switch_ctrl):
         # CONTROL IK FK SWITCH THROUGH FK CONTROLS ATTRIBUTE
-        for index, joint in enumerate(self.leg_segments):
+        for index, joint in enumerate(self.leg_segments[:-1]):
             cmds.addAttr(f"{joint}_FK_CTRL", longName="IK_FK_SWITCH", proxy=f"{ik_fk_switch_ctrl}.IK_FK_SWITCH")
 
         # CONTROL IK FK SWITCH THROUGH IK CONTROLS ATTRIBUTE

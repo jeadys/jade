@@ -180,7 +180,9 @@ class MayaUITemplate(QtWidgets.QWidget):
                                               joint_orientation=self.joint_orientation_combobox.currentText())
                 arm_instance.create_arm_locators()
             case "leg":
-                leg_instance = leg_module.Leg(prefix=self.selected_side)
+                leg_instance = leg_module.Leg(prefix=self.limb_side_combobox.currentText(),
+                                              rotation_order=self.rotation_order_combobox.currentText(),
+                                              joint_orientation=self.joint_orientation_combobox.currentText())
                 leg_instance.create_leg_locators()
             case "spine":
                 spine_instance = spine_module.Spine(prefix="C", spine_count=self.slider.value())
@@ -196,7 +198,9 @@ class MayaUITemplate(QtWidgets.QWidget):
                                               joint_orientation=self.joint_orientation_combobox.currentText())
                 arm_instance.create_arm_joints()
             case "leg":
-                leg_instance = leg_module.Leg(prefix=self.selected_side)
+                leg_instance = leg_module.Leg(prefix=self.limb_side_combobox.currentText(),
+                                              rotation_order=self.rotation_order_combobox.currentText(),
+                                              joint_orientation=self.joint_orientation_combobox.currentText())
                 leg_instance.create_leg_joints()
             case "spine":
                 spine_instance = spine_module.Spine(prefix="C", spine_count=self.slider.value())
@@ -251,25 +255,27 @@ class MayaUITemplate(QtWidgets.QWidget):
 
             case "leg":
                 # FK LEG
-                leg_fk_instance = leg_fk_module.LegFK(prefix=self.selected_side)
+                leg_fk_instance = leg_fk_module.LegFK(prefix=self.limb_side_combobox.currentText(),
+                                                      rotation_order=self.rotation_order_combobox.currentText())
                 leg_fk_instance.create_leg_fk()
 
                 # IK LEG
-                leg_ik_instance = leg_ik_module.LegIK(prefix=self.selected_side)
+                leg_ik_instance = leg_ik_module.LegIK(prefix=self.limb_side_combobox.currentText(),
+                                                      rotation_order=self.rotation_order_combobox.currentText())
                 leg_ik_instance.create_leg_ik()
 
                 # SWITCH LEG
-                leg_switch_instance = leg_switch_module.LegSwitch(prefix=self.selected_side)
+                leg_switch_instance = leg_switch_module.LegSwitch(prefix=self.limb_side_combobox.currentText())
                 leg_switch_instance.create_leg_switch()
 
                 # TWIST LEG
-                if self.add_twist:
-                    leg_twist_instance = leg_twist_module.LegTwist(prefix=self.selected_side)
+                if self.twist_checkbox.isChecked():
+                    leg_twist_instance = leg_twist_module.LegTwist(prefix=self.limb_side_combobox.currentText())
                     leg_twist_instance.create_leg_twist()
 
                 # STRETCH LEG
-                if self.add_stretch:
-                    leg_stretch_instance = leg_stretch_module.LegStretch(prefix=self.selected_side)
+                if self.stretch_checkbox.isChecked():
+                    leg_stretch_instance = leg_stretch_module.LegStretch(prefix=self.limb_side_combobox.currentText())
                     leg_stretch_instance.create_leg_stretch()
 
             case "spine":

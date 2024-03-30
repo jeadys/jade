@@ -15,9 +15,11 @@ reload(control_shape)
 #
 
 class LegIK:
-    def __init__(self, prefix) -> None:
+    def __init__(self, prefix, rotation_order) -> None:
         self.prefix = prefix
-        self.leg_segments = [f"{self.prefix}_upperleg", f"{self.prefix}_lowerleg", f"{self.prefix}_ankle"]
+        self.rotation_order = rotation_order.upper()
+        self.leg_segments = [f"{self.prefix}_upperleg", f"{self.prefix}_lowerleg", f"{self.prefix}_ankle",
+                             f"{self.prefix}_ball", f"{self.prefix}_toe"]
         self.kinematic_parent_group = f"{self.prefix}_leg_kinematics"
         self.control_parent_group = f"{self.prefix}_leg_controls"
         self.control_shape: Curve = Curve()
@@ -48,21 +50,21 @@ class LegIK:
             cmds.parent(self.control_parent_group, "controls")
 
         ik_leg_ctrl = self.control_shape.curve_four_way_arrow(name=f"{self.prefix}_leg_IK_CTRL")
-        cmds.setAttr(f"{ik_leg_ctrl}.rotateOrder", RotateOrder.ZXY.value)
+        cmds.setAttr(f"{ik_leg_ctrl}.rotateOrder", RotateOrder[self.rotation_order].value)
 
         ik_knee_ctrl = self.control_shape.curve_triangle(name=f"{self.prefix}_knee_IK_CTRL")
-        cmds.setAttr(f"{ik_knee_ctrl}.rotateOrder", RotateOrder.ZXY.value)
+        cmds.setAttr(f"{ik_knee_ctrl}.rotateOrder", RotateOrder[self.rotation_order].value)
 
         ik_handle = cmds.ikHandle(
             name=f"{self.prefix}_ikHandle_leg",
             startJoint=f"{self.leg_segments[0]}_IK",
-            endEffector=f"{self.leg_segments[-1]}_IK",
+            endEffector=f"{self.leg_segments[-3]}_IK",
             solver="ikRPsolver")[0]
 
         # ANKLE
-        cmds.matchTransform(ik_leg_ctrl, f"{self.leg_segments[-1]}_IK", position=True, rotation=True, scale=False)
+        cmds.matchTransform(ik_leg_ctrl, f"{self.leg_segments[-3]}_IK", position=True, rotation=True, scale=False)
         cmds.parent(ik_handle, ik_leg_ctrl)
-        cmds.orientConstraint(ik_leg_ctrl, f"{self.leg_segments[-1]}_IK", maintainOffset=True)
+        cmds.orientConstraint(ik_leg_ctrl, f"{self.leg_segments[-3]}_IK", maintainOffset=True)
         cmds.parent(ik_leg_ctrl, self.control_parent_group)
 
         bake_transform_to_offset_parent_matrix(ik_leg_ctrl)
@@ -79,7 +81,8 @@ class LegIK:
 
     def create_knee_space_swap(self):
 
-        cmds.addAttr(f"{self.prefix}_knee_IK_CTRL", attributeType="enum", enumName=f"WORLD=0:FOOT=1", niceName="KNEE_FOLLOW",
+        cmds.addAttr(f"{self.prefix}_knee_IK_CTRL", attributeType="enum", enumName=f"WORLD=0:FOOT=1",
+                     niceName="KNEE_FOLLOW",
                      longName="KNEE_FOLLOW", defaultValue=0, keyable=True)
 
         knee_space_swap = cmds.createNode("blendMatrix", name=f"{self.prefix}_blend_matrix_knee_space_swap")
@@ -87,7 +90,8 @@ class LegIK:
         cmds.setAttr(f"{knee_space_swap}.inputMatrix", offset_matrix, type="matrix")
 
         ik_leg_swap_position = cmds.spaceLocator(name=f"{self.prefix}_ik_leg_swap_position")
-        cmds.matchTransform(ik_leg_swap_position, f"{self.prefix}_knee_IK_CTRL", position=True, rotation=True, scale=False)
+        cmds.matchTransform(ik_leg_swap_position, f"{self.prefix}_knee_IK_CTRL", position=True, rotation=True,
+                            scale=False)
         cmds.parent(ik_leg_swap_position, f"{self.prefix}_leg_IK_CTRL")
 
         bake_transform_to_offset_parent_matrix(ik_leg_swap_position[0])
@@ -96,4 +100,5 @@ class LegIK:
         cmds.connectAttr(f"{knee_space_swap}.outputMatrix", f"{self.prefix}_knee_IK_CTRL.offsetParentMatrix")
         cmds.connectAttr(f"{self.prefix}_knee_IK_CTRL.KNEE_FOLLOW", f"{knee_space_swap}.envelope")
 
-        cmds.addAttr(f"{self.prefix}_leg_IK_CTRL", longName="KNEE_FOLLOW", proxy=f"{self.prefix}_knee_IK_CTRL.KNEE_FOLLOW")
+        cmds.addAttr(f"{self.prefix}_leg_IK_CTRL", longName="KNEE_FOLLOW",
+                     proxy=f"{self.prefix}_knee_IK_CTRL.KNEE_FOLLOW")
