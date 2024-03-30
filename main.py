@@ -135,13 +135,10 @@ class MayaUITemplate(QtWidgets.QWidget):
                                                                                     items=joint_orientations)
         orientation_layout.addWidget(joint_orientation_widget)
 
-        self.slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
-        self.slider.setMinimum(5)
-        self.slider.setMaximum(10)
-        self.slider.setValue(5)
-        self.slider.setTickInterval(1)
-        self.slider.setTickPosition(QtWidgets.QSlider.TicksBelow)
-        layout.addWidget(self.slider)
+        mechanism_group = QtWidgets.QGroupBox("mechanisms")
+        mechanism_layout = QtWidgets.QVBoxLayout()
+        mechanism_group.setLayout(mechanism_layout)
+        main_layout.addWidget(mechanism_group)
 
         self.slider.valueChanged.connect(self.spin_box.setValue)
         self.spin_box.valueChanged.connect(self.slider.setValue)
