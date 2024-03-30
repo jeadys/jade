@@ -115,9 +115,10 @@ class MayaUITemplate(QtWidgets.QWidget):
         self.limb_side_widget, self.limb_side_combobox = create_combobox(name="side", items=limb_sides)
         module_layout.addWidget(self.limb_side_widget)
 
-        self.create_joint_button = QtWidgets.QPushButton("Create joints")
-        self.create_joint_button.clicked.connect(self.create_joints)
-        main_layout.addWidget(self.create_joint_button)
+        self.spine_count_widget, self.spine_count_slider = create_slider(name="spine count", value=5, minimum=5,
+                                                                         maximum=10)
+        self.spine_count_widget.setVisible(False)
+        module_layout.addWidget(self.spine_count_widget)
 
         self.create_control_button = QtWidgets.QPushButton("Create controls")
         self.create_control_button.clicked.connect(self.create_controls)
