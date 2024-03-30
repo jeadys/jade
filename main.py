@@ -143,10 +143,8 @@ class MayaUITemplate(QtWidgets.QWidget):
         twist_widget, self.twist_checkbox = create_checkbox(name="twist", is_checked=True)
         mechanism_layout.addWidget(twist_widget)
 
-        twist_checkbox = QtWidgets.QCheckBox("twist")
-        twist_checkbox.setChecked(self.add_twist)
-        twist_checkbox.stateChanged.connect(self.add_twist_state)
-        main_layout.addWidget(twist_checkbox)
+        stretch_widget, self.stretch_checkbox = create_checkbox(name="stretch", is_checked=True)
+        mechanism_layout.addWidget(stretch_widget)
 
         stretch_checkbox = QtWidgets.QCheckBox("stretch")
         stretch_checkbox.setChecked(self.add_stretch)
