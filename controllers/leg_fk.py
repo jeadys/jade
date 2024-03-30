@@ -48,14 +48,14 @@ class LegFK:
             cmds.matchTransform(current_fk_ctrl, joint, position=True, rotation=True, scale=False)
             cmds.parent(current_fk_ctrl, previous_fk_control)
 
+            bake_transform_to_offset_parent_matrix(current_fk_ctrl)
+
             if index == 0:
                 cmds.connectAttr(f"{joint}_FK_CTRL.worldMatrix[0]",
                                  f"{joint}_FK.offsetParentMatrix")
             else:
                 cmds.connectAttr(f"{joint}_FK_CTRL.translate", f"{joint}_FK.translate")
                 cmds.connectAttr(f"{joint}_FK_CTRL.rotate", f"{joint}_FK.rotate")
-
-            bake_transform_to_offset_parent_matrix(current_fk_ctrl)
 
             previous_fk_control = current_fk_ctrl
 
