@@ -125,8 +125,10 @@ class MayaUITemplate(QtWidgets.QWidget):
         orientation_group.setLayout(orientation_layout)
         main_layout.addWidget(orientation_group)
 
-        layout = QtWidgets.QHBoxLayout(self)
-        main_layout.addLayout(layout)
+        rotation_orders = ["xyz", "yzx", "zxy", "zyx", "yxz", "xzy"]
+        rotation_order_widget, self.rotation_order_combobox = create_combobox(name="rotation order",
+                                                                              items=rotation_orders)
+        orientation_layout.addWidget(rotation_order_widget)
 
         self.spin_box = QtWidgets.QSpinBox()
         self.spin_box.setMinimum(5)
