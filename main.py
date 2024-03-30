@@ -159,10 +159,9 @@ class MayaUITemplate(QtWidgets.QWidget):
         joint_button.clicked.connect(self.create_joints)
         operation_layout.addWidget(joint_button)
 
-    def radio_selected(self):
-        sender = self.sender()
-        if sender.isChecked():
-            print("Selected option:", sender.text())
+        control_button = QtWidgets.QPushButton("create controls")
+        control_button.clicked.connect(self.create_controls)
+        operation_layout.addWidget(control_button)
 
     def select_module(self, index):
         self.selected_module = self.select_module_combo.itemText(index)
