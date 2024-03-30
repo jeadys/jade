@@ -15,9 +15,10 @@ reload(control_shape)
 #
 
 class ArmIK:
-    def __init__(self, prefix) -> None:
+    def __init__(self, prefix, rotation_order) -> None:
         self.prefix = prefix
-        self.arm_segments = [f"{self.prefix}_upperarm", f"{self.prefix}_lowerarm", f"{self.prefix}_wrist"]
+        self.rotation_order = rotation_order.upper()
+        self.arm_segments = [f"{self.prefix}_clavicle", f"{self.prefix}_upperarm", f"{self.prefix}_lowerarm", f"{self.prefix}_wrist"]
         self.kinematic_parent_group = f"{self.prefix}_arm_kinematics"
         self.control_parent_group = f"{self.prefix}_arm_controls"
         self.control_shape: Curve = Curve()
@@ -33,7 +34,7 @@ class ArmIK:
             cmds.parent(self.kinematic_parent_group, "rig_systems")
 
         previous_ik_joint = self.kinematic_parent_group
-        for count, joint in enumerate(self.arm_segments):
+        for count, joint in enumerate(self.arm_segments[1:]):
             current_ik_joint = cmds.duplicate(joint, parentOnly=True, name=f"{joint}_IK")[0]
             cmds.parentConstraint(current_ik_joint, joint, maintainOffset=True)
             cmds.parent(current_ik_joint, previous_ik_joint)
@@ -48,14 +49,14 @@ class ArmIK:
             cmds.parent(self.control_parent_group, "controls")
 
         ik_arm_ctrl = self.control_shape.curve_four_way_arrow(name=f"{self.prefix}_arm_IK_CTRL")
-        cmds.setAttr(f"{ik_arm_ctrl}.rotateOrder", RotateOrder.ZXY.value)
+        cmds.setAttr(f"{ik_arm_ctrl}.rotateOrder", RotateOrder[self.rotation_order].value)
 
         ik_elbow_ctrl = self.control_shape.curve_triangle(name=f"{self.prefix}_elbow_IK_CTRL")
-        cmds.setAttr(f"{ik_elbow_ctrl}.rotateOrder", RotateOrder.ZXY.value)
+        cmds.setAttr(f"{ik_elbow_ctrl}.rotateOrder", RotateOrder[self.rotation_order].value)
 
         ik_handle = cmds.ikHandle(
             name=f"{self.prefix}_ikHandle_arm",
-            startJoint=f"{self.arm_segments[0]}_IK",
+            startJoint=f"{self.arm_segments[1]}_IK",
             endEffector=f"{self.arm_segments[-1]}_IK",
             solver="ikRPsolver")[0]
 

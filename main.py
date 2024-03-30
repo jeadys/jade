@@ -163,17 +163,21 @@ class MayaUITemplate(QtWidgets.QWidget):
         control_button.clicked.connect(self.create_controls)
         operation_layout.addWidget(control_button)
 
-    def select_module(self, index):
-        self.selected_module = self.select_module_combo.itemText(index)
-
-    def select_side(self, index):
-        self.selected_side = self.select_side_combo.itemText(index)
+    def limb_changed(self):
+        if self.limb_module_combobox.currentText() == "spine":
+            self.spine_count_widget.setVisible(True)
+            self.limb_side_widget.setVisible(False)
+        else:
+            self.spine_count_widget.setVisible(False)
+            self.limb_side_widget.setVisible(True)
 
     @undoable
     def create_locators(self):
-        match self.selected_module:
+        match self.limb_module_combobox.currentText():
             case "arm":
-                arm_instance = arm_module.Arm(prefix=self.selected_side)
+                arm_instance = arm_module.Arm(prefix=self.limb_side_combobox.currentText(),
+                                              rotation_order=self.rotation_order_combobox.currentText(),
+                                              joint_orientation=self.joint_orientation_combobox.currentText())
                 arm_instance.create_arm_locators()
             case "leg":
                 leg_instance = leg_module.Leg(prefix=self.selected_side)
@@ -185,9 +189,11 @@ class MayaUITemplate(QtWidgets.QWidget):
 
     @undoable
     def create_joints(self):
-        match self.selected_module:
+        match self.limb_module_combobox.currentText():
             case "arm":
-                arm_instance = arm_module.Arm(prefix=self.selected_side)
+                arm_instance = arm_module.Arm(prefix=self.limb_side_combobox.currentText(),
+                                              rotation_order=self.rotation_order_combobox.currentText(),
+                                              joint_orientation=self.joint_orientation_combobox.currentText())
                 arm_instance.create_arm_joints()
             case "leg":
                 leg_instance = leg_module.Leg(prefix=self.selected_side)
@@ -217,28 +223,30 @@ class MayaUITemplate(QtWidgets.QWidget):
             cmds.group(empty=True, name="rig_systems")
             cmds.parent("rig_systems", "DO_NOT_TOUCH")
 
-        match self.selected_module:
+        match self.limb_module_combobox.currentText():
             case "arm":
                 # FK ARM
-                fk_arm_instance = arm_fk_module.ArmFK(prefix=self.selected_side)
+                fk_arm_instance = arm_fk_module.ArmFK(prefix=self.limb_side_combobox.currentText(),
+                                                      rotation_order=self.rotation_order_combobox.currentText())
                 fk_arm_instance.create_arm_fk()
 
                 # IK ARM
-                ik_arm_instance = arm_ik_module.ArmIK(prefix=self.selected_side)
+                ik_arm_instance = arm_ik_module.ArmIK(prefix=self.limb_side_combobox.currentText(),
+                                                      rotation_order=self.rotation_order_combobox.currentText())
                 ik_arm_instance.create_arm_ik()
 
                 # SWITCH ARM
-                arm_switch_instance = arm_switch_module.ArmSwitch(prefix=self.selected_side)
+                arm_switch_instance = arm_switch_module.ArmSwitch(prefix=self.limb_side_combobox.currentText())
                 arm_switch_instance.create_arm_switch()
 
                 # TWIST ARM
-                if self.add_twist:
-                    arm_twist_instance = arm_twist_module.ArmTwist(prefix=self.selected_side)
+                if self.twist_checkbox.isChecked():
+                    arm_twist_instance = arm_twist_module.ArmTwist(prefix=self.limb_side_combobox.currentText())
                     arm_twist_instance.create_arm_twist()
 
                 # STRETCH ARM
-                if self.add_stretch:
-                    arm_stretch_instance = arm_stretch_module.ArmStretch(prefix=self.selected_side)
+                if self.stretch_checkbox.isChecked():
+                    arm_stretch_instance = arm_stretch_module.ArmStretch(prefix=self.limb_side_combobox.currentText())
                     arm_stretch_instance.create_arm_stretch()
 
             case "leg":
