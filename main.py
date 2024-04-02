@@ -8,6 +8,7 @@ import inspect
 
 # Joints
 import joints.arm as arm_module
+import joints.foot as foot_module
 import joints.leg as leg_module
 import joints.spine as spine_module
 
@@ -17,6 +18,9 @@ import controllers.arm_ik as arm_ik_module
 import controllers.arm_switch as arm_switch_module
 import mechanisms.arm_stretch as arm_stretch_module
 import mechanisms.arm_twist as arm_twist_module
+
+# Foot
+import controllers.foot_ik as foot_ik_module
 
 # Leg
 import controllers.leg_fk as leg_fk_module
@@ -56,6 +60,9 @@ reload(arm_ik_module)
 reload(arm_switch_module)
 reload(arm_stretch_module)
 reload(arm_twist_module)
+
+reload(foot_module)
+reload(foot_ik_module)
 
 reload(leg_module)
 reload(leg_fk_module)
@@ -184,6 +191,11 @@ class MayaUITemplate(QtWidgets.QWidget):
                                               rotation_order=self.rotation_order_combobox.currentText(),
                                               joint_orientation=self.joint_orientation_combobox.currentText())
                 leg_instance.create_leg_locators()
+
+                foot_instance = foot_module.Foot(prefix=self.limb_side_combobox.currentText(),
+                                                 rotation_order=self.rotation_order_combobox.currentText(),
+                                                 joint_orientation=self.joint_orientation_combobox.currentText())
+                foot_instance.create_foot_locators()
             case "spine":
                 spine_instance = spine_module.Spine(prefix="C", spine_count=self.slider.value())
                 spine_instance.create_spine_locators()
@@ -202,6 +214,11 @@ class MayaUITemplate(QtWidgets.QWidget):
                                               rotation_order=self.rotation_order_combobox.currentText(),
                                               joint_orientation=self.joint_orientation_combobox.currentText())
                 leg_instance.create_leg_joints()
+
+                foot_instance = foot_module.Foot(prefix=self.limb_side_combobox.currentText(),
+                                                 rotation_order=self.rotation_order_combobox.currentText(),
+                                                 joint_orientation=self.joint_orientation_combobox.currentText())
+                foot_instance.create_foot_joints()
             case "spine":
                 spine_instance = spine_module.Spine(prefix="C", spine_count=self.slider.value())
                 spine_instance.create_spine_joints()
@@ -277,6 +294,11 @@ class MayaUITemplate(QtWidgets.QWidget):
                 if self.stretch_checkbox.isChecked():
                     leg_stretch_instance = leg_stretch_module.LegStretch(prefix=self.limb_side_combobox.currentText())
                     leg_stretch_instance.create_leg_stretch()
+
+                # IK FOOT
+                fk_foot_instance = foot_ik_module.FootIK(prefix=self.limb_side_combobox.currentText(),
+                                                         rotation_order=self.rotation_order_combobox.currentText())
+                fk_foot_instance.create_foot_ik()
 
             case "spine":
                 # IK SPINE
