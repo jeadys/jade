@@ -9,9 +9,10 @@ reload(control_shape)
 
 
 class LegFK:
-    def __init__(self, prefix) -> None:
+    def __init__(self, prefix, rotation_order) -> None:
         self.prefix = prefix
-        self.leg_segments = [f"{self.prefix}_upperleg", f"{self.prefix}_lowerleg", f"{self.prefix}_ankle"]
+        self.rotation_order = rotation_order.upper()
+        self.leg_segments = [f"{self.prefix}_upperleg", f"{self.prefix}_lowerleg", f"{self.prefix}_ankle", f"{self.prefix}_ball", f"{self.prefix}_toe"]
         self.control_parent_group = f"{self.prefix}_leg_controls"
         self.kinematic_parent_group = f"{self.prefix}_leg_kinematics"
         self.control_shape: Curve = Curve()
@@ -41,11 +42,13 @@ class LegFK:
             cmds.parent(self.control_parent_group, "controls")
 
         previous_fk_control = self.control_parent_group
-        for index, joint in enumerate(self.leg_segments):
-            current_fk_ctrl = self.control_shape.curve_cube(name=f"{joint}_FK_CTRL")
-            cmds.setAttr(f"{current_fk_ctrl}.rotateOrder", RotateOrder.ZXY.value)
+        for index, joint in enumerate(self.leg_segments[:-1]):
+            current_fk_ctrl = self.control_shape.curve_circle(name=f"{joint}_FK_CTRL")
+            cmds.setAttr(f"{current_fk_ctrl}.rotateOrder", RotateOrder[self.rotation_order].value)
             cmds.matchTransform(current_fk_ctrl, joint, position=True, rotation=True, scale=False)
             cmds.parent(current_fk_ctrl, previous_fk_control)
+
+            bake_transform_to_offset_parent_matrix(current_fk_ctrl)
 
             if index == 0:
                 cmds.connectAttr(f"{joint}_FK_CTRL.worldMatrix[0]",
@@ -53,8 +56,6 @@ class LegFK:
             else:
                 cmds.connectAttr(f"{joint}_FK_CTRL.translate", f"{joint}_FK.translate")
                 cmds.connectAttr(f"{joint}_FK_CTRL.rotate", f"{joint}_FK.rotate")
-
-            bake_transform_to_offset_parent_matrix(current_fk_ctrl)
 
             previous_fk_control = current_fk_ctrl
 

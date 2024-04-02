@@ -12,13 +12,17 @@ class Leg:
     locator_parent_group = "locators"
     joint_parent_group = "skeleton"
 
-    def __init__(self, prefix):
+    def __init__(self, prefix, rotation_order, joint_orientation):
         self.prefix = prefix
+        self.rotation_order = rotation_order
+        self.orient_joint, self.orient_secondary_axis = joint_orientation.split(" - ", 1)
         side = 1 if self.prefix == "L" else -1
         self.leg_segments = (
             LegSegment(name=f"{self.prefix}_upperleg", position=(side * 10, 90, 0)),
             LegSegment(name=f"{self.prefix}_lowerleg", position=(side * 10, 50, 0)),
             LegSegment(name=f"{self.prefix}_ankle", position=(side * 10, 10, -7.5)),
+            LegSegment(name=f"{self.prefix}_ball", position=(side * 10, 0, 0)),
+            LegSegment(name=f"{self.prefix}_toe", position=(side * 10, 0, 7.5)),
         )
 
     def create_leg_locators(self) -> None:
@@ -60,17 +64,18 @@ class Leg:
         for index, joint in enumerate(self.leg_segments):
             # Prevent Maya from auto parenting joint to selected item in scene.
             cmds.select(deselect=True)
-            current_joint = cmds.joint(radius=3, rotationOrder="zxy", name=f"{joint.name}")
+            current_joint = cmds.joint(radius=3, rotationOrder=self.rotation_order, name=f"{joint.name}")
             cmds.matchTransform(current_joint, f"{joint.name}_LOC", position=True, rotation=False, scale=False)
             cmds.parent(current_joint, previous_joint)
 
             previous_joint = current_joint
 
         for index, joint in enumerate(self.leg_segments):
-            if index == len(self.leg_segments) - 1:
+            if joint.name == self.leg_segments[-1].name or joint.name == self.leg_segments[-3].name:
                 cmds.joint(f"{joint.name}", edit=True, orientJoint="none", zeroScaleOrient=True)
             else:
-                cmds.joint(f"{joint.name}", edit=True, orientJoint="yzx", secondaryAxisOrient="zup",
+                cmds.joint(f"{joint.name}", edit=True, orientJoint=self.orient_joint,
+                           secondaryAxisOrient=self.orient_secondary_axis,
                            zeroScaleOrient=True)
 
         # if is_auto_parent and cmds.objExists("C_pelvis"):
