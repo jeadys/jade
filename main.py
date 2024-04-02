@@ -7,10 +7,14 @@ from importlib import reload
 import inspect
 
 # Joints
+import joints.hand as hand_module
 import joints.arm as arm_module
 import joints.foot as foot_module
 import joints.leg as leg_module
 import joints.spine as spine_module
+
+# Hand
+import controllers.hand_fk as hand_fk_module
 
 # Arm
 import controllers.arm_fk as arm_fk_module
@@ -51,8 +55,8 @@ from ui.widgets.line_edit import create_line_edit
 from ui.widgets.slider import create_slider
 from ui.widgets.spinbox import create_spinbox
 
-reload(arm_window_module)
-reload(leg_window_module)
+reload(hand_module)
+reload(hand_fk_module)
 
 reload(arm_module)
 reload(arm_fk_module)
@@ -186,6 +190,11 @@ class MayaUITemplate(QtWidgets.QWidget):
                                               rotation_order=self.rotation_order_combobox.currentText(),
                                               joint_orientation=self.joint_orientation_combobox.currentText())
                 arm_instance.create_arm_locators()
+
+                hand_instance = hand_module.Hand(prefix=self.limb_side_combobox.currentText(),
+                                                 rotation_order=self.rotation_order_combobox.currentText(),
+                                                 joint_orientation=self.joint_orientation_combobox.currentText())
+                hand_instance.create_hand_locators()
             case "leg":
                 leg_instance = leg_module.Leg(prefix=self.limb_side_combobox.currentText(),
                                               rotation_order=self.rotation_order_combobox.currentText(),
@@ -209,6 +218,11 @@ class MayaUITemplate(QtWidgets.QWidget):
                                               rotation_order=self.rotation_order_combobox.currentText(),
                                               joint_orientation=self.joint_orientation_combobox.currentText())
                 arm_instance.create_arm_joints()
+
+                hand_instance = hand_module.Hand(prefix=self.limb_side_combobox.currentText(),
+                                                 rotation_order=self.rotation_order_combobox.currentText(),
+                                                 joint_orientation=self.joint_orientation_combobox.currentText())
+                hand_instance.create_hand_joints()
             case "leg":
                 leg_instance = leg_module.Leg(prefix=self.limb_side_combobox.currentText(),
                                               rotation_order=self.rotation_order_combobox.currentText(),
@@ -269,6 +283,11 @@ class MayaUITemplate(QtWidgets.QWidget):
                 if self.stretch_checkbox.isChecked():
                     arm_stretch_instance = arm_stretch_module.ArmStretch(prefix=self.limb_side_combobox.currentText())
                     arm_stretch_instance.create_arm_stretch()
+
+                # FK HAND
+                fk_hand_instance = hand_fk_module.HandFK(prefix=self.limb_side_combobox.currentText(),
+                                                         rotation_order=self.rotation_order_combobox.currentText())
+                fk_hand_instance.create_hand_fk()
 
             case "leg":
                 # FK LEG
