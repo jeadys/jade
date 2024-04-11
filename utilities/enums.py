@@ -73,7 +73,13 @@ class UpAxis(CustomEnum):
     CLOSEST_X = 8
 
 
-class Stretch(Enum):
+class Color(Enum):
+    RED: (1, 0, 0)
+    GREEN: (0, 1, 0)
+    BLUE: (0, 0, 1)
+
+
+class StretchMode(Enum):
     BOTH = 1
     STRETCH = 3
     SQUASH = 5
