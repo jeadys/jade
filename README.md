@@ -15,6 +15,11 @@ Mesh + Skeleton           |  Skeleton
 - **Automated Rigging**: Quickly generate standard character rigs with automated bone and controller placement.
 - **Support for Advanced Rigging Techniques**: Incorporate advanced rigging techniques such as IK/FK blending, stretchy limbs, and squash and stretch.
 
+## TODO
+- Multi limb support
+- Blueprints
+- Modular building blocks
+
 ## Installation
 To install the Maya Rigging Tool, follow these steps:
 1. Download the tool from [GitHub repository link].
