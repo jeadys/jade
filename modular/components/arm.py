@@ -3,24 +3,20 @@ from utilities.enums import Orient, Shape, Color
 
 
 def arm_segments() -> list[Segment]:
-    upperleg_control = Control(name="upperleg", parent=None, shape=Shape.CUBE, color=Color.GREEN, scale=5)
-    upperleg_joint = Segment(name="upperleg", parent=None, position=(10, 90, 0), orientation=Orient.BONE,
-                             control=upperleg_control)
+    clavicle_control = Control(name="clavicle", parent=None, shape=Shape.CUBE, color=Color.GREEN, scale=5)
+    clavicle_joint = Segment(name="clavicle", parent=None, position=(5, 140, 5), orientation=Orient.BONE,
+                             control=clavicle_control)
 
-    lowerleg_control = Control(name="lowerleg", parent=upperleg_control, shape=Shape.CUBE, color=Color.GREEN, scale=5)
-    lowerleg_joint = Segment(name="lowerleg", parent=upperleg_joint, position=(0, -40, 0), orientation=Orient.BONE,
-                             control=lowerleg_control)
+    upperarm_control = Control(name="upperarm", parent=None, shape=Shape.CUBE, color=Color.GREEN, scale=5)
+    upperarm_joint = Segment(name="upperarm", parent=clavicle_joint, position=(10, 0, -15), orientation=Orient.BONE,
+                             control=upperarm_control)
 
-    ankle_control = Control(name="ankle", parent=lowerleg_control, shape=Shape.CUBE, color=Color.GREEN, scale=5)
-    ankle_joint = Segment(name="ankle", parent=lowerleg_joint, position=(0, -40, -7.5), orientation=Orient.SKIP,
-                          control=ankle_control)
+    lowerarm_control = Control(name="lowerarm", parent=upperarm_control, shape=Shape.CUBE, color=Color.GREEN, scale=5)
+    lowerarm_joint = Segment(name="lowerarm", parent=upperarm_joint, position=(30, 0, -7.5), orientation=Orient.BONE,
+                             control=lowerarm_control)
 
-    ball_control = Control(name="ball", parent=ankle_control, shape=Shape.CUBE, color=Color.GREEN, scale=5)
-    ball_joint = Segment(name="ball", parent=ankle_joint, position=(0, -10, 7.5), orientation=Orient.BONE,
-                         control=ball_control)
+    wrist_control = Control(name="wrist", parent=lowerarm_control, shape=Shape.CUBE, color=Color.GREEN, scale=5)
+    wrist_joint = Segment(name="wrist", parent=lowerarm_joint, position=(25, 0, 0), orientation=Orient.WORLD,
+                          control=wrist_control)
 
-    toe_control = Control(name="toe", parent=ball_control, shape=Shape.CUBE, color=Color.GREEN, scale=5)
-    toe_joint = Segment(name="toe", parent=ball_joint, position=(0, 0, 7.5), orientation=Orient.WORLD,
-                        control=toe_control)
-
-    return [upperleg_joint, lowerleg_joint, ankle_joint, ball_joint, toe_joint]
+    return [clavicle_joint, upperarm_joint, lowerarm_joint, wrist_joint]
