@@ -3,19 +3,23 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 from utilities.enums import Orient, Shape, Color
+from typing import Optional
 
 
 @dataclass
 class Control:
+    name: str
     shape: Shape
     color: Color
     scale: float
+    parent: Optional["Control"]
+    generate: bool = True
 
 
 @dataclass
 class Segment:
     name: str
-    parent: str | None
+    parent: Optional["Segment"]
     position: tuple[float, float, float]
     orientation: Orient
     control: Control
