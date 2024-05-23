@@ -13,10 +13,15 @@ def calculate_distance_between(from_distance: str, to_distance: str) -> tuple[fl
 
 class Twist:
 
-    def __init__(self, prefix: str, name: str, segments: list[str]):
-        self.prefix = prefix
+    def __init__(self, node, name, prefix, segments):
+        self.node = node
         self.name = name
+        self.prefix = prefix
         self.segments = segments
+        self.blueprint_nr = self.node.rsplit("_", 1)[-1]
+        self.selection = cmds.listConnections(f"{self.node}.parent_joint")
+
+        self.twist_amount = 3
 
     def create_twist_joints(self, base_joint: str, end_joint: str) -> tuple[str, str]:
         twist_a: str = cmds.duplicate(base_joint, parentOnly=True, name=f"{self.prefix}_{self.name}_twist_a01")[0]
@@ -30,8 +35,14 @@ class Twist:
     def create_twist_joints_hierarchy(self, twist_d: str, distance_between_value: float) -> tuple[str, str]:
         twist_b: str = cmds.duplicate(twist_d, parentOnly=True, name=f"{self.prefix}_{self.name}_twist_b01")[0]
         twist_c: str = cmds.duplicate(twist_d, parentOnly=True, name=f"{self.prefix}_{self.name}_twist_c01")[0]
-        cmds.move(0, - (distance_between_value * 0.66), 0, twist_b, relative=True, objectSpace=True)
-        cmds.move(0, - (distance_between_value * 0.33), 0, twist_c, relative=True, objectSpace=True)
+
+        distance = 1 / self.twist_amount
+        current = distance
+        for segment in range(self.twist_amount):
+            twist: str = cmds.duplicate(twist_d, parentOnly=True, name=f"{self.prefix}_{self.name}_twist_b01")[0]
+            cmds.move(0, - (distance_between_value * current), 0, twist, relative=True, objectSpace=True)
+
+            current += distance
         return twist_b, twist_c
 
     def create_ik_handle(self, start_joint, end_effector) -> str:
