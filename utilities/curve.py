@@ -1,4 +1,153 @@
 import maya.cmds as cmds
+from utilities.enums import Shape
+
+
+def select_curve(shape, name, scale):
+    match shape:
+        case Shape.CIRCLE:
+            return curve_circle(name=name, scale=scale)
+        case Shape.SQUARE:
+            return curve_square(name=name, scale=scale)
+        case Shape.TRIANGLE:
+            return curve_triangle(name=name, scale=scale)
+        case Shape.CUBE:
+            return curve_cube(name=name, scale=scale)
+        case Shape.FOURWAYARROW:
+            return curve_four_way_arrow(name=name, scale=scale)
+        case _:
+            return curve_circle(name=name, scale=scale)
+
+
+def curve_circle(name, scale):
+    curve = cmds.circle(normal=(0, 1, 0), center=(0, 0, 0), radius=scale, degree=1, sections=32, name=name)
+
+    return curve[0]
+
+
+def curve_square(name, scale):
+    points = [
+        (1, 0, 1),
+        (1, 0, -1),
+        (-1, 0, -1),
+        (-1, 0, 1),
+        (1, 0, 1),
+    ]
+
+    curve = cmds.curve(
+        point=points,
+        degree=1,
+        name=name,
+    )
+
+    if name[0] == "R":
+        cmds.rotate(0, 180, 0, curve)
+    cmds.scale(scale, scale, scale, curve)
+    cmds.makeIdentity(curve, apply=True, scale=True, rotate=True)
+
+    return curve
+
+
+def curve_triangle(name, scale):
+    points = [
+        (0, 0, 1),
+        (1, 0, -1),
+        (-1, 0, -1),
+        (0, 0, 1),
+    ]
+
+    curve = cmds.curve(
+        point=points,
+        degree=1,
+        name=name,
+    )
+
+    if name[0] == "R":
+        cmds.rotate(0, 180, 0, curve)
+    cmds.scale(scale, scale, scale, curve)
+    cmds.makeIdentity(curve, apply=True, scale=True, rotate=True)
+
+    return curve
+
+
+def curve_cube(name, scale):
+    points = [
+        (1, -1, 1),
+        (1, -1, -1),
+        (-1, -1, -1),
+        (-1, -1, 1),
+        (1, -1, 1),
+        (1, 1, 1),
+
+        (1, 1, -1),
+        (1, -1, -1),
+        (1, 1, -1),
+
+        (-1, 1, -1),
+        (-1, -1, -1),
+        (-1, 1, -1),
+
+        (-1, 1, 1),
+        (-1, -1, 1),
+        (-1, 1, 1),
+
+        (1, 1, 1),
+    ]
+
+    curve = cmds.curve(
+        point=points,
+        degree=1,
+        name=name,
+    )
+
+    if name[0] == "R":
+        cmds.rotate(0, 180, 0, curve)
+    cmds.scale(scale, scale, scale, curve)
+    cmds.makeIdentity(curve, apply=True, scale=True, rotate=True)
+
+    return curve
+
+
+def curve_four_way_arrow(name, scale):
+    points = [
+        (0, 0, -2.5),
+        (1, 0, -1.5),
+        (0.5, 0, -1.5),
+        (0.5, 0, -0.5),
+        (1.5, 0, -0.5),
+        (1.5, 0, -1),
+        (2.5, 0, 0),
+        (1.5, 0, 1),
+        (1.5, 0, 0.5),
+        (0.5, 0, 0.5),
+        (0.5, 0, 1.5),
+        (1, 0, 1.5),
+        (0, 0, 2.5),
+        (-1, 0, 1.5),   # reversed
+        (-0.5, 0, 1.5),
+        (-0.5, 0, 0.5),
+        (-1.5, 0, 0.5),
+        (-1.5, 0, 1),
+        (-2.5, 0, 0),
+        (-1.5, 0, -1),
+        (-1.5, 0, -0.5),
+        (-0.5, 0, -0.5),
+        (-0.5, 0, -1.5),
+        (-1, 0, -1.5),
+        (0, 0, -2.5),
+    ]
+
+    curve = cmds.curve(
+        point=points,
+        degree=1,
+        name=name,
+    )
+
+    if name[0] == "R":
+        cmds.rotate(0, 180, 0, curve)
+    cmds.scale(scale, scale, scale, curve)
+    cmds.makeIdentity(curve, apply=True, scale=True, rotate=True)
+
+    return curve
 
 
 class Curve:
@@ -16,6 +165,19 @@ class Curve:
                 return self.curve_lowerarm(name=name)
             case "L_ankle" | "R_ankle":
                 return self.curve_wrist(name=name)
+
+    def get_control_shape(self, shape, name, scale):
+        match shape:
+            case Shape.CIRCLE:
+                return self.curve_circle(name=name, scale=scale)
+            case Shape.SQUARE:
+                return self.curve_square(name=name, scale=scale)
+            case Shape.TRIANGLE:
+                return self.curve_triangle(name=name, scale=scale)
+            case Shape.CUBE:
+                return self.curve_cube(name=name, scale=scale)
+            case _:
+                pass
 
     @staticmethod
     def get_curve_cv_coordinates(curve):
@@ -40,8 +202,8 @@ class Curve:
 
         return curve
 
-    @staticmethod
-    def curve_circle(name, scale):
+
+    def curve_circle(self, name, scale):
         curve = cmds.circle(normal=(0, 1, 0), center=(0, 0, 0), radius=scale, degree=1, sections=32, name=name)
 
         # cmds.scale(2, 2, 2, curve)
@@ -49,14 +211,50 @@ class Curve:
 
         return curve[0]
 
-    def curve_triangle(self, name):
+    def curve_square(self, name, scale):
+        points = [
+            (1, 0, 1),
+            (1, 0, -1),
+            (-1, 0, -1),
+            (-1, 0, 1),
+            (1, 0, 1),
+        ]
+
+        curve = cmds.curve(
+            point=points,
+            degree=1,
+            name=name,
+        )
+
+        if name[0] == "R":
+            cmds.rotate(0, 180, 0, curve)
+        cmds.scale(scale, scale, scale, curve)
+        cmds.makeIdentity(curve, apply=True, scale=True, rotate=True)
+
+        return curve
+
+    def curve_triangle(self, name, scale):
         points = [
             (0, 0, 1),
             (1, 0, -1),
             (-1, 0, -1),
             (0, 0, 1),
         ]
-        return self.create_curve(name, points)
+
+        curve = cmds.curve(
+            point=points,
+            degree=1,
+            name=name,
+        )
+
+        if name[0] == "R":
+            cmds.rotate(0, 180, 0, curve)
+        cmds.scale(scale, scale, scale, curve)
+        cmds.makeIdentity(curve, apply=True, scale=True, rotate=True)
+
+        return curve
+
+        # return self.create_curve(name, points)
 
     def curve_cube(self, name, scale):
         points = [
