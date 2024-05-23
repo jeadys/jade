@@ -15,6 +15,10 @@ class SpineStretch:
     def __init__(self):
         pass
 
+    def create_spine_stretch(self):
+        self.create_spine_stretch_attributes()
+        self.create_spine_stretch_nodes()
+
     def create_spine_stretch_locators(self):
         pass
 
@@ -54,7 +58,7 @@ class SpineStretch:
         cmds.setAttr(f"{spine_stretch_ik_blend}.color2G", 1)
         cmds.setAttr(f"{spine_stretch_ik_blend}.color2B", 1)
 
-        cmds.connectAttr("IK_CTRL_cog.Stretchiness", f"{spine_stretch_blend}.blender")
+        cmds.connectAttr("cog_CTRL.Stretchiness", f"{spine_stretch_blend}.blender")
 
         # Check if spine should stretch or not
         spine_stretch_condition = cmds.createNode("condition", name="spine_stretch_condition")
@@ -63,10 +67,10 @@ class SpineStretch:
         cmds.connectAttr(f"{spine_stretch_blend}.output.outputR", f"{spine_stretch_condition}.colorIfTrue.colorIfTrueR")
 
         # Determines if spine should SQUASH, STRETCH or BOTH
-        cmds.connectAttr("IK_CTRL_cog.Stretch_Type", f"{spine_stretch_condition}.operation")
+        cmds.connectAttr("cog_CTRL.Stretch_Type", f"{spine_stretch_condition}.operation")
 
         cmds.connectAttr(f"{spine_stretch_condition}.outColor.outColorR", f"{spine_stretch_ik_blend}.color1.color1R")
-        cmds.connectAttr(f"IK_CTRL_cog.IK_FK_SWITCH", f"{spine_stretch_ik_blend}.blender")
+        cmds.connectAttr(f"cog_CTRL.IK_FK_SWITCH", f"{spine_stretch_ik_blend}.blender")
 
         # Scale the IK spines correctly
         cmds.connectAttr(f"{spine_stretch_ik_blend}.output.outputR", "IK_spine_01.scale.scaleY")
@@ -97,15 +101,15 @@ class SpineStretch:
     @staticmethod
     def create_spine_stretch_attributes():
         # CATEGORY STRETCH
-        if not cmds.attributeQuery("STRETCH", node="IK_CTRL_cog", exists=True):
-            cmds.addAttr("IK_CTRL_cog", attributeType="enum", niceName="STRETCH", longName="STRETCH",
+        if not cmds.attributeQuery("STRETCH", node="cog_CTRL", exists=True):
+            cmds.addAttr("cog_CTRL", attributeType="enum", niceName="STRETCH", longName="STRETCH",
                          enumName="---------")
-            cmds.setAttr("IK_CTRL_cog.STRETCH", keyable=False, lock=True, channelBox=True)
+            cmds.setAttr("cog_CTRL.STRETCH", keyable=False, lock=True, channelBox=True)
 
         # STRETCHINESS
-        if not cmds.attributeQuery("Stretchiness", node="IK_CTRL_cog", exists=True):
+        if not cmds.attributeQuery("Stretchiness", node="cog_CTRL", exists=True):
             cmds.addAttr(
-                "IK_CTRL_cog",
+                "cog_CTRL",
                 attributeType="float",
                 niceName="Stretchiness",
                 longName="Stretchiness",
@@ -116,8 +120,8 @@ class SpineStretch:
             )
 
         # STRETCH TYPE
-        if not cmds.attributeQuery("Stretch_Type", node="IK_CTRL_cog", exists=True):
-            cmds.addAttr("IK_CTRL_cog",
+        if not cmds.attributeQuery("Stretch_Type", node="cog_CTRL", exists=True):
+            cmds.addAttr("cog_CTRL",
                          attributeType="enum",
                          niceName="Stretch_Type",
                          longName="Stretch_Type",
