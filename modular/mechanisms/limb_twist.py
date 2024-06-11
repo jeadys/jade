@@ -1,5 +1,8 @@
 import maya.cmds as cmds
 
+from modular.biped.biped import Segment
+from utilities.enums import MUDOperation
+
 
 def calculate_distance_between(from_distance: str, to_distance: str) -> tuple[float, str]:
     distance_between_node: str = cmds.createNode("distanceBetween", name=f"{from_distance}_{to_distance}_distance_node")
@@ -13,81 +16,62 @@ def calculate_distance_between(from_distance: str, to_distance: str) -> tuple[fl
 
 class Twist:
 
-    def __init__(self, node, name, prefix, segments):
+    def __init__(self, node, name):
         self.node = node
         self.name = name
-        self.prefix = prefix
-        self.segments = segments
         self.blueprint_nr = self.node.rsplit("_", 1)[-1]
         self.selection = cmds.listConnections(f"{self.node}.parent_joint")
 
-        self.twist_amount = 3
+    def twist_joint(self, prefix, parent_segment: Segment, start_segment: Segment, end_segment: Segment, twist_amount,
+                    twist_mechanic):
+        distance_between_start_end, _ = calculate_distance_between(
+            from_distance=f"{prefix}{start_segment.name}_{self.blueprint_nr}_JNT",
+            to_distance=f"{prefix}{end_segment.name}_{self.blueprint_nr}_JNT")
 
-    def create_twist_joints(self, base_joint: str, end_joint: str) -> tuple[str, str]:
-        twist_a: str = cmds.duplicate(base_joint, parentOnly=True, name=f"{self.prefix}_{self.name}_twist_a01")[0]
-        cmds.setAttr(f"{twist_a}.radius", 5)
-        twist_d: str = cmds.duplicate(end_joint, parentOnly=True, name=f"{self.prefix}_{self.name}_twist_d01")[0]
-        cmds.setAttr(f"{twist_d}.radius", 5)
-        cmds.joint(twist_d, edit=True, orientJoint="none", zeroScaleOrient=True)
-        cmds.parent(twist_d, twist_a)
-        return twist_a, twist_d
+        average_joint_position = distance_between_start_end / (twist_amount + 1)
 
-    def create_twist_joints_hierarchy(self, twist_d: str, distance_between_value: float) -> tuple[str, str]:
-        twist_b: str = cmds.duplicate(twist_d, parentOnly=True, name=f"{self.prefix}_{self.name}_twist_b01")[0]
-        twist_c: str = cmds.duplicate(twist_d, parentOnly=True, name=f"{self.prefix}_{self.name}_twist_c01")[0]
+        start_joint = cmds.joint(radius=3, name=f"{prefix}{self.name}_{self.blueprint_nr}_TWIST_start_#")
+        cmds.matchTransform(start_joint, f"{prefix}{start_segment.name}_{self.blueprint_nr}_JNT", position=True,
+                            rotation=True, scale=False)
 
-        distance = 1 / self.twist_amount
-        current = distance
-        for segment in range(self.twist_amount):
-            twist: str = cmds.duplicate(twist_d, parentOnly=True, name=f"{self.prefix}_{self.name}_twist_b01")[0]
-            cmds.move(0, - (distance_between_value * current), 0, twist, relative=True, objectSpace=True)
+        end_joint = cmds.joint(radius=3, name=f"{prefix}{self.name}_{self.blueprint_nr}_TWIST_end_#")
+        cmds.matchTransform(end_joint, f"{prefix}{end_segment.name}_{self.blueprint_nr}_JNT", position=True,
+                            rotation=True, scale=False)
 
-            current += distance
-        return twist_b, twist_c
+        twist_handle = cmds.ikHandle(name=f"{prefix}{self.name}_{self.blueprint_nr}_twist_ikSCsolver_#",
+                                     startJoint=start_joint, endEffector=end_joint, solver="ikSCsolver")[0]
 
-    def create_ik_handle(self, start_joint, end_effector) -> str:
-        ik_handle: str = cmds.ikHandle(
-            name=f"{self.prefix}_ikHandle_{end_effector}",
-            startJoint=start_joint,
-            endEffector=end_effector,
-            solver="ikSCsolver"
-        )[0]
-        return ik_handle
+        cmds.parent(twist_handle, f"{prefix}{parent_segment.name}_{self.blueprint_nr}_JNT")
+        cmds.parent(start_joint, f"{prefix}{parent_segment.name}_{self.blueprint_nr}_JNT")
 
-    @staticmethod
-    def create_twist_joints_constraint(twist_a: str, twist_b: str, twist_c: str, twist_d: str) -> None:
-        b_point: str = cmds.pointConstraint([twist_a, twist_d], twist_b, maintainOffset=False)[0]
-        b_orient: str = cmds.orientConstraint([twist_a, twist_d], twist_b, maintainOffset=False)[0]
-        cmds.setAttr(f"{b_point}.{twist_a}W0", 2)
-        cmds.setAttr(f"{b_orient}.{twist_a}W0", 2)
+        if twist_mechanic == "upper":
+            cmds.orientConstraint(f"{prefix}{start_segment.name}_{self.blueprint_nr}_JNT", end_joint,
+                                  maintainOffset=False)
+        elif twist_mechanic == "lower":
+            cmds.orientConstraint(f"{prefix}{end_segment.name}_{self.blueprint_nr}_JNT", end_joint,
+                                  maintainOffset=False)
 
-        c_point: str = cmds.pointConstraint([twist_a, twist_d], twist_c, maintainOffset=False)[0]
-        c_orient: str = cmds.orientConstraint([twist_a, twist_d], twist_c, maintainOffset=False)[0]
-        cmds.setAttr(f"{c_point}.{twist_d}W1", 2)
-        cmds.setAttr(f"{c_orient}.{twist_d}W1", 2)
+        cmds.pointConstraint(f"{prefix}{end_segment.name}_{self.blueprint_nr}_JNT", twist_handle, maintainOffset=False)
 
-    def setup_upper(self) -> None:
-        twist_a, twist_d = self.create_twist_joints(self.segments[0], self.segments[1])
-        distance_between_value, _ = calculate_distance_between(twist_a, twist_d)
-        twist_b, twist_c = self.create_twist_joints_hierarchy(twist_d, distance_between_value)
-        ik_handle_upper: str = self.create_ik_handle(twist_a, twist_d)
-        # cmds.parent(ik_handle_shoulder, f"{self.prefix}_clavicle")
-        cmds.pointConstraint(self.segments[1], ik_handle_upper, maintainOffset=False)
-        cmds.orientConstraint(self.segments[0], twist_d, maintainOffset=False)
+        previous_joint = end_joint
+        for x in range(twist_amount):
+            cmds.select(deselect=True)
+            between_joint = cmds.joint(name=f"{prefix}{self.name}_{self.blueprint_nr}_TWIST_#")
 
-        self.create_twist_joints_constraint(twist_a=twist_a, twist_b=twist_b, twist_c=twist_c, twist_d=twist_d)
+            cmds.matchTransform(between_joint, end_joint, position=True, rotation=False, scale=False)
+            cmds.matchTransform(between_joint, end_joint, position=False, rotation=True, scale=False)
 
-    def setup_lower(self) -> None:
-        twist_a, twist_d = self.create_twist_joints(self.segments[-1], self.segments[1])
-        distance_between_value, _ = calculate_distance_between(twist_a, twist_d)
-        twist_b, twist_c = self.create_twist_joints_hierarchy(twist_d, distance_between_value)
-        ik_handle_lower: str = self.create_ik_handle(twist_a, twist_d)
-        cmds.parent(ik_handle_lower, self.segments[-1])
-        cmds.pointConstraint(self.segments[1], ik_handle_lower, maintainOffset=False)
-        cmds.orientConstraint(self.segments[1], twist_d, maintainOffset=False)
+            if twist_mechanic == "upper":
+                cmds.move(0, -average_joint_position * (x + 1), 0, between_joint, relative=True, objectSpace=True)
+            elif twist_mechanic == "lower":
+                cmds.move(0, average_joint_position * (x + 1), 0, between_joint, relative=True, objectSpace=True)
 
-        self.create_twist_joints_constraint(twist_a=twist_a, twist_b=twist_b, twist_c=twist_c, twist_d=twist_d)
+            cmds.parent(between_joint, start_joint)
 
-    def create_twist(self) -> None:
-        self.setup_upper()
-        self.setup_lower()
+            divide = cmds.createNode("multiplyDivide", name=f"{prefix}{self.name}_{self.blueprint_nr}_TWIST_DIVIDE_#")
+            cmds.setAttr(f"{divide}.input2Y", 0.75)
+            cmds.setAttr(f"{divide}.operation", MUDOperation.MULTIPLY.value)
+
+            cmds.connectAttr(f"{previous_joint}.rotate.rotateY", f"{divide}.input1Y")
+            cmds.connectAttr(f"{divide}.outputY", f"{between_joint}.rotate.rotateY")
+            previous_joint = between_joint
