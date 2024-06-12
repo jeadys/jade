@@ -33,21 +33,25 @@ def build_rig(blueprint="master"):
 
         match component_type:
             case "arm":
-                right_arm = Arm(node=child, segments=arm_segments(), prefix="L_")
-                right_arm.generate_arm()
-                right_arm.stretch_arm()
+                left_arm = Arm(node=child, segments=arm_segments(), prefix="L_")
+                left_arm.generate_arm()
+                left_arm.stretch_arm()
+                left_arm.twist_arm()
                 if mirror:
-                    left_arm = Arm(node=child, segments=arm_segments(), prefix="R_")
-                    left_arm.generate_arm()
-                    left_arm.stretch_arm()
+                    right_arm = Arm(node=child, segments=arm_segments(), prefix="R_")
+                    right_arm.generate_arm()
+                    right_arm.stretch_arm()
+                    right_arm.twist_arm()
             case "leg":
                 left_leg = Leg(node=child, segments=leg_segments(), prefix="L_")
                 left_leg.generate_leg()
                 left_leg.stretch_leg()
+                left_leg.twist_leg()
                 if mirror:
                     right_leg = Leg(node=child, segments=leg_segments(), prefix="R_")
                     right_leg.generate_leg()
                     right_leg.stretch_leg()
+                    right_leg.twist_leg()
             case "spine":
                 spine = Spine(node=child, segments=spine_segments())
                 spine.generate_spine()
