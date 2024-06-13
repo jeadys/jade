@@ -5,6 +5,7 @@ from modular.kinematics.ik_chain import IKChain
 from modular.kinematics.fk_chain import FKChain
 from modular.kinematics.skeleton import Skeleton
 from modular.mechanisms.limb_stretch import Stretch
+from modular.mechanisms.limb_twist import Twist
 
 from typing import Literal
 
@@ -23,6 +24,7 @@ class Leg:
         self.ik_chain: IKChain = IKChain(node=node, name=Leg.name)
         self.fk_chain: FKChain = FKChain(node=node, name=Leg.name)
         self.stretch: Stretch = Stretch(node=node, name=Leg.name)
+        self.twist: Twist = Twist(node=node, name=Leg.name)
 
         self.fk_joints: list[str] = []
         self.fk_controls: list[str] = []
@@ -57,8 +59,11 @@ class Leg:
         self.stretch.stretch_attribute(prefix=self.prefix)
         self.stretch.stretch_node(prefix=self.prefix, segments=self.segments[:-2])
 
-    def twist_leg(self):
-        pass
+    def twist_leg(self) -> None:
+        self.twist.twist_joint(prefix=self.prefix, parent_segment=self.segments[0], start_segment=self.segments[0],
+                               end_segment=self.segments[1], twist_amount=5, twist_mechanic="upper")
+        self.twist.twist_joint(prefix=self.prefix, parent_segment=self.segments[2], start_segment=self.segments[2],
+                               end_segment=self.segments[1], twist_amount=3, twist_mechanic="lower")
 
     def space_swap_leg(self):
         pass
