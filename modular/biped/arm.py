@@ -5,6 +5,7 @@ from modular.kinematics.ik_chain import IKChain
 from modular.kinematics.fk_chain import FKChain
 from modular.kinematics.skeleton import Skeleton
 from modular.mechanisms.limb_stretch import Stretch
+from modular.mechanisms.limb_twist import Twist
 
 from utilities.bake_transform import bake_transform_to_offset_parent_matrix
 
@@ -28,6 +29,7 @@ class Arm:
         self.ik_chain: IKChain = IKChain(node=node, name=Arm.name)
         self.fk_chain: FKChain = FKChain(node=node, name=Arm.name)
         self.stretch: Stretch = Stretch(node=node, name=Arm.name)
+        self.twist: Twist = Twist(node=node, name=Arm.name)
 
         self.fk_joints: list[str] = []
         self.fk_controls: list[str] = []
@@ -56,8 +58,8 @@ class Arm:
         clavicle_control = select_curve(shape=Shape.CUBE,
                                         name=f"{self.prefix}{self.segments[0].name}_{self.blueprint_nr}_CTRL", scale=5)
         cmds.parent(clavicle_control, f"{self.prefix}{Arm.name}_{self.blueprint_nr}_CONTROL_GROUP")
-        cmds.matchTransform(clavicle_control, f"{self.prefix}{self.segments[0].name}_{self.blueprint_nr}_JNT", position=True,
-                            rotation=True, scale=False)
+        cmds.matchTransform(clavicle_control, f"{self.prefix}{self.segments[0].name}_{self.blueprint_nr}_JNT",
+                            position=True, rotation=True, scale=False)
         cmds.parentConstraint(clavicle_control, f"{self.prefix}{self.segments[0].name}_{self.blueprint_nr}_JNT",
                               maintainOffset=True)
 
@@ -94,3 +96,9 @@ class Arm:
         self.stretch.stretch_joint(prefix=self.prefix, segments=self.segments[1:])
         self.stretch.stretch_attribute(prefix=self.prefix)
         self.stretch.stretch_node(prefix=self.prefix, segments=self.segments[1:])
+
+    def twist_arm(self) -> None:
+        self.twist.twist_joint(prefix=self.prefix, parent_segment=self.segments[0], start_segment=self.segments[1],
+                               end_segment=self.segments[2], twist_amount=5, twist_mechanic="upper")
+        self.twist.twist_joint(prefix=self.prefix, parent_segment=self.segments[3], start_segment=self.segments[3],
+                               end_segment=self.segments[2], twist_amount=3, twist_mechanic="lower")
