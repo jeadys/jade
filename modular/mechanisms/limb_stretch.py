@@ -121,6 +121,14 @@ class Stretch:
         cmds.connectAttr(f"{stretch_ik_blend}.outputR", f"{prefix}{segments[1].name}_{self.blueprint_nr}_JNT.scale.scaleY")
         # cmds.connectAttr(f"{stretch_ik_blend}.outputR", f"{segments[-1]}.scale.scaleY")
 
+        twist_start_upper = f"{prefix}{self.name}_{self.blueprint_nr}_TWIST_start_upper"
+        if cmds.objExists(twist_start_upper):
+            self.stretch_twist_joint(stretch_ik_blend=stretch_ik_blend, twist_start_joint=twist_start_upper)
+
+        twist_start_lower = f"{prefix}{self.name}_{self.blueprint_nr}_TWIST_start_lower"
+        if cmds.objExists(twist_start_lower):
+            self.stretch_twist_joint(stretch_ik_blend=stretch_ik_blend, twist_start_joint=twist_start_lower)
+
         # twist_joints: list[str] = ["a01", "b01", "c01", "d01", "a02", "b02", "c02", "d02"]
         # for twist_joint in twist_joints:
         #     if cmds.objExists(f"{prefix}{self.name}_twist_{twist_joint}") and cmds.objExists(
@@ -145,6 +153,14 @@ class Stretch:
         #     if cmds.objExists(f"{prefix}{self.name}_twist_{twist_joint}"):
         #         cmds.connectAttr(f"{stretch_ik_blend}.outputG", f"{prefix}{self.name}_twist_{twist_joint}.scaleX")
         #         cmds.connectAttr(f"{stretch_ik_blend}.outputG", f"{prefix}{self.name}_twist_{twist_joint}.scaleZ")
+
+    @staticmethod
+    def stretch_twist_joint(stretch_ik_blend, twist_start_joint):
+        twist_start_children = cmds.listRelatives(twist_start_joint, shapes=False, type="joint", allDescendents=True)
+        for twist_joint in [twist_start_joint] + twist_start_children:
+            cmds.connectAttr(f"{stretch_ik_blend}.outputR", f"{twist_joint}.scaleY")
+            cmds.connectAttr(f"{stretch_ik_blend}.outputG", f"{twist_joint}.scaleX")
+            cmds.connectAttr(f"{stretch_ik_blend}.outputG", f"{twist_joint}.scaleZ")
 
     def stretch_attribute(self, prefix):
         # STRETCHINESS
