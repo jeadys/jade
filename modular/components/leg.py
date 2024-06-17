@@ -12,7 +12,7 @@ def leg_segments() -> list[Segment]:
                              control=lowerleg_control)
 
     ankle_control = Control(name="ankle", parent=lowerleg_control, shape=Shape.CUBE, color=Color.GREEN, scale=5)
-    ankle_joint = Segment(name="ankle", parent=lowerleg_joint, position=(0, -40, -7.5), orientation=Orient.SKIP,
+    ankle_joint = Segment(name="ankle", parent=lowerleg_joint, position=(0, -40, -7.5), orientation=Orient.WORLD,
                           control=ankle_control)
 
     ball_control = Control(name="ball", parent=ankle_control, shape=Shape.CUBE, color=Color.GREEN, scale=5)
