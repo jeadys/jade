@@ -91,11 +91,11 @@ class IKChain:
         return [ik_control, pole_control]
 
     def spline_kinematic(self, segments):
-        pelvis_mch = cmds.joint(radius=3, rotationOrder=RotateOrder.YZX, name=f"pelvis_{self.blueprint_nr}_MCH")
+        pelvis_mch = cmds.joint(radius=3, rotationOrder=RotateOrder.YZX.name, name=f"pelvis_{self.blueprint_nr}_MCH")
         cmds.matchTransform(pelvis_mch, f"{segments[0].name}_{self.blueprint_nr}_JNT", position=True, rotation=False,
                             scale=False)
 
-        back_mch = cmds.joint(radius=3, rotationOrder=RotateOrder.YZX, name=f"back_{self.blueprint_nr}_MCH")
+        back_mch = cmds.joint(radius=3, rotationOrder=RotateOrder.YZX.name, name=f"back_{self.blueprint_nr}_MCH")
         cmds.matchTransform(back_mch, f"{segments[len(segments) // 2].name}_{self.blueprint_nr}_JNT", position=True,
                             rotation=False,
                             scale=False)
@@ -108,7 +108,7 @@ class IKChain:
             cmds.delete(constraint)
         cmds.parent(back_mch, world=True)
 
-        chest_mch = cmds.joint(radius=3, rotationOrder=RotateOrder.YZX, name=f"chest_{self.blueprint_nr}_MCH")
+        chest_mch = cmds.joint(radius=3, rotationOrder=RotateOrder.YZX.name, name=f"chest_{self.blueprint_nr}_MCH")
         cmds.matchTransform(chest_mch, f"{segments[-1].name}_{self.blueprint_nr}_JNT", position=True, rotation=False,
                             scale=False)
         cmds.parent(chest_mch, world=True)
