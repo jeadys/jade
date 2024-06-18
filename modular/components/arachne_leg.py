@@ -20,6 +20,6 @@ def arachne_leg_segments() -> list[Segment]:
     arachne_toe_control = Control(name="arachne_toe", parent=arachne_foot_control, shape=Shape.CUBE, color=Color.GREEN,
                                   scale=2.5)
     arachne_toe_joint = Segment(name="arachne_toe", parent=arachne_foot_joint, position=(0, -5, 0),
-                                orientation=Orient.SKIP, control=arachne_toe_control)
+                                orientation=Orient.WORLD, control=arachne_toe_control)
 
     return [arachne_thigh_joint, arachne_shin_joint, arachne_foot_joint, arachne_toe_joint]

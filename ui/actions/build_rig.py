@@ -35,50 +35,36 @@ def build_rig(blueprint="master"):
             case "arm":
                 left_arm = Arm(node=child, segments=arm_segments(), prefix="L_")
                 left_arm.generate_arm()
-                left_arm.stretch_arm()
-                left_arm.twist_arm()
                 if mirror:
                     right_arm = Arm(node=child, segments=arm_segments(), prefix="R_")
                     right_arm.generate_arm()
-                    right_arm.stretch_arm()
-                    right_arm.twist_arm()
             case "leg":
                 left_leg = Leg(node=child, segments=leg_segments(), prefix="L_")
                 left_leg.generate_leg()
-                left_leg.stretch_leg()
-                left_leg.twist_leg()
                 if mirror:
                     right_leg = Leg(node=child, segments=leg_segments(), prefix="R_")
                     right_leg.generate_leg()
-                    right_leg.stretch_leg()
-                    right_leg.twist_leg()
             case "spine":
                 spine = Spine(node=child, segments=spine_segments())
                 spine.generate_spine()
             case "front_leg":
                 left_front_leg = FrontLeg(node=child, segments=front_leg_segments(), prefix="L_")
                 left_front_leg.generate_front_leg()
-                left_front_leg.stretch_front_leg()
                 if mirror:
                     right_front_leg = FrontLeg(node=child, segments=front_leg_segments(), prefix="R_")
                     right_front_leg.generate_front_leg()
-                    right_front_leg.stretch_front_leg()
             case "rear_leg":
                 left_rear_leg = RearLeg(node=child, segments=rear_leg_segments(), prefix="L_")
                 left_rear_leg.generate_rear_leg()
-                left_rear_leg.stretch_rear_leg()
                 if mirror:
                     right_rear_leg = RearLeg(node=child, segments=rear_leg_segments(), prefix="R_")
                     right_rear_leg.generate_rear_leg()
-                    right_rear_leg.stretch_rear_leg()
             case "arachne_leg":
                 left_arachne_leg = ArachneLeg(node=child, segments=arachne_leg_segments(), prefix="L_")
                 left_arachne_leg.generate_arachne_leg()
-                left_arachne_leg.stretch_arachne_leg()
                 if mirror:
                     right_arachne_leg = ArachneLeg(node=child, segments=arachne_leg_segments(), prefix="R_")
                     right_arachne_leg.generate_arachne_leg()
-                    right_arachne_leg.stretch_arachne_leg()
             case "wing":
                 left_wing = Wing(node=child, segments=wing_segments(), prefix="L_")
                 left_wing.generate_wing()
