@@ -18,7 +18,7 @@ def rear_leg_segments() -> list[Segment]:
 
     rear_foot_control = Control(name="rear_foot", parent=rear_heel_control, shape=Shape.CUBE, color=Color.GREEN,
                                 scale=5)
-    rear_foot_joint = Segment(name="rear_foot", parent=rear_heel_joint, position=(0, -10, 0), orientation=Orient.SKIP,
+    rear_foot_joint = Segment(name="rear_foot", parent=rear_heel_joint, position=(0, -10, 0), orientation=Orient.WORLD,
                               control=rear_foot_control)
 
     rear_toe_control = Control(name="rear_toe", parent=rear_foot_control, shape=Shape.CUBE, color=Color.GREEN, scale=5)

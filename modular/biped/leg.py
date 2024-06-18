@@ -7,6 +7,8 @@ from modular.kinematics.skeleton import Skeleton
 from modular.mechanisms.limb_stretch import Stretch
 from modular.mechanisms.limb_twist import Twist
 
+from utilities.enums import TwistFlow
+
 from typing import Literal
 
 
@@ -47,23 +49,25 @@ class Leg:
     def switch_kinematic(self):
         self.ik_chain.switch_kinematic(prefix=self.prefix, fk_joints=self.fk_joints, fk_controls=self.fk_controls,
                                        ik_joints=self.ik_joints, ik_controls=self.ik_controls)
-    
+
+    def twist_mechanism(self) -> None:
+        self.twist.twist_joint(prefix=self.prefix, parent_segment=self.segments[0], start_segment=self.segments[0],
+                               end_segment=self.segments[1], twist_flow=TwistFlow.FORWARD)
+        self.twist.twist_joint(prefix=self.prefix, parent_segment=self.segments[1], start_segment=self.segments[1],
+                               end_segment=self.segments[2], twist_flow=TwistFlow.BACKWARD)
+
+    def stretch_mechanism(self) -> None:
+        self.stretch.stretch_joint(prefix=self.prefix, segments=self.segments[:-2])
+        self.stretch.stretch_attribute(prefix=self.prefix)
+        self.stretch.stretch_node(prefix=self.prefix, segments=self.segments[:-2])
+
     def generate_leg(self) -> None:
         self.base_skeleton()
         self.forward_kinematic()
         self.inverse_kinematic()
         self.switch_kinematic()
 
-    def stretch_leg(self):
-        self.stretch.stretch_joint(prefix=self.prefix, segments=self.segments[:-2])
-        self.stretch.stretch_attribute(prefix=self.prefix)
-        self.stretch.stretch_node(prefix=self.prefix, segments=self.segments[:-2])
-
-    def twist_leg(self) -> None:
-        self.twist.twist_joint(prefix=self.prefix, parent_segment=self.segments[0], start_segment=self.segments[0],
-                               end_segment=self.segments[1], twist_amount=5, twist_mechanic="upper")
-        self.twist.twist_joint(prefix=self.prefix, parent_segment=self.segments[2], start_segment=self.segments[2],
-                               end_segment=self.segments[1], twist_amount=3, twist_mechanic="lower")
-
-    def space_swap_leg(self):
-        pass
+        if cmds.getAttr(f"{self.node}.twist"):
+            self.twist_mechanism()
+        if cmds.getAttr(f"{self.node}.stretch"):
+            self.stretch_mechanism()
