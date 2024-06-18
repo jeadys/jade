@@ -1,7 +1,7 @@
 import maya.cmds as cmds
 
 from modular.biped.biped import Segment
-from utilities.enums import MUDOperation, TwistFlow
+from utilities.enums import MUDOperation, TwistFlow, RotateOrder
 from utilities.get_node_distance import calculate_distance_between
 
 
@@ -72,7 +72,8 @@ class Twist:
         previous_joint = None
         for x in range(twist_amount):
             cmds.select(deselect=True)
-            between_joint = cmds.joint(name=f"{prefix}{self.name}_{self.blueprint_nr}_TWIST_#", rotationOrder="yzx")
+            between_joint = cmds.joint(name=f"{prefix}{self.name}_{self.blueprint_nr}_TWIST_#",
+                                       rotationOrder=RotateOrder.YZX.name)
 
             cmds.matchTransform(between_joint, end_joint, position=True, rotation=False, scale=False)
             cmds.parent(between_joint, start_joint)

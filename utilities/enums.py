@@ -6,13 +6,16 @@ class CustomEnum(Enum):
         return str(self.value)
 
 
-class RotateOrder(CustomEnum):
+class RotateOrder(int, Enum):
     XYZ = 0
     YZX = 1
     ZXY = 2
     XZY = 3
     YXZ = 4
     ZYX = 5
+
+    def __int__(self) -> int:
+        return int.__int__(self)
 
 
 # Condition node operation
