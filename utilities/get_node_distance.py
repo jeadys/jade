@@ -1,12 +1,12 @@
 import maya.cmds as cmds
 
 
-def calculate_distance_between_nodes(from_distance, to_distance):
-    distance_between_node = cmds.createNode("distanceBetween")
+def calculate_distance_between(from_distance: str, to_distance: str) -> tuple[float, str]:
+    distance_between_node: str = cmds.createNode("distanceBetween", name=f"{from_distance}_{to_distance}_distance_node")
     cmds.connectAttr(f"{from_distance}.worldMatrix[0]", f"{distance_between_node}.inMatrix1")
     cmds.connectAttr(f"{to_distance}.worldMatrix[0]", f"{distance_between_node}.inMatrix2")
 
-    distance_between_value = cmds.getAttr(f"{distance_between_node}.distance")
+    distance_between_value: float = cmds.getAttr(f"{distance_between_node}.distance")
 
     return distance_between_value, distance_between_node
 
