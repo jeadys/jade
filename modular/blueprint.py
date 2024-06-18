@@ -24,6 +24,11 @@ class Blueprint:
                      writable=True)
         cmds.addAttr(node, niceName="parent_joint", longName="parent_joint", attributeType="message")
         cmds.addAttr(node, niceName="mirror", longName="mirror", attributeType="bool", defaultValue=1)
+        
+        cmds.addAttr(node, niceName="stretch", longName="stretch", attributeType="bool", defaultValue=1)
+        cmds.addAttr(node, niceName="twist", longName="twist", attributeType="bool", defaultValue=1)
+        cmds.addAttr(node, niceName="twist_joints", longName="twist_joints", attributeType="long", minValue=1, maxValue=10, defaultValue=1)
+        cmds.addAttr(node, niceName="twist_influence", longName="twist_influence", attributeType="double", minValue=0, maxValue=1, defaultValue=0.75)
 
         cmds.addAttr(node, niceName="children", longName="children", attributeType="message", readable=True,
                      writable=False)
