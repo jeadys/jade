@@ -4,7 +4,7 @@ from modular.biped.biped import Segment
 
 from utilities.curve import select_curve
 from utilities.bake_transform import bake_transform_to_offset_parent_matrix
-from utilities.enums import Shape, WorldUpType, ForwardAxis, UpAxis
+from utilities.enums import Shape, WorldUpType, ForwardAxis, UpAxis, RotateOrder
 
 
 class IKChain:
@@ -59,6 +59,9 @@ class IKChain:
         pole_control = select_curve(shape=Shape.CUBE, name=f"{prefix}{self.name}_{self.blueprint_nr}_POLE_CTRL",
                                     scale=5)
 
+        cmds.setAttr(f"{ik_control}.rotateOrder", RotateOrder.YZX)
+        cmds.setAttr(f"{pole_control}.rotateOrder", RotateOrder.YZX)
+
         ik_handle = cmds.ikHandle(name=f"{prefix}{self.name}_{self.blueprint_nr}_ikHandle",
                                   startJoint=f"{prefix}{segments[0].name}_{self.blueprint_nr}_IK",
                                   endEffector=f"{prefix}{segments[-1].name}_{self.blueprint_nr}_IK",
@@ -88,11 +91,11 @@ class IKChain:
         return [ik_control, pole_control]
 
     def spline_kinematic(self, segments):
-        pelvis_mch = cmds.joint(radius=3, rotationOrder="zxy", name=f"pelvis_{self.blueprint_nr}_MCH")
+        pelvis_mch = cmds.joint(radius=3, rotationOrder=RotateOrder.YZX, name=f"pelvis_{self.blueprint_nr}_MCH")
         cmds.matchTransform(pelvis_mch, f"{segments[0].name}_{self.blueprint_nr}_JNT", position=True, rotation=False,
                             scale=False)
 
-        back_mch = cmds.joint(radius=3, rotationOrder="zxy", name=f"back_{self.blueprint_nr}_MCH")
+        back_mch = cmds.joint(radius=3, rotationOrder=RotateOrder.YZX, name=f"back_{self.blueprint_nr}_MCH")
         cmds.matchTransform(back_mch, f"{segments[len(segments) // 2].name}_{self.blueprint_nr}_JNT", position=True,
                             rotation=False,
                             scale=False)
@@ -105,7 +108,7 @@ class IKChain:
             cmds.delete(constraint)
         cmds.parent(back_mch, world=True)
 
-        chest_mch = cmds.joint(radius=3, rotationOrder="zxy", name=f"chest_{self.blueprint_nr}_MCH")
+        chest_mch = cmds.joint(radius=3, rotationOrder=RotateOrder.YZX, name=f"chest_{self.blueprint_nr}_MCH")
         cmds.matchTransform(chest_mch, f"{segments[-1].name}_{self.blueprint_nr}_JNT", position=True, rotation=False,
                             scale=False)
         cmds.parent(chest_mch, world=True)
@@ -122,6 +125,7 @@ class IKChain:
         pelvis_control = select_curve(shape=Shape.CUBE, name=f"pelvis_{self.blueprint_nr}_CTRL", scale=5)
         cmds.addAttr(pelvis_control, niceName="blueprint", longName="blueprint", attributeType="message", readable=True,
                      writable=True)
+        cmds.setAttr(f"{pelvis_control}.rotateOrder", RotateOrder.YZX)
         cmds.matchTransform(pelvis_control, pelvis_mch, position=True, rotation=False, scale=False)
         bake_transform_to_offset_parent_matrix(pelvis_control)
         cmds.parent(pelvis_mch, pelvis_control)
@@ -129,6 +133,7 @@ class IKChain:
         back_control = select_curve(shape=Shape.CUBE, name=f"back_{self.blueprint_nr}_CTRL", scale=5)
         cmds.addAttr(back_control, niceName="blueprint", longName="blueprint", attributeType="message", readable=True,
                      writable=True)
+        cmds.setAttr(f"{back_control}.rotateOrder", RotateOrder.YZX)
         cmds.matchTransform(back_control, back_mch, position=True, rotation=False, scale=False)
         bake_transform_to_offset_parent_matrix(back_control)
         cmds.parent(back_mch, back_control)
@@ -136,6 +141,7 @@ class IKChain:
         chest_control = select_curve(shape=Shape.CUBE, name=f"chest_{self.blueprint_nr}_CTRL", scale=5)
         cmds.addAttr(chest_control, niceName="blueprint", longName="blueprint", attributeType="message", readable=True,
                      writable=True)
+        cmds.setAttr(f"{chest_control}.rotateOrder", RotateOrder.YZX)
         cmds.matchTransform(chest_control, chest_mch, position=True, rotation=False, scale=False)
         bake_transform_to_offset_parent_matrix(chest_control)
         cmds.parent(chest_mch, chest_control)
@@ -199,8 +205,10 @@ class IKChain:
         ik_control = select_curve(shape=Shape.CUBE, name=f"{prefix}{self.name}_{self.blueprint_nr}_IK_CTRL", scale=5)
         cmds.matchTransform(ik_control, f"{prefix}{segments[3].name}_{self.blueprint_nr}_IK", rotation=True,
                             position=True, scale=False)
+        cmds.setAttr(f"{ik_control}.rotateOrder", RotateOrder.YZX)
 
         hoc_control = select_curve(shape=Shape.CUBE, name=f"{prefix}{self.name}_{self.blueprint_nr}_HOC_CTRL", scale=5)
+        cmds.setAttr(f"{hoc_control}.rotateOrder", RotateOrder.YZX)
         cmds.matchTransform(hoc_control, f"{prefix}{segments[2].name}_{self.blueprint_nr}_IK")
         position = cmds.xform(f"{prefix}{segments[3].name}_{self.blueprint_nr}_IK", query=True, translation=True,
                               worldSpace=True)
@@ -208,6 +216,7 @@ class IKChain:
 
         pole_control = select_curve(shape=Shape.CUBE, name=f"{prefix}{self.name}_{self.blueprint_nr}_POLE_CTRL",
                                     scale=5)
+        cmds.setAttr(f"{pole_control}.rotateOrder", RotateOrder.YZX)
         cmds.matchTransform(pole_control, f"{prefix}{segments[1].name}_{self.blueprint_nr}_IK", position=True,
                             rotation=False, scale=False)
         cmds.move(0, 0, 20 if prefix == "L" else 20, pole_control, relative=True, objectSpace=True)

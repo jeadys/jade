@@ -1,6 +1,6 @@
 import maya.cmds as cmds
 
-from utilities.enums import Orient
+from utilities.enums import Orient, RotateOrder
 
 
 class Skeleton:
@@ -21,7 +21,8 @@ class Skeleton:
                 continue
 
             cmds.select(deselect=True)
-            current_segment = cmds.joint(name=f"{prefix}{segment.name}_{self.blueprint_nr}_JNT")
+            current_segment = cmds.joint(name=f"{prefix}{segment.name}_{self.blueprint_nr}_JNT",
+                                         rotationOrder=RotateOrder.YZX)
 
             cmds.matchTransform(current_segment, f"{segment.name}_{self.blueprint_nr}", position=True, rotation=False,
                                 scale=False)

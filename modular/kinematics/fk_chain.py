@@ -5,6 +5,7 @@ from modular.biped.biped import Segment
 from utilities.set_rgb_color import set_rgb_color
 from utilities.curve import select_curve
 from utilities.bake_transform import bake_transform_to_offset_parent_matrix
+from utilities.enums import RotateOrder
 
 
 class FKChain:
@@ -66,6 +67,7 @@ class FKChain:
                                            name=f"{prefix}{segment.name}_{self.blueprint_nr}_FK_CTRL",
                                            scale=control_scale)
             set_rgb_color(current_control, (1, 0, 1))
+            cmds.setAttr(f"{current_control}.rotateOrder", RotateOrder.YZX)
 
             cmds.matchTransform(current_control, current_segment, position=True, rotation=True, scale=False)
             cmds.parentConstraint(current_control, current_segment, maintainOffset=True)
