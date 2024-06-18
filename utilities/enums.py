@@ -164,6 +164,14 @@ class Side(int, Enum):
         return int.__int__(self)
 
 
+class TwistFlow(str, Enum):
+    FORWARD = "forward"
+    BACKWARD = "backward"
+
+    def __int__(self) -> str:
+        return str.__str__(self)
+
+
 def enum_to_string_attribute(enum):
     enums = ':'.join([f"{x.name}={x.value}" for x in enum])
 
