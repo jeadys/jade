@@ -41,9 +41,11 @@ class Stretch:
         return ik_joints
 
     def stretch_node(self, prefix, segments: list[Segment]):
-        stretch_length: str = cmds.createNode("plusMinusAverage", name=f"{prefix}{self.name}_{self.blueprint_nr}_stretch_length")
+        stretch_length: str = cmds.createNode("plusMinusAverage",
+                                              name=f"{prefix}{self.name}_{self.blueprint_nr}_stretch_length")
         stretch_end_loc: str = cmds.spaceLocator(name=f"{prefix}{self.name}_{self.blueprint_nr}_stretch_end_LOC")[0]
-        cmds.matchTransform(stretch_end_loc, f"{prefix}{self.name}_{self.blueprint_nr}_IK_CTRL", position=True, rotation=True,
+        cmds.matchTransform(stretch_end_loc, f"{prefix}{self.name}_{self.blueprint_nr}_IK_CTRL", position=True,
+                            rotation=True,
                             scale=False)
         cmds.parent(stretch_end_loc, f"{prefix}{self.name}_{self.blueprint_nr}_IK_CTRL")
 
@@ -68,10 +70,12 @@ class Stretch:
         distance_between: str = cmds.createNode("distanceBetween",
                                                 name=f"{prefix}{self.name}_{self.blueprint_nr}_distance_node")
 
-        cmds.connectAttr(f"{prefix}{segments[0].name}_{self.blueprint_nr}_STRETCH.worldMatrix", f"{distance_between}.inMatrix1")
+        cmds.connectAttr(f"{prefix}{segments[0].name}_{self.blueprint_nr}_STRETCH.worldMatrix",
+                         f"{distance_between}.inMatrix1")
         cmds.connectAttr(f"{stretch_end_loc}.worldMatrix", f"{distance_between}.inMatrix2")
 
-        cmds.connectAttr(f"{prefix}{segments[0].name}_{self.blueprint_nr}_STRETCH.rotatePivotTranslate", f"{distance_between}.point1")
+        cmds.connectAttr(f"{prefix}{segments[0].name}_{self.blueprint_nr}_STRETCH.rotatePivotTranslate",
+                         f"{distance_between}.point1")
         cmds.connectAttr(f"{stretch_end_loc}.rotatePivotTranslate", f"{distance_between}.point2")
 
         # SEGMENT SCALE FACTOR
@@ -85,7 +89,8 @@ class Stretch:
         stretch_condition: str = cmds.createNode("condition",
                                                  name=f"{prefix}{self.name}_{self.blueprint_nr}_stretch_condition")
         cmds.setAttr(f"{stretch_condition}.secondTerm", 1)
-        cmds.connectAttr(f"{prefix}{self.name}_{self.blueprint_nr}_IK_CTRL.Stretch_Type", f"{stretch_condition}.operation")
+        cmds.connectAttr(f"{prefix}{self.name}_{self.blueprint_nr}_IK_CTRL.Stretch_Type",
+                         f"{stretch_condition}.operation")
         cmds.connectAttr(f"{scale_factor}.outputX", f"{stretch_condition}.firstTerm")
 
         # BLEND COLOR NODES
@@ -115,25 +120,22 @@ class Stretch:
         cmds.connectAttr(f"{stretch_condition}.outColorR", f"{stretch_ik_blend}.color1R")
 
         # POSITION JOINTS ON STRETCH
-        cmds.connectAttr(f"{stretch_condition}.outColorR", f"{prefix}{segments[0].name}_{self.blueprint_nr}_IK.scale.scaleY")
-        cmds.connectAttr(f"{stretch_condition}.outColorR", f"{prefix}{segments[1].name}_{self.blueprint_nr}_IK.scale.scaleY")
+        cmds.connectAttr(f"{stretch_condition}.outColorR",
+                         f"{prefix}{segments[0].name}_{self.blueprint_nr}_IK.scale.scaleY")
+        cmds.connectAttr(f"{stretch_condition}.outColorR",
+                         f"{prefix}{segments[1].name}_{self.blueprint_nr}_IK.scale.scaleY")
 
-        cmds.connectAttr(f"{stretch_ik_blend}.outputR", f"{prefix}{segments[1].name}_{self.blueprint_nr}_JNT.scale.scaleY")
+        cmds.connectAttr(f"{stretch_ik_blend}.outputR",
+                         f"{prefix}{segments[1].name}_{self.blueprint_nr}_JNT.scale.scaleY")
         # cmds.connectAttr(f"{stretch_ik_blend}.outputR", f"{segments[-1]}.scale.scaleY")
 
-        twist_start_upper = f"{prefix}{self.name}_{self.blueprint_nr}_TWIST_start_upper"
-        if cmds.objExists(twist_start_upper):
-            self.stretch_twist_joint(stretch_ik_blend=stretch_ik_blend, twist_start_joint=twist_start_upper)
+        if cmds.objExists(f"{prefix}{self.name}_{self.blueprint_nr}_TWIST_start_forward"):
+            self.stretch_twist_joint(stretch_ik_blend=stretch_ik_blend,
+                                     twist_start_joint=f"{prefix}{self.name}_{self.blueprint_nr}_TWIST_start_forward")
 
-        twist_start_lower = f"{prefix}{self.name}_{self.blueprint_nr}_TWIST_start_lower"
-        if cmds.objExists(twist_start_lower):
-            self.stretch_twist_joint(stretch_ik_blend=stretch_ik_blend, twist_start_joint=twist_start_lower)
-
-        # twist_joints: list[str] = ["a01", "b01", "c01", "d01", "a02", "b02", "c02", "d02"]
-        # for twist_joint in twist_joints:
-        #     if cmds.objExists(f"{prefix}{self.name}_twist_{twist_joint}") and cmds.objExists(
-        #             f"{prefix}{self.name}_twist_{twist_joint}"):
-        #         cmds.connectAttr(f"{stretch_ik_blend}.outputR", f"{prefix}{self.name}_twist_{twist_joint}.scaleY")
+        if cmds.objExists(f"{prefix}{self.name}_{self.blueprint_nr}_TWIST_start_backward"):
+            self.stretch_twist_joint(stretch_ik_blend=stretch_ik_blend,
+                                     twist_start_joint=f"{prefix}{self.name}_{self.blueprint_nr}_TWIST_start_backward")
 
         # PRESERVE JOINTS VOLUME ON STRETCH
         volume_preservation: str = cmds.createNode("multiplyDivide",
@@ -143,16 +145,13 @@ class Stretch:
         cmds.connectAttr(f"{stretch_blend}.outputR", f"{volume_preservation}.input1.input1X")
         cmds.connectAttr(f"{volume_preservation}.outputX", f"{stretch_condition}.colorIfTrueG")
 
-        cmds.connectAttr(f"{stretch_ik_blend}.outputG", f"{prefix}{segments[1].name}_{self.blueprint_nr}_JNT.scale.scaleX")
-        cmds.connectAttr(f"{stretch_ik_blend}.outputG", f"{prefix}{segments[1].name}_{self.blueprint_nr}_JNT.scale.scaleZ")
+        cmds.connectAttr(f"{stretch_ik_blend}.outputG",
+                         f"{prefix}{segments[1].name}_{self.blueprint_nr}_JNT.scale.scaleX")
+        cmds.connectAttr(f"{stretch_ik_blend}.outputG",
+                         f"{prefix}{segments[1].name}_{self.blueprint_nr}_JNT.scale.scaleZ")
 
         # cmds.connectAttr(f"{stretch_ik_blend}.outputG", f"{segments[-1]}.scale.scaleX")
         # cmds.connectAttr(f"{stretch_ik_blend}.outputG", f"{segments[-1]}.scale.scaleZ")
-
-        # for twist_joint in twist_joints:
-        #     if cmds.objExists(f"{prefix}{self.name}_twist_{twist_joint}"):
-        #         cmds.connectAttr(f"{stretch_ik_blend}.outputG", f"{prefix}{self.name}_twist_{twist_joint}.scaleX")
-        #         cmds.connectAttr(f"{stretch_ik_blend}.outputG", f"{prefix}{self.name}_twist_{twist_joint}.scaleZ")
 
     @staticmethod
     def stretch_twist_joint(stretch_ik_blend, twist_start_joint):
@@ -164,7 +163,8 @@ class Stretch:
 
     def stretch_attribute(self, prefix):
         # STRETCHINESS
-        if not cmds.attributeQuery("Stretchiness", node=f"{prefix}{self.name}_{self.blueprint_nr}_IK_CTRL", exists=True):
+        if not cmds.attributeQuery("Stretchiness", node=f"{prefix}{self.name}_{self.blueprint_nr}_IK_CTRL",
+                                   exists=True):
             cmds.addAttr(
                 f"{prefix}{self.name}_{self.blueprint_nr}_IK_CTRL",
                 attributeType="float",
@@ -187,7 +187,8 @@ class Stretch:
             )
 
         # STRETCH TYPE
-        if not cmds.attributeQuery("Stretch_Type", node=f"{prefix}{self.name}_{self.blueprint_nr}_IK_CTRL", exists=True):
+        if not cmds.attributeQuery("Stretch_Type", node=f"{prefix}{self.name}_{self.blueprint_nr}_IK_CTRL",
+                                   exists=True):
             cmds.addAttr(f"{prefix}{self.name}_{self.blueprint_nr}_IK_CTRL",
                          attributeType="enum",
                          niceName="Stretch_Type",
