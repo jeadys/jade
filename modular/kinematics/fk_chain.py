@@ -34,7 +34,7 @@ class FKChain:
             cmds.parentConstraint(current_segment, f"{prefix}{segment.name}_{self.blueprint_nr}_JNT",
                                   maintainOffset=True)
 
-            if segment.control.parent is not None:
+            if segment.control is not None and segment.control.parent is not None:
                 cmds.parent(current_segment, f"{prefix}{segment.parent.name}_{self.blueprint_nr}_FK")
             else:
                 cmds.parent(current_segment, joint_group)
@@ -53,7 +53,7 @@ class FKChain:
 
         fk_controls: list[str] = []
         for segment in segments:
-            if cmds.objExists(f"{prefix}{segment.name}_{self.blueprint_nr}_FK_CTRL"):
+            if cmds.objExists(f"{prefix}{segment.name}_{self.blueprint_nr}_FK_CTRL") or segment.control is None:
                 continue
 
             current_segment = f"{prefix}{segment.name}_{self.blueprint_nr}_FK" if cmds.objExists(
@@ -72,7 +72,7 @@ class FKChain:
             cmds.matchTransform(current_control, current_segment, position=True, rotation=True, scale=False)
             cmds.parentConstraint(current_control, current_segment, maintainOffset=True)
 
-            if segment.control.parent is not None:
+            if segment.control is not None and segment.control.parent is not None:
                 cmds.parent(current_control, f"{prefix}{segment.control.parent.name}_{self.blueprint_nr}_FK_CTRL")
             else:
                 cmds.parent(current_control, control_group)

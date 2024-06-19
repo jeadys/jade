@@ -29,7 +29,7 @@ class Stretch:
                                              name=f"{prefix}{segment.name}_{self.blueprint_nr}_STRETCH",
                                              parentOnly=True)[0]
 
-            if segment.control.parent is not None:
+            if segment.control is not None and segment.control.parent is not None:
                 cmds.parent(current_segment, f"{prefix}{segment.parent.name}_{self.blueprint_nr}_STRETCH")
             else:
                 cmds.parent(current_segment, joint_group)
