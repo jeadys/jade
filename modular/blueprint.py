@@ -59,13 +59,14 @@ class Blueprint:
                          readable=True, writable=False)
 
             cmds.addAttr(current_segment, longName=segment.name, numberOfChildren=4, attributeType="compound")
-            cmds.addAttr(current_segment, longName="control_shape", attributeType="enum",
-                         enumName=Shape.enum_to_string_attribute(), defaultValue=segment.control.shape,
-                         parent=segment.name)
-            cmds.addAttr(current_segment, longName="control_color", attributeType="enum",
-                         enumName=Color.enum_to_string_attribute(), defaultValue=0, parent=segment.name)
-            cmds.addAttr(current_segment, longName="control_scale", attributeType="float", minValue=1, maxValue=10,
-                         defaultValue=segment.control.scale, parent=segment.name)
+            if segment.control is not None:
+                cmds.addAttr(current_segment, longName="control_shape", attributeType="enum",
+                             enumName=Shape.enum_to_string_attribute(), defaultValue=segment.control.shape,
+                             parent=segment.name)
+                cmds.addAttr(current_segment, longName="control_color", attributeType="enum",
+                             enumName=Color.enum_to_string_attribute(), defaultValue=0, parent=segment.name)
+                cmds.addAttr(current_segment, longName="control_scale", attributeType="float", minValue=1, maxValue=10,
+                             defaultValue=segment.control.scale, parent=segment.name)
             cmds.addAttr(current_segment, longName="dummy", attributeType="message", parent=segment.name, hidden=True)
 
             if segment.parent is not None:

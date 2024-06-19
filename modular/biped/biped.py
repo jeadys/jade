@@ -22,7 +22,7 @@ class Segment:
     parent: Optional["Segment"]
     position: tuple[float, float, float]
     orientation: Orient
-    control: Control
+    control: Optional["Control"]
 
 
 class Biped(ABC):
