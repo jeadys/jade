@@ -18,32 +18,32 @@ class Spine:
         self.blueprint_nr = self.node.rsplit("_", 1)[-1]
         self.selection = cmds.listConnections(f"{self.node}.parent_joint")
 
-        self.skeleton: Skeleton = Skeleton(node=node, segments=segments)
-        self.ik_chain: IKChain = IKChain(node=node, name=Spine.name)
-        self.fk_chain: FKChain = FKChain(node=node, name=Spine.name)
+        self.skeleton: Skeleton = Skeleton(node=node, segments=segments, prefix=self.prefix)
+        self.ik_chain: IKChain = IKChain(node=node, name=Spine.name, prefix=self.prefix)
+        self.fk_chain: FKChain = FKChain(node=node, name=Spine.name, prefix=self.prefix)
 
         self.fk_joints: list[str] = []
         self.fk_controls: list[str] = []
         self.ik_joints: list[str] = []
         self.ik_controls: list[str] = []
 
-    def base_skeleton(self):
-        self.skeleton.generate_skeleton(prefix=self.prefix)
-        self.skeleton.orient_skeleton(prefix=self.prefix)
+    def base_skeleton(self) -> None:
+        self.skeleton.generate_skeleton()
+        self.skeleton.orient_skeleton()
 
-    def forward_kinematic(self):
-        self.fk_joints = self.fk_chain.fk_joint(prefix=self.prefix, segments=self.segments)
-        self.fk_controls = self.fk_chain.fk_control(prefix=self.prefix, segments=self.segments)
+    def forward_kinematic(self) -> None:
+        self.fk_joints = self.fk_chain.fk_joint(segments=self.segments)
+        self.fk_controls = self.fk_chain.fk_control(segments=self.segments)
 
-    def inverse_kinematic(self):
-        self.ik_joints = self.ik_chain.ik_joint(prefix=self.prefix, segments=self.segments)
+    def inverse_kinematic(self) -> None:
+        self.ik_joints = self.ik_chain.ik_joint(segments=self.segments)
         self.ik_controls = self.ik_chain.spline_kinematic(segments=self.segments)
 
-    def switch_kinematic(self):
-        self.ik_chain.switch_kinematic(prefix=self.prefix, fk_joints=self.fk_joints, fk_controls=self.fk_controls,
+    def switch_kinematic(self) -> None:
+        self.ik_chain.switch_kinematic(fk_joints=self.fk_joints, fk_controls=self.fk_controls,
                                        ik_joints=self.ik_joints, ik_controls=self.ik_controls)
 
-    def generate_spine(self):
+    def generate_spine(self) -> None:
         self.base_skeleton()
         self.forward_kinematic()
         self.inverse_kinematic()

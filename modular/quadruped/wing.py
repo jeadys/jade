@@ -18,19 +18,19 @@ class Wing:
         self.blueprint_nr = self.node.rsplit("_", 1)[-1]
         self.selection = cmds.listConnections(f"{self.node}.parent_joint")
 
-        self.skeleton: Skeleton = Skeleton(node=node, segments=segments)
-        self.fk_chain: FKChain = FKChain(node=node, name=Wing.name)
+        self.skeleton: Skeleton = Skeleton(node=node, segments=segments, prefix=self.prefix)
+        self.fk_chain: FKChain = FKChain(node=node, name=Wing.name, prefix=self.prefix)
 
         self.fk_joints: list[str] = []
         self.fk_controls: list[str] = []
 
-    def base_skeleton(self):
-        self.skeleton.generate_skeleton(prefix=self.prefix)
-        self.skeleton.orient_skeleton(prefix=self.prefix)
+    def base_skeleton(self) -> None:
+        self.skeleton.generate_skeleton()
+        self.skeleton.orient_skeleton()
 
-    def forward_kinematic(self):
-        self.fk_controls = self.fk_chain.fk_control(prefix=self.prefix, segments=self.segments)
+    def forward_kinematic(self) -> None:
+        self.fk_controls = self.fk_chain.fk_control(segments=self.segments)
 
-    def generate_wing(self):
+    def generate_wing(self) -> None:
         self.base_skeleton()
         self.forward_kinematic()
