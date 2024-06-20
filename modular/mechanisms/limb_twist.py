@@ -7,55 +7,57 @@ from utilities.get_node_distance import calculate_distance_between
 
 class Twist:
 
-    def __init__(self, node, name):
+    def __init__(self, node, name, prefix):
         self.node = node
         self.name = name
+        self.prefix = prefix
         self.blueprint_nr = self.node.rsplit("_", 1)[-1]
         self.selection = cmds.listConnections(f"{self.node}.parent_joint")
 
-    def twist_joint(self, prefix, parent_segment: Segment, start_segment: Segment, end_segment: Segment,
+    def twist_joint(self, parent_segment: Segment, start_segment: Segment, end_segment: Segment,
                     twist_flow: TwistFlow):
 
-        joint_layer_group = f"{prefix}{self.name}_{self.blueprint_nr}_LAYER_GROUP"
+        joint_layer_group = f"{self.prefix}{self.name}_{self.blueprint_nr}_LAYER_GROUP"
         if not cmds.objExists(joint_layer_group):
             cmds.group(empty=True, name=joint_layer_group)
 
-        joint_group = f"{prefix}{self.name}_{self.blueprint_nr}_TWIST_GROUP"
+        joint_group = f"{self.prefix}{self.name}_{self.blueprint_nr}_TWIST_GROUP"
         if not cmds.objExists(joint_group):
-            cmds.group(empty=True, name=f"{prefix}{self.name}_{self.blueprint_nr}_TWIST_GROUP")
+            cmds.group(empty=True, name=f"{self.prefix}{self.name}_{self.blueprint_nr}_TWIST_GROUP")
             cmds.parent(joint_group, joint_layer_group)
 
-        start_joint = cmds.duplicate(f"{prefix}{start_segment.name}_{self.blueprint_nr}_JNT",
-                                     name=f"{prefix}{self.name}_{self.blueprint_nr}_TWIST_start_{twist_flow}",
+        start_joint = cmds.duplicate(f"{self.prefix}{start_segment.name}_{self.blueprint_nr}_JNT",
+                                     name=f"{self.prefix}{self.name}_{self.blueprint_nr}_TWIST_start_{twist_flow}",
                                      parentOnly=True)[0]
 
-        end_joint = cmds.duplicate(f"{prefix}{end_segment.name}_{self.blueprint_nr}_JNT",
-                                   name=f"{prefix}{self.name}_{self.blueprint_nr}_TWIST_end_{twist_flow}",
+        end_joint = cmds.duplicate(f"{self.prefix}{end_segment.name}_{self.blueprint_nr}_JNT",
+                                   name=f"{self.prefix}{self.name}_{self.blueprint_nr}_TWIST_end_{twist_flow}",
                                    parentOnly=True)[0]
 
         cmds.parent(start_joint, joint_group)
         cmds.parent(end_joint, start_joint)
 
         if twist_flow == TwistFlow.FORWARD:
-            cmds.orientConstraint(f"{prefix}{start_segment.name}_{self.blueprint_nr}_JNT", end_joint,
+            cmds.orientConstraint(f"{self.prefix}{start_segment.name}_{self.blueprint_nr}_JNT", end_joint,
                                   maintainOffset=True, skip=["x", "z"])
-            cmds.orientConstraint(f"{prefix}{start_segment.name}_{self.blueprint_nr}_JNT", start_joint,
+            cmds.orientConstraint(f"{self.prefix}{start_segment.name}_{self.blueprint_nr}_JNT", start_joint,
                                   maintainOffset=True, skip=["y"])
-            cmds.pointConstraint(f"{prefix}{parent_segment.name}_{self.blueprint_nr}_JNT", start_joint,
+            cmds.pointConstraint(f"{self.prefix}{parent_segment.name}_{self.blueprint_nr}_JNT", start_joint,
                                  maintainOffset=True)
         elif twist_flow == TwistFlow.BACKWARD:
-            cmds.orientConstraint(f"{prefix}{end_segment.name}_{self.blueprint_nr}_JNT", end_joint,
+            cmds.orientConstraint(f"{self.prefix}{end_segment.name}_{self.blueprint_nr}_JNT", end_joint,
                                   maintainOffset=True)
-            cmds.parentConstraint(f"{prefix}{parent_segment.name}_{self.blueprint_nr}_JNT", start_joint,
+            cmds.parentConstraint(f"{self.prefix}{parent_segment.name}_{self.blueprint_nr}_JNT", start_joint,
                                   maintainOffset=True)
 
         return start_joint, end_joint
 
-    def setup_twist_hierarchy(self, prefix, start_joint, end_joint):
-        mult_matrix = cmds.createNode("multMatrix", name=f"{prefix}{self.name}_{self.blueprint_nr}_multMatrix_#")
+    def setup_twist_hierarchy(self, start_joint, end_joint):
+        mult_matrix = cmds.createNode("multMatrix", name=f"{self.prefix}{self.name}_{self.blueprint_nr}_multMatrix_#")
         decompose_matrix = cmds.createNode("decomposeMatrix",
-                                           name=f"{prefix}{self.name}_{self.blueprint_nr}_decomposeMatrix_#")
-        quat_to_euler = cmds.createNode("quatToEuler", name=f"{prefix}{self.name}_{self.blueprint_nr}_quatToEuler_#")
+                                           name=f"{self.prefix}{self.name}_{self.blueprint_nr}_decomposeMatrix_#")
+        quat_to_euler = cmds.createNode("quatToEuler",
+                                        name=f"{self.prefix}{self.name}_{self.blueprint_nr}_quatToEuler_#")
         cmds.setAttr(f"{quat_to_euler}.inputRotateOrder", 1)
 
         cmds.connectAttr(f"{end_joint}.worldMatrix[0]", f'{mult_matrix}.matrixIn[0]')
@@ -72,7 +74,7 @@ class Twist:
         previous_joint = None
         for x in range(twist_amount):
             cmds.select(deselect=True)
-            between_joint = cmds.joint(name=f"{prefix}{self.name}_{self.blueprint_nr}_TWIST_#",
+            between_joint = cmds.joint(name=f"{self.prefix}{self.name}_{self.blueprint_nr}_TWIST_#",
                                        rotationOrder=RotateOrder.YZX.name)
 
             cmds.matchTransform(between_joint, end_joint, position=True, rotation=False, scale=False)
@@ -81,7 +83,7 @@ class Twist:
             cmds.move(0, -average_joint_position * (x + 1), 0, between_joint, relative=True, objectSpace=True)
 
             multiply_divide = cmds.createNode("multiplyDivide",
-                                              name=f"{prefix}{self.name}_{self.blueprint_nr}_multiplyDivide_#")
+                                              name=f"{self.prefix}{self.name}_{self.blueprint_nr}_multiplyDivide_#")
             cmds.connectAttr(f"{self.node}.twist_influence", f"{multiply_divide}.input2Y")
             cmds.setAttr(f"{multiply_divide}.operation", MUDOperation.MULTIPLY.value)
 

@@ -23,46 +23,49 @@ class FrontLeg:
         self.blueprint_nr = self.node.rsplit("_", 1)[-1]
         self.selection = cmds.listConnections(f"{self.node}.parent_joint")
 
-        self.skeleton: Skeleton = Skeleton(node=node, segments=segments)
-        self.ik_chain: IKChain = IKChain(node=node, name=FrontLeg.name)
-        self.fk_chain: FKChain = FKChain(node=node, name=FrontLeg.name)
-        self.stretch: Stretch = Stretch(node=node, name=FrontLeg.name)
-        self.twist: Twist = Twist(node=node, name=FrontLeg.name)
+        self.skeleton: Skeleton = Skeleton(node=node, segments=segments, prefix=self.prefix)
+        self.ik_chain: IKChain = IKChain(node=node, name=FrontLeg.name, prefix=self.prefix)
+        self.fk_chain: FKChain = FKChain(node=node, name=FrontLeg.name, prefix=self.prefix)
+        self.stretch: Stretch = Stretch(node=node, name=FrontLeg.name, prefix=self.prefix)
+        self.twist: Twist = Twist(node=node, name=FrontLeg.name, prefix=self.prefix)
 
         self.fk_joints: list[str] = []
         self.fk_controls: list[str] = []
         self.ik_joints: list[str] = []
         self.ik_controls: list[str] = []
 
-    def base_skeleton(self):
-        self.skeleton.generate_skeleton(prefix=self.prefix)
-        self.skeleton.orient_skeleton(prefix=self.prefix)
+    def base_skeleton(self) -> None:
+        self.skeleton.generate_skeleton()
+        self.skeleton.orient_skeleton()
 
-    def forward_kinematic(self):
-        self.fk_joints = self.fk_chain.fk_joint(prefix=self.prefix, segments=self.segments[1:])
-        self.fk_controls = self.fk_chain.fk_control(prefix=self.prefix, segments=self.segments[1:])
+    def forward_kinematic(self) -> None:
+        self.fk_joints = self.fk_chain.fk_joint(segments=self.segments[1:])
+        self.fk_controls = self.fk_chain.fk_control(segments=self.segments[1:])
 
-    def inverse_kinematic(self):
-        self.ik_joints = self.ik_chain.ik_joint(prefix=self.prefix, segments=self.segments[1:])
-        self.ik_controls = self.ik_chain.ik_control(prefix=self.prefix, segments=self.segments[1:])
+    def inverse_kinematic(self) -> None:
+        self.ik_joints = self.ik_chain.ik_joint(segments=self.segments[1:])
+        self.ik_controls = self.ik_chain.ik_control(segments=self.segments[1:])
         self.ik_chain.inverse_kinematic_space_swap(ik_control=self.ik_controls[0], pole_control=self.ik_controls[1])
 
-    def switch_kinematic(self):
-        self.ik_chain.switch_kinematic(prefix=self.prefix, fk_joints=self.fk_joints, fk_controls=self.fk_controls,
+    def switch_kinematic(self) -> None:
+        self.ik_chain.switch_kinematic(fk_joints=self.fk_joints, fk_controls=self.fk_controls,
                                        ik_joints=self.ik_joints, ik_controls=self.ik_controls)
 
     def twist_mechanism(self) -> None:
-        self.twist.twist_joint(prefix=self.prefix, parent_segment=self.segments[1], start_segment=self.segments[1],
-                               end_segment=self.segments[2], twist_flow=TwistFlow.FORWARD)
-        self.twist.twist_joint(prefix=self.prefix, parent_segment=self.segments[2], start_segment=self.segments[2],
-                               end_segment=self.segments[3], twist_flow=TwistFlow.BACKWARD)
+        start, end = self.twist.twist_joint(parent_segment=self.segments[1], start_segment=self.segments[1],
+                                            end_segment=self.segments[2], twist_flow=TwistFlow.FORWARD)
+        self.twist.setup_twist_hierarchy(start_joint=start, end_joint=end)
 
-    def stretch_mechanism(self):
-        self.stretch.stretch_joint(prefix=self.prefix, segments=self.segments[1:])
-        self.stretch.stretch_attribute(prefix=self.prefix)
-        self.stretch.stretch_node(prefix=self.prefix, segments=self.segments[1:])
+        start, end = self.twist.twist_joint(parent_segment=self.segments[2], start_segment=self.segments[2],
+                                            end_segment=self.segments[3], twist_flow=TwistFlow.BACKWARD)
+        self.twist.setup_twist_hierarchy(start_joint=start, end_joint=end)
 
-    def clavicle_control(self):
+    def stretch_mechanism(self) -> None:
+        self.stretch.stretch_joint(segments=self.segments[1:])
+        self.stretch.stretch_attribute()
+        self.stretch.stretch_node(segments=self.segments[1:])
+
+    def clavicle_control(self) -> None:
         clavicle_control = cmds.circle(normal=(0, 1, 0), center=(0, 0, 0), radius=5, degree=1, sections=32,
                                        name=f"{self.prefix}{self.segments[0].name}_{self.blueprint_nr}_CTRL")[0]
         cmds.parent(clavicle_control, f"{self.prefix}{FrontLeg.name}_{self.blueprint_nr}_CONTROL_GROUP")
@@ -89,7 +92,7 @@ class FrontLeg:
 
         bake_transform_to_offset_parent_matrix(clavicle_control)
 
-    def generate_front_leg(self):
+    def generate_front_leg(self) -> None:
         self.base_skeleton()
         self.forward_kinematic()
         self.inverse_kinematic()
