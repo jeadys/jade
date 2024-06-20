@@ -25,14 +25,6 @@ class Twist:
             cmds.group(empty=True, name=f"{prefix}{self.name}_{self.blueprint_nr}_TWIST_GROUP")
             cmds.parent(joint_group, joint_layer_group)
 
-        twist_amount = cmds.getAttr(f"{self.node}.twist_joints")
-
-        distance_between_start_end, _ = calculate_distance_between(
-            from_distance=f"{prefix}{start_segment.name}_{self.blueprint_nr}_JNT",
-            to_distance=f"{prefix}{end_segment.name}_{self.blueprint_nr}_JNT")
-
-        average_joint_position = distance_between_start_end / (twist_amount + 1)
-
         start_joint = cmds.duplicate(f"{prefix}{start_segment.name}_{self.blueprint_nr}_JNT",
                                      name=f"{prefix}{self.name}_{self.blueprint_nr}_TWIST_start_{twist_flow}",
                                      parentOnly=True)[0]
@@ -57,9 +49,13 @@ class Twist:
             cmds.parentConstraint(f"{prefix}{parent_segment.name}_{self.blueprint_nr}_JNT", start_joint,
                                   maintainOffset=True)
 
-        mult_matrix = cmds.createNode("multMatrix", name="multMatrix")
-        decompose_matrix = cmds.createNode("decomposeMatrix", name="decomposeMatrix")
-        quat_to_euler = cmds.createNode("quatToEuler", name="quatToEuler")
+        return start_joint, end_joint
+
+    def setup_twist_hierarchy(self, prefix, start_joint, end_joint):
+        mult_matrix = cmds.createNode("multMatrix", name=f"{prefix}{self.name}_{self.blueprint_nr}_multMatrix_#")
+        decompose_matrix = cmds.createNode("decomposeMatrix",
+                                           name=f"{prefix}{self.name}_{self.blueprint_nr}_decomposeMatrix_#")
+        quat_to_euler = cmds.createNode("quatToEuler", name=f"{prefix}{self.name}_{self.blueprint_nr}_quatToEuler_#")
         cmds.setAttr(f"{quat_to_euler}.inputRotateOrder", 1)
 
         cmds.connectAttr(f"{end_joint}.worldMatrix[0]", f'{mult_matrix}.matrixIn[0]')
@@ -68,6 +64,10 @@ class Twist:
         cmds.connectAttr(f"{mult_matrix}.matrixSum", f'{decompose_matrix}.inputMatrix')
         cmds.connectAttr(f"{decompose_matrix}.outputQuatY", f'{quat_to_euler}.inputQuatY')
         cmds.connectAttr(f"{decompose_matrix}.outputQuatW", f'{quat_to_euler}.inputQuatW')
+
+        twist_amount = cmds.getAttr(f"{self.node}.twist_joints")
+        distance_between_start_end, _ = calculate_distance_between(from_distance=start_joint, to_distance=end_joint)
+        average_joint_position = distance_between_start_end / (twist_amount + 1)
 
         previous_joint = None
         for x in range(twist_amount):
@@ -80,7 +80,8 @@ class Twist:
             cmds.joint(between_joint, edit=True, orientJoint="none", zeroScaleOrient=True)
             cmds.move(0, -average_joint_position * (x + 1), 0, between_joint, relative=True, objectSpace=True)
 
-            multiply_divide = cmds.createNode("multiplyDivide", name="multiplyDivide")
+            multiply_divide = cmds.createNode("multiplyDivide",
+                                              name=f"{prefix}{self.name}_{self.blueprint_nr}_multiplyDivide_#")
             cmds.connectAttr(f"{self.node}.twist_influence", f"{multiply_divide}.input2Y")
             cmds.setAttr(f"{multiply_divide}.operation", MUDOperation.MULTIPLY.value)
 
@@ -90,9 +91,5 @@ class Twist:
                 cmds.connectAttr(f"{quat_to_euler}.outputRotateY", f'{multiply_divide}.input1Y')
 
             cmds.connectAttr(f"{multiply_divide}.outputY", f"{between_joint}.rotateY")
-
-            # nurbs_cube = cmds.nurbsCube(name="nurbs_cube_#", width=2.5, lengthRatio=0.25, heightRatio=5)
-            # cmds.matchTransform(nurbs_cube, between_joint, position=True, rotation=True, scale=False)
-            # cmds.parent(nurbs_cube[0], between_joint)
 
             previous_joint = between_joint
