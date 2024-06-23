@@ -23,7 +23,7 @@ class FrontLeg:
         self.blueprint_nr = self.node.rsplit("_", 1)[-1]
         self.selection = cmds.listConnections(f"{self.node}.parent_joint")
 
-        self.skeleton: Skeleton = Skeleton(node=node, segments=segments, prefix=self.prefix)
+        self.skeleton: Skeleton = Skeleton(node=node, prefix=self.prefix)
         self.ik_chain: IKChain = IKChain(node=node, name=FrontLeg.name, prefix=self.prefix)
         self.fk_chain: FKChain = FKChain(node=node, name=FrontLeg.name, prefix=self.prefix)
         self.stretch: Stretch = Stretch(node=node, name=FrontLeg.name, prefix=self.prefix)
@@ -35,8 +35,8 @@ class FrontLeg:
         self.ik_controls: list[str] = []
 
     def base_skeleton(self) -> None:
-        self.skeleton.generate_skeleton()
-        self.skeleton.orient_skeleton()
+        self.skeleton.generate_skeleton(segments=self.segments)
+        self.skeleton.orient_skeleton(segments=self.segments)
 
     def forward_kinematic(self) -> None:
         self.fk_joints = self.fk_chain.fk_joint(segments=self.segments[1:])

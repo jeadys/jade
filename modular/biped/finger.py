@@ -5,7 +5,6 @@ from modular.kinematics.ik_chain import IKChain
 from modular.kinematics.fk_chain import FKChain
 from modular.kinematics.skeleton import Skeleton
 from modular.mechanisms.limb_stretch import Stretch
-from modular.mechanisms.curl import Curl
 
 from typing import Literal
 
@@ -20,11 +19,10 @@ class Finger:
         self.blueprint_nr = self.node.rsplit("_", 1)[-1]
         self.selection = cmds.listConnections(f"{self.node}.parent_joint")
 
-        self.skeleton: Skeleton = Skeleton(node=node, segments=segments, prefix=self.prefix)
+        self.skeleton: Skeleton = Skeleton(node=node, prefix=self.prefix)
         self.ik_chain: IKChain = IKChain(node=node, name=self.name, prefix=self.prefix)
         self.fk_chain: FKChain = FKChain(node=node, name=self.name, prefix=self.prefix)
         self.stretch: Stretch = Stretch(node=node, name=self.name, prefix=self.prefix)
-        self.curl: Curl = Curl(node=node, name=self.name, prefix=self.prefix)
 
         self.fk_joints: list[str] = []
         self.fk_controls: list[str] = []
@@ -32,8 +30,8 @@ class Finger:
         self.ik_controls: list[str] = []
 
     def base_skeleton(self) -> None:
-        self.skeleton.generate_skeleton()
-        self.skeleton.orient_skeleton()
+        self.skeleton.generate_skeleton(segments=self.segments)
+        self.skeleton.orient_skeleton(segments=self.segments)
 
     def forward_kinematic(self) -> None:
         self.fk_joints = self.fk_chain.fk_joint(segments=self.segments[1:])

@@ -9,19 +9,18 @@ from typing import Literal
 
 class Skeleton:
 
-    def __init__(self, node, segments: list[Segment], prefix: Literal["L_", "R_"] = ""):
+    def __init__(self, node, prefix: Literal["L_", "R_"] = ""):
         self.node = node
-        self.segments = segments
         self.prefix = prefix
         self.blueprint_nr = self.node.rsplit("_", 1)[-1]
         self.selection = cmds.listConnections(f"{self.node}.parent_joint")
 
-    def generate_skeleton(self):
+    def generate_skeleton(self, segments: list[Segment]):
         skeleton_group = "skeleton"
         if not cmds.objExists(skeleton_group):
             cmds.group(empty=True, name=skeleton_group)
 
-        for segment in self.segments:
+        for segment in segments:
             if cmds.objExists(f"{self.prefix}{segment.name}_{self.blueprint_nr}_JNT"):
                 continue
 
@@ -45,8 +44,8 @@ class Skeleton:
             else:
                 cmds.parent(current_segment, skeleton_group)
 
-    def orient_skeleton(self):
-        for segment in self.segments:
+    def orient_skeleton(self, segments: list[Segment]):
+        for segment in segments:
             match segment.orientation:
                 case Orient.SKIP:
                     continue
