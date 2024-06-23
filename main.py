@@ -36,7 +36,8 @@ class MayaUITemplate(QtWidgets.QWidget):
         main_layout.addWidget(module_group)
 
         limb_modules: list[str] = ["arm", "leg", "spine", "front_leg", "rear_leg", "quadrupled_spine", "arachne_leg",
-                                   "wing", "head", "hand", "face"]
+                                   "wing", "head", "hand", "face", "thumb_finger", "index_finger", "middle_finger",
+                                   "ring_finger", "pinky_finger", "index_toe", "middle_toe", "ring_toe", "pinky_toe"]
         limb_module_widget, self.limb_module_combobox = create_combobox(name="limb", items=limb_modules)
         # self.limb_module_combobox.currentTextChanged.connect(self.limb_changed)
         module_layout.addWidget(limb_module_widget)
@@ -130,5 +131,7 @@ def open_window():
 if __name__ == "__main__":
     DEBUG = True
     if DEBUG:
-        unload_packages(silent=False, packages=["segments", "joints", "modular", "kinematics", "kinematics", "utilities", "ui", "modular"])
+        unload_packages(silent=False,
+                        packages=["segments", "joints", "modular", "kinematics", "kinematics", "utilities", "ui",
+                                  "modular", "helpers"])
     open_window()
