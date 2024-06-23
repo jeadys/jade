@@ -24,11 +24,11 @@ class Leg:
         self.blueprint_nr = self.node.rsplit("_", 1)[-1]
         self.selection = cmds.listConnections(f"{self.node}.parent_joint")
 
-        self.skeleton: Skeleton = Skeleton(node=node, prefix=self.prefix)
-        self.ik_chain: IKChain = IKChain(node=node, name=Leg.name, prefix=self.prefix)
-        self.fk_chain: FKChain = FKChain(node=node, name=Leg.name, prefix=self.prefix)
-        self.stretch: Stretch = Stretch(node=node, name=Leg.name, prefix=self.prefix)
-        self.twist: Twist = Twist(node=node, name=Leg.name, prefix=self.prefix)
+        self.skeleton: Skeleton = Skeleton(node=self.node, prefix=self.prefix)
+        self.ik_chain: IKChain = IKChain(node=self.node, name=Leg.name, prefix=self.prefix)
+        self.fk_chain: FKChain = FKChain(node=self.node, name=Leg.name, prefix=self.prefix)
+        self.stretch: Stretch = Stretch(node=self.node, name=Leg.name, prefix=self.prefix)
+        self.twist: Twist = Twist(node=self.node, name=Leg.name, prefix=self.prefix)
 
         self.fk_joints: list[str] = []
         self.fk_controls: list[str] = []
