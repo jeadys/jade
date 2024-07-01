@@ -19,6 +19,8 @@ Mesh + Skeleton           |  Skeleton
 - Multi limb support
 - Blueprints
 - Modular building blocks
+- Hierarchy tree view of modules
+- Import, export and save rig data
 
 ## Installation
 To install the Maya Rigging Tool, follow these steps:
