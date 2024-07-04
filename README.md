@@ -21,6 +21,7 @@ Mesh + Skeleton           |  Skeleton
 - Modular building blocks
 - Hierarchy tree view of modules
 - Import, export and save rig data
+- Attach and detach modules from each other
 
 ## Installation
 To install the Maya Rigging Tool, follow these steps:
