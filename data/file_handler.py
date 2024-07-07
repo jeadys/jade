@@ -44,15 +44,20 @@ def save_data_to_file(file_path, data):
 def read_data_from_file(file_path):
     if not file_path:
         print("No file path provided")
-        return False
+        return None
 
     if not file_path.endswith(".json"):
         print("No JSON file provided")
-        return False
+        return None
 
     try:
         with open(file_path, "r") as file:
             data = json.load(file)
+
+        if not data:
+            print(f"File is empty: {file_path}")
+            return None
+
         print(f"Data read from {file_path}")
         return data
     except FileNotFoundError:
