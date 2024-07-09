@@ -106,6 +106,11 @@ class Orient(int, Enum):
     def __int__(self) -> int:
         return int.__int__(self)
 
+    @classmethod
+    def enum_to_string_attribute(cls):
+        enums = ':'.join([f"{x.name}={x.value}" for x in cls])
+        return enums
+
 
 class Color(int, Enum):
     RED = 0
