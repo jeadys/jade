@@ -10,7 +10,7 @@ from modular.quadruped.rear_leg import RearLeg
 from modular.quadruped.arachne_leg import ArachneLeg
 from modular.quadruped.wing import Wing
 
-from modular.components.arm import arm_segments
+from modular.components.arm import arm_module
 from modular.components.fingers.thumb_finger import thumb_finger_segments
 from modular.components.fingers.index_finger import index_finger_segments
 from modular.components.fingers.middle_finger import middle_finger_segments
@@ -20,10 +20,10 @@ from modular.components.toes.index_toe import index_toe_segments
 from modular.components.toes.middle_toe import middle_toe_segments
 from modular.components.toes.ring_toe import ring_toe_segments
 from modular.components.toes.pinky_toe import pinky_toe_segments
-from modular.components.leg import leg_segments
+from modular.components.leg import leg_module
 from modular.components.spine import spine_segments
-from modular.components.front_leg import front_leg_segments
-from modular.components.rear_leg import rear_leg_segments
+from modular.components.front_leg import front_leg_module
+from modular.components.rear_leg import rear_leg_module
 from modular.components.arachne_leg import arachne_leg_segments
 from modular.components.wing import wing_segments
 
@@ -44,10 +44,10 @@ def build_rig(blueprint="master"):
 
         match component_type:
             case "arm":
-                left_arm = Arm(node=child, segments=arm_segments, prefix="L_")
+                left_arm = Arm(node=child, segments=arm_module.segments, prefix="L_")
                 left_arm.generate_arm()
                 if mirror:
-                    right_arm = Arm(node=child, segments=arm_segments, prefix="R_")
+                    right_arm = Arm(node=child, segments=arm_module.segments, prefix="R_")
                     right_arm.generate_arm()
             case "index_toe":
                 left_thumb = Toe(node=child, segments=index_toe_segments, prefix="L_")
@@ -104,25 +104,25 @@ def build_rig(blueprint="master"):
                     right_pinky = Finger(node=child, segments=pinky_finger_segments, prefix="R_")
                     right_pinky.generate_finger()
             case "leg":
-                left_leg = Leg(node=child, segments=leg_segments, prefix="L_")
+                left_leg = Leg(node=child, segments=leg_module, prefix="L_")
                 left_leg.generate_leg()
                 if mirror:
-                    right_leg = Leg(node=child, segments=leg_segments, prefix="R_")
+                    right_leg = Leg(node=child, segments=leg_module, prefix="R_")
                     right_leg.generate_leg()
             case "spine":
                 spine = Spine(node=child, segments=spine_segments)
                 spine.generate_spine()
             case "front_leg":
-                left_front_leg = FrontLeg(node=child, segments=front_leg_segments, prefix="L_")
+                left_front_leg = FrontLeg(node=child, segments=front_leg_module, prefix="L_")
                 left_front_leg.generate_front_leg()
                 if mirror:
-                    right_front_leg = FrontLeg(node=child, segments=front_leg_segments, prefix="R_")
+                    right_front_leg = FrontLeg(node=child, segments=front_leg_module, prefix="R_")
                     right_front_leg.generate_front_leg()
             case "rear_leg":
-                left_rear_leg = RearLeg(node=child, segments=rear_leg_segments, prefix="L_")
+                left_rear_leg = RearLeg(node=child, segments=rear_leg_module, prefix="L_")
                 left_rear_leg.generate_rear_leg()
                 if mirror:
-                    right_rear_leg = RearLeg(node=child, segments=rear_leg_segments, prefix="R_")
+                    right_rear_leg = RearLeg(node=child, segments=rear_leg_module, prefix="R_")
                     right_rear_leg.generate_rear_leg()
             case "arachne_leg":
                 left_arachne_leg = ArachneLeg(node=child, segments=arachne_leg_segments, prefix="L_")
