@@ -149,6 +149,6 @@ if __name__ == "__main__":
     DEBUG = True
     if DEBUG:
         unload_packages(silent=False,
-                        packages=["segments", "joints", "modular", "kinematics", "kinematics", "utilities", "ui",
-                                  "modular", "helpers", "data"])
+                        packages=["segments", "joints", "rig", "kinematics", "kinematics", "utilities", "ui",
+                                  "rig", "helpers", "data"])
     open_window()
