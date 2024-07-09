@@ -9,7 +9,7 @@ from ui.actions.build_blueprint import add_default_segment_attributes, add_defau
 
 from utilities.curve_from_locators import create_visual_connection
 
-from modular.components.arm import Rig, Module, Segment
+from rig.components.arm import Rig, Module, Segment
 
 
 def import_rig_data():

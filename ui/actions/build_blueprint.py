@@ -1,12 +1,12 @@
 import maya.cmds as cmds
 
-from modular.components.arm import arm_module
-from modular.components.leg import leg_module
-from modular.components.spine import spine_segments
-from modular.components.front_leg import front_leg_module
-from modular.components.rear_leg import rear_leg_module
-from modular.components.arachne_leg import arachne_leg_segments
-from modular.components.wing import wing_segments
+from rig.components.arm import arm_module
+from rig.components.leg import leg_module
+from rig.components.spine import spine_segments
+from rig.components.front_leg import front_leg_module
+from rig.components.rear_leg import rear_leg_module
+from rig.components.arachne_leg import arachne_leg_segments
+from rig.components.wing import wing_segments
 
 from ui.actions.undoable_action import undoable_action
 from ui.actions.tree_view import tree_view, StandardItem, node_combobox, segment_combobox
