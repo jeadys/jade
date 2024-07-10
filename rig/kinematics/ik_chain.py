@@ -1,12 +1,11 @@
+from typing import Literal
+
 import maya.cmds as cmds
 
-from rig.biped.biped import Segment
-
-from utilities.curve import select_curve
+from data.rig_structure import Segment
 from utilities.bake_transform import bake_transform_to_offset_parent_matrix
-from utilities.enums import Shape, WorldUpType, ForwardAxis, UpAxis, RotateOrder
-
-from typing import Literal
+from utilities.curve import select_curve
+from utilities.enums import ForwardAxis, RotateOrder, Shape, UpAxis, WorldUpType
 
 
 class IKChain:

@@ -1,8 +1,7 @@
 import maya.cmds as cmds
 
 from data.file_handler import get_save_file_name, save_data_to_file
-
-from rig.components.arm import Rig, Module, Segment, Control
+from data.rig_structure import Control, Module, Rig, Segment
 
 
 def export_rig_data():

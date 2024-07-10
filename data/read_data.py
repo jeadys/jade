@@ -1,15 +1,11 @@
 import maya.cmds as cmds
 
 from data.file_handler import get_open_file_name, read_data_from_file
-
-from ui.actions.tree_view import tree_view, StandardItem
-from ui.actions.undoable_action import undoable_action
-from ui.actions.tree_view import node_combobox
-from ui.actions.build_blueprint import add_default_segment_attributes, add_default_node_attributes
-
+from data.rig_structure import Module, Rig, Segment
+from ui.actions.build_blueprint import add_default_node_attributes, add_default_segment_attributes
+from ui.actions.tree_view import node_combobox, StandardItem, tree_view
+from helpers.decorators.undoable_action import undoable_action
 from utilities.curve_from_locators import create_visual_connection
-
-from rig.components.arm import Rig, Module, Segment
 
 
 def import_rig_data():
@@ -79,5 +75,7 @@ def apply_rig_segments(current_module: str, segments: list[Segment]):
                   relative=True, objectSpace=True)
         cmds.rotate(segment.rotateX, segment.rotateY, segment.rotateZ, current_segment,
                     relative=True, objectSpace=True)
+        cmds.scale(segment.scaleX, segment.scaleY, segment.scaleZ, current_segment,
+                   relative=True, objectSpace=True)
 
         cmds.connectAttr(f"{current_module}.segments{[index]}", f"{current_segment}.parent_node")
