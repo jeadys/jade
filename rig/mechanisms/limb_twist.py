@@ -1,7 +1,7 @@
 import maya.cmds as cmds
 
-from rig.biped.biped import Segment
-from utilities.enums import MUDOperation, TwistFlow, RotateOrder
+from data.rig_structure import Segment
+from utilities.enums import MUDOperation, RotateOrder, TwistFlow
 from utilities.get_node_distance import calculate_distance_between
 
 

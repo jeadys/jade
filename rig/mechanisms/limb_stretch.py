@@ -1,9 +1,9 @@
+from typing import Literal
+
 import maya.cmds as cmds
 
-from utilities.enums import StretchMode, MUDOperation
-from rig.biped.biped import Segment
-
-from typing import Literal
+from data.rig_structure import Segment
+from utilities.enums import MUDOperation, StretchMode
 
 
 class Stretch:
@@ -46,7 +46,8 @@ class Stretch:
     def stretch_node(self, segments: list[Segment]):
         stretch_length: str = cmds.createNode("plusMinusAverage",
                                               name=f"{self.prefix}{self.name}_{self.blueprint_nr}_stretch_length")
-        stretch_end_loc: str = cmds.spaceLocator(name=f"{self.prefix}{self.name}_{self.blueprint_nr}_stretch_end_LOC")[0]
+        stretch_end_loc: str = cmds.spaceLocator(name=f"{self.prefix}{self.name}_{self.blueprint_nr}_stretch_end_LOC")[
+            0]
         cmds.matchTransform(stretch_end_loc, f"{self.prefix}{self.name}_{self.blueprint_nr}_IK_CTRL", position=True,
                             rotation=True,
                             scale=False)
@@ -64,8 +65,9 @@ class Stretch:
 
             cmds.connectAttr(f"{self.prefix}{segment.name}_{self.blueprint_nr}_STRETCH.rotatePivotTranslate",
                              f"{distance_between_joints}.point1")
-            cmds.connectAttr(f"{self.prefix}{segments[index + 1].name}_{self.blueprint_nr}_STRETCH.rotatePivotTranslate",
-                             f"{distance_between_joints}.point2")
+            cmds.connectAttr(
+                f"{self.prefix}{segments[index + 1].name}_{self.blueprint_nr}_STRETCH.rotatePivotTranslate",
+                f"{distance_between_joints}.point2")
 
             cmds.connectAttr(f"{distance_between_joints}.distance", f"{stretch_length}.input1D[{index}]")
 
@@ -98,8 +100,10 @@ class Stretch:
 
         # BLEND COLOR NODES
         color_attributes: list[str] = ["R", "G", "B"]
-        stretch_blend = cmds.createNode("blendColors", name=f"{self.prefix}{self.name}_{self.blueprint_nr}_stretch_blend")
-        cmds.connectAttr(f"{self.prefix}{self.name}_{self.blueprint_nr}_IK_CTRL.Stretchiness", f"{stretch_blend}.blender")
+        stretch_blend = cmds.createNode("blendColors",
+                                        name=f"{self.prefix}{self.name}_{self.blueprint_nr}_stretch_blend")
+        cmds.connectAttr(f"{self.prefix}{self.name}_{self.blueprint_nr}_IK_CTRL.Stretchiness",
+                         f"{stretch_blend}.blender")
 
         for color_attribute in color_attributes:
             cmds.setAttr(f"{stretch_blend}.color1{color_attribute}", 1)
@@ -148,7 +152,8 @@ class Stretch:
         volume_preservation: str = cmds.createNode("multiplyDivide",
                                                    name=f"{self.prefix}{self.name}_{self.blueprint_nr}_volume_preservation")
         cmds.setAttr(f"{volume_preservation}.operation", MUDOperation.POWER.value)
-        cmds.connectAttr(f"{self.prefix}{self.name}_{self.blueprint_nr}_IK_CTRL.Volume", f"{volume_preservation}.input2X")
+        cmds.connectAttr(f"{self.prefix}{self.name}_{self.blueprint_nr}_IK_CTRL.Volume",
+                         f"{volume_preservation}.input2X")
         cmds.connectAttr(f"{stretch_blend}.outputR", f"{volume_preservation}.input1.input1X")
         cmds.connectAttr(f"{volume_preservation}.outputX", f"{stretch_condition}.colorIfTrueG")
 

@@ -1,10 +1,9 @@
+from typing import Literal
+
 import maya.cmds as cmds
 
-from rig.biped.biped import Segment
-
+from data.rig_structure import Segment
 from utilities.enums import Orient, RotateOrder
-
-from typing import Literal
 
 
 class Skeleton:

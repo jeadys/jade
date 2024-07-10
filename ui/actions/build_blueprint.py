@@ -1,20 +1,20 @@
 import maya.cmds as cmds
-
-from rig.components.arm import arm_module
-from rig.components.leg import leg_module
-from rig.components.spine import spine_segments
-from rig.components.front_leg import front_leg_module
-from rig.components.rear_leg import rear_leg_module
-from rig.components.arachne_leg import arachne_leg_segments
-from rig.components.wing import wing_segments
-
-from ui.actions.undoable_action import undoable_action
-from ui.actions.tree_view import tree_view, StandardItem, node_combobox, segment_combobox
-
-from utilities.curve_from_locators import create_visual_connection
-from utilities.enums import Shape, Color, Orient
-
 from PySide2 import QtWidgets
+
+from rig.modules.biped.arm import arm_module
+from rig.modules.biped.leg import leg_module
+from rig.modules.biped.spine import create_chain_module
+from rig.modules.creature.arachne_leg import arachne_leg_module
+from rig.modules.creature.wing import wing_module
+from rig.modules.quadruped.front_leg import front_leg_module
+from rig.modules.quadruped.rear_leg import rear_leg_module
+from ui.actions.tree_view import node_combobox, segment_combobox, StandardItem, tree_view
+from helpers.decorators.undoable_action import undoable_action
+from utilities.curve_from_locators import create_visual_connection
+from utilities.enums import Color, Orient, Shape
+
+
+# from rig.modules.creature.wing import wing_segments
 
 
 def update_driven_combobox(driver_combobox: QtWidgets.QComboBox, driven_combobox: QtWidgets.QComboBox, attribute: str):
@@ -39,8 +39,9 @@ def build_blueprint(blueprint_component):
                      writable=False, hidden=True)
         cmds.setAttr("master.component_type", "master", type="string")
 
-    segments_dict = {"arm": arm_module, "leg": leg_module, "spine": spine_segments, "front_leg": front_leg_module,
-                     "rear_leg": rear_leg_module, "arachne_leg": arachne_leg_segments, "wing": wing_segments}
+    segments_dict = {"arm": arm_module, "leg": leg_module,
+                     "spine": create_chain_module(chain_amount=5, chain_name="spine"), "front_leg": front_leg_module,
+                     "rear_leg": rear_leg_module, "arachne_leg": arachne_leg_module, "wing": wing_module}
 
     current_node = create_blueprint_node(module=segments_dict[blueprint_component])
     create_blueprint_segments(node=current_node, module=segments_dict[blueprint_component])
@@ -72,7 +73,7 @@ def create_blueprint_node(module):
     return current_module
 
 
-def create_blueprint_segments(module, node):
+def create_blueprint_segments(node, module):
     blueprint_nr = node.rsplit("_", 1)[-1]
     for index, segment in enumerate(module.segments):
         current_segment = cmds.spaceLocator(name=f"{segment.name}_#")[0]
@@ -85,7 +86,7 @@ def create_blueprint_segments(module, node):
 
         if segment.parent_joint:
             cmds.matchTransform(current_segment, f"{segment.parent_joint}_{blueprint_nr}", position=True,
-                                rotation=False, scale=False)
+                                rotation=True, scale=False)
             cmds.move(segment.translateX, segment.translateY, segment.translateZ, current_segment, relative=True,
                       objectSpace=True)
             cmds.parent(current_segment, f"{segment.parent_joint}_{blueprint_nr}")
@@ -97,6 +98,12 @@ def create_blueprint_segments(module, node):
             cmds.parent(current_segment, selected_segment)
             cmds.connectAttr(f"{selected_segment}.children", f"{current_segment}.parent_joint")
             create_visual_connection(from_node=selected_segment, to_node=current_segment)
+
+        cmds.rotate(segment.rotateX, segment.rotateY, segment.rotateZ, current_segment, relative=True,
+                    objectSpace=True)
+
+        cmds.scale(segment.scaleX, segment.scaleY, segment.scaleZ, current_segment, relative=True,
+                   objectSpace=True)
 
         cmds.connectAttr(f"{node}.segments{[index]}", f"{current_segment}.parent_node")
 
