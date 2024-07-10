@@ -104,7 +104,7 @@ arachne_toe = Segment(
 
 arachne_leg_module = Module(
     name="arachne_leg",
-    component_type="arachne_leg",
+    module_type="arachne_leg",
     children=[""],
     segments=[arachne_thigh, arachne_shin, arachne_foot, arachne_toe],
     parent_node=None,

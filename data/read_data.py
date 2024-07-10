@@ -21,9 +21,9 @@ def apply_rig_data(data: Rig):
     if not cmds.objExists("master"):
         cmds.createNode("network", name="master", skipSelect=True)
         cmds.addAttr("master", niceName="children", longName="children", attributeType="message")
-        cmds.addAttr("master", niceName="component_type", longName="component_type", dataType="string", readable=False,
+        cmds.addAttr("master", niceName="module_type", longName="module_type", dataType="string", readable=False,
                      writable=False, hidden=True)
-        cmds.setAttr("master.component_type", "master", type="string")
+        cmds.setAttr("master.module_type", "master", type="string")
 
     for key, module in data.modules.items():
         apply_rig_module(module=module)
@@ -40,7 +40,8 @@ def apply_rig_module(module: Module):
 
     current_module = cmds.createNode("network", name=module.name, skipSelect=True)
     add_default_node_attributes(node=current_module)
-    cmds.setAttr(f"{current_module}.component_type", module.component_type, type="string")
+    cmds.setAttr(f"{current_module}.module_type", module.module_type, type="string")
+    cmds.setAttr(f"{current_module}.module_nr", module.module_nr, type="string")
     cmds.setAttr(f"{current_module}.mirror", module.mirror)
     cmds.setAttr(f"{current_module}.stretch", module.stretch)
     cmds.setAttr(f"{current_module}.twist", module.twist)

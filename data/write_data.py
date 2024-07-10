@@ -23,7 +23,8 @@ def retrieve_rig_data(blueprint="master", data=None):
     for module in modules:
         module_dict = Module(
             name=module,
-            component_type=cmds.getAttr(f"{module}.component_type"),
+            module_type=cmds.getAttr(f"{module}.module_type"),
+            module_nr=cmds.getAttr(f"{module}.module_nr"),
             children=cmds.listConnections(f"{module}.children"),
             segments=[],
             parent_node=(cmds.listConnections(f"{module}.parent_node") or [None])[0],

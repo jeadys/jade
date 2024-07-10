@@ -128,7 +128,7 @@ rear_toe = Segment(
 
 rear_leg_module = Module(
     name="rear_leg",
-    component_type="rear_leg",
+    module_type="rear_leg",
     children=[""],
     segments=[rear_hip, rear_knee, rear_heel, rear_foot, rear_toe],
     parent_node=None,

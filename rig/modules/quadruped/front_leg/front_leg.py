@@ -19,7 +19,7 @@ class FrontLeg:
         self.node = node
         self.segments = segments
         self.prefix = prefix
-        self.blueprint_nr = self.node.rsplit("_", 1)[-1]
+        self.module_nr = cmds.getAttr(f"{self.node}.module_nr")
         self.selection = cmds.listConnections(f"{self.node}.parent_joint")
 
         self.skeleton: Skeleton = Skeleton(node=self.node, prefix=self.prefix)
@@ -66,20 +66,20 @@ class FrontLeg:
 
     def clavicle_control(self) -> None:
         clavicle_control = cmds.circle(normal=(0, 1, 0), center=(0, 0, 0), radius=5, degree=1, sections=32,
-                                       name=f"{self.prefix}{self.segments[0].name}_{self.blueprint_nr}_CTRL")[0]
-        cmds.parent(clavicle_control, f"{self.prefix}{FrontLeg.name}_{self.blueprint_nr}_CONTROL_GROUP")
-        cmds.matchTransform(clavicle_control, f"{self.prefix}{self.segments[0].name}_{self.blueprint_nr}_JNT",
+                                       name=f"{self.prefix}{self.segments[0].name}_{self.module_nr}_CTRL")[0]
+        cmds.parent(clavicle_control, f"{self.prefix}{FrontLeg.name}_{self.module_nr}_CONTROL_GROUP")
+        cmds.matchTransform(clavicle_control, f"{self.prefix}{self.segments[0].name}_{self.module_nr}_JNT",
                             position=True,
                             rotation=True, scale=False)
-        cmds.parentConstraint(clavicle_control, f"{self.prefix}{self.segments[0].name}_{self.blueprint_nr}_JNT",
+        cmds.parentConstraint(clavicle_control, f"{self.prefix}{self.segments[0].name}_{self.module_nr}_JNT",
                               maintainOffset=True)
 
-        if cmds.objExists(f"{self.prefix}{FrontLeg.name}_{self.blueprint_nr}_IK_GROUP"):
-            cmds.parentConstraint(clavicle_control, f"{self.prefix}{FrontLeg.name}_{self.blueprint_nr}_IK_GROUP",
+        if cmds.objExists(f"{self.prefix}{FrontLeg.name}_{self.module_nr}_IK_GROUP"):
+            cmds.parentConstraint(clavicle_control, f"{self.prefix}{FrontLeg.name}_{self.module_nr}_IK_GROUP",
                                   maintainOffset=True)
 
-        if cmds.objExists(f"{self.prefix}{FrontLeg.name}_{self.blueprint_nr}_FK_CTRL_GROUP"):
-            cmds.parentConstraint(clavicle_control, f"{self.prefix}{FrontLeg.name}_{self.blueprint_nr}_FK_CTRL_GROUP",
+        if cmds.objExists(f"{self.prefix}{FrontLeg.name}_{self.module_nr}_FK_CTRL_GROUP"):
+            cmds.parentConstraint(clavicle_control, f"{self.prefix}{FrontLeg.name}_{self.module_nr}_FK_CTRL_GROUP",
                                   maintainOffset=True)
 
         if self.selection:
@@ -87,7 +87,7 @@ class FrontLeg:
             cmds.matchTransform(clavicle_group, clavicle_control, position=True, rotation=True, scale=False)
             cmds.parent(clavicle_control, clavicle_group)
             cmds.parentConstraint(f"{self.prefix}{self.selection[0]}_JNT", clavicle_group, maintainOffset=True)
-            cmds.parent(clavicle_group, f"{self.prefix}{FrontLeg.name}_{self.blueprint_nr}_CONTROL_GROUP")
+            cmds.parent(clavicle_group, f"{self.prefix}{FrontLeg.name}_{self.module_nr}_CONTROL_GROUP")
 
         bake_transform_to_offset_parent_matrix(clavicle_control)
 

@@ -10,7 +10,7 @@ from utilities.enums import Shape
 def create_chain_module(chain_amount, chain_name, max_distance=100):
     chain_module = Module(
         name=chain_name,
-        component_type="chain",
+        module_type=chain_name,
         children=[""],
         segments=[],
         parent_node=None,

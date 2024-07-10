@@ -128,7 +128,7 @@ front_paw = Segment(
 
 front_leg_module = Module(
     name="front_leg",
-    component_type="front_leg",
+    module_type="front_leg",
     children=[""],
     segments=[front_clavicle, front_upperarm, front_lowerarm, front_wrist, front_paw],
     parent_node=None,

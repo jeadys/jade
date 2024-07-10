@@ -1,6 +1,7 @@
 from utilities.enums import Orient, Color, Shape, RotateOrder
 from dataclasses import dataclass, asdict
 import json
+from typing import Optional
 
 
 @dataclass
@@ -45,7 +46,7 @@ class Segment:
 @dataclass
 class Module:
     name: str
-    component_type: str
+    module_type: str
     children: list[str] | None
     segments: list[Segment]
     parent_node: str | None
@@ -55,6 +56,7 @@ class Module:
     twist: float
     twist_joints: int
     twist_influence: float
+    module_nr: str | None = None
 
     @classmethod
     def from_dict(cls, data: dict):
@@ -77,3 +79,18 @@ class Rig:
 
     def to_json(self):
         return json.dumps(asdict(self))
+
+
+@dataclass
+class Twist:
+    add_twist: bool
+    twist_joints: int
+    twist_influence: float
+
+
+@dataclass
+class Stretch:
+    add_stretch: bool
+    stretchiness: float
+    stretch_volume: float
+    stretch_type: int

@@ -14,30 +14,30 @@ class IKChain:
         self.node = node
         self.name = name
         self.prefix = prefix
-        self.blueprint_nr = self.node.rsplit("_", 1)[-1]
+        self.module_nr = cmds.getAttr(f"{self.node}.module_nr")
         self.selection = cmds.listConnections(f"{self.node}.parent_joint")
 
     def ik_joint(self, segments: list[Segment]) -> list[str]:
-        joint_group = cmds.group(empty=True, name=f"{self.prefix}{self.name}_{self.blueprint_nr}_IK_GROUP")
+        joint_group = cmds.group(empty=True, name=f"{self.prefix}{self.name}_{self.module_nr}_IK_GROUP")
 
-        joint_layer_group = f"{self.prefix}{self.name}_{self.blueprint_nr}_LAYER_GROUP"
+        joint_layer_group = f"{self.prefix}{self.name}_{self.module_nr}_LAYER_GROUP"
         if not cmds.objExists(joint_layer_group):
             joint_layer_group = cmds.group(empty=True, name=joint_layer_group)
         cmds.parent(joint_group, joint_layer_group)
 
         ik_joints = []
         for segment in segments:
-            if cmds.objExists(f"{self.prefix}{segment.name}_{self.blueprint_nr}_IK"):
+            if cmds.objExists(f"{self.prefix}{segment.name}_{self.module_nr}_IK"):
                 continue
 
-            current_segment = cmds.duplicate(f"{self.prefix}{segment.name}_{self.blueprint_nr}_JNT",
-                                             name=f"{self.prefix}{segment.name}_{self.blueprint_nr}_IK",
+            current_segment = cmds.duplicate(f"{self.prefix}{segment.name}_{self.module_nr}_JNT",
+                                             name=f"{self.prefix}{segment.name}_{self.module_nr}_IK",
                                              parentOnly=True)[0]
-            cmds.parentConstraint(current_segment, f"{self.prefix}{segment.name}_{self.blueprint_nr}_JNT",
+            cmds.parentConstraint(current_segment, f"{self.prefix}{segment.name}_{self.module_nr}_JNT",
                                   maintainOffset=True)
 
-            if segment.control is not None and segment.control.parent is not None:
-                cmds.parent(current_segment, f"{self.prefix}{segment.parent.name}_{self.blueprint_nr}_IK")
+            if segment.control is not None and segment.control.parent_control is not None:
+                cmds.parent(current_segment, f"{self.prefix}{segment.parent_joint}_{self.module_nr}_IK")
             else:
                 cmds.parent(current_segment, joint_group)
 
@@ -51,33 +51,33 @@ class IKChain:
         return ik_joints
 
     def ik_control(self, segments: list[Segment]) -> list[str]:
-        control_group = cmds.group(empty=True, name=f"{self.prefix}{self.name}_{self.blueprint_nr}_IK_CTRL_GROUP")
+        control_group = cmds.group(empty=True, name=f"{self.prefix}{self.name}_{self.module_nr}_IK_CTRL_GROUP")
 
-        joint_control_group = f"{self.prefix}{self.name}_{self.blueprint_nr}_CONTROL_GROUP"
+        joint_control_group = f"{self.prefix}{self.name}_{self.module_nr}_CONTROL_GROUP"
         if not cmds.objExists(joint_control_group):
             cmds.group(empty=True, name=joint_control_group)
         cmds.parent(control_group, joint_control_group)
 
-        ik_control = select_curve(shape=Shape.CUBE, name=f"{self.prefix}{self.name}_{self.blueprint_nr}_IK_CTRL",
+        ik_control = select_curve(shape=Shape.CUBE, name=f"{self.prefix}{self.name}_{self.module_nr}_IK_CTRL",
                                   scale=5)
-        pole_control = select_curve(shape=Shape.CUBE, name=f"{self.prefix}{self.name}_{self.blueprint_nr}_POLE_CTRL",
+        pole_control = select_curve(shape=Shape.CUBE, name=f"{self.prefix}{self.name}_{self.module_nr}_POLE_CTRL",
                                     scale=5)
 
         cmds.setAttr(f"{ik_control}.rotateOrder", RotateOrder.YZX)
         cmds.setAttr(f"{pole_control}.rotateOrder", RotateOrder.YZX)
 
-        ik_handle = cmds.ikHandle(name=f"{self.prefix}{self.name}_{self.blueprint_nr}_ikHandle",
-                                  startJoint=f"{self.prefix}{segments[0].name}_{self.blueprint_nr}_IK",
-                                  endEffector=f"{self.prefix}{segments[-1].name}_{self.blueprint_nr}_IK",
+        ik_handle = cmds.ikHandle(name=f"{self.prefix}{self.name}_{self.module_nr}_ikHandle",
+                                  startJoint=f"{self.prefix}{segments[0].name}_{self.module_nr}_IK",
+                                  endEffector=f"{self.prefix}{segments[-1].name}_{self.module_nr}_IK",
                                   solver="ikRPsolver")[0]
 
-        cmds.matchTransform(ik_control, f"{self.prefix}{segments[-1].name}_{self.blueprint_nr}_IK", position=True,
+        cmds.matchTransform(ik_control, f"{self.prefix}{segments[-1].name}_{self.module_nr}_IK", position=True,
                             rotation=True, scale=False)
         cmds.parent(ik_handle, ik_control)
-        cmds.orientConstraint(ik_control, f"{self.prefix}{segments[-1].name}_{self.blueprint_nr}_IK",
+        cmds.orientConstraint(ik_control, f"{self.prefix}{segments[-1].name}_{self.module_nr}_IK",
                               maintainOffset=True)
 
-        cmds.matchTransform(pole_control, f"{self.prefix}{segments[1].name}_{self.blueprint_nr}_IK", position=True,
+        cmds.matchTransform(pole_control, f"{self.prefix}{segments[1].name}_{self.module_nr}_IK", position=True,
                             rotation=True, scale=False)
         # cmds.move(0, 0, -50, pole_control, relative=True, worldSpace=True)
         cmds.poleVectorConstraint(pole_control, ik_handle)
@@ -96,25 +96,25 @@ class IKChain:
         return [ik_control, pole_control]
 
     def spline_kinematic(self, segments):
-        pelvis_mch = cmds.joint(radius=3, rotationOrder=RotateOrder.YZX.name, name=f"pelvis_{self.blueprint_nr}_MCH")
-        cmds.matchTransform(pelvis_mch, f"{segments[0].name}_{self.blueprint_nr}_JNT", position=True, rotation=False,
+        pelvis_mch = cmds.joint(radius=3, rotationOrder=RotateOrder.YZX.name, name=f"pelvis_{self.module_nr}_MCH")
+        cmds.matchTransform(pelvis_mch, f"{segments[0].name}_{self.module_nr}_JNT", position=True, rotation=False,
                             scale=False)
 
-        back_mch = cmds.joint(radius=3, rotationOrder=RotateOrder.YZX.name, name=f"back_{self.blueprint_nr}_MCH")
-        cmds.matchTransform(back_mch, f"{segments[len(segments) // 2].name}_{self.blueprint_nr}_JNT", position=True,
+        back_mch = cmds.joint(radius=3, rotationOrder=RotateOrder.YZX.name, name=f"back_{self.module_nr}_MCH")
+        cmds.matchTransform(back_mch, f"{segments[len(segments) // 2].name}_{self.module_nr}_JNT", position=True,
                             rotation=False,
                             scale=False)
         # We need to get the center between the start/end of the segments when the number pf segments is an even number.
         if len(segments) % 2 == 0:
             constraint = cmds.parentConstraint(
-                [f"{segments[0].name}_{self.blueprint_nr}_JNT", f"{segments[-1].name}_{self.blueprint_nr}_JNT"],
+                [f"{segments[0].name}_{self.module_nr}_JNT", f"{segments[-1].name}_{self.module_nr}_JNT"],
                 back_mch,
                 maintainOffset=False, skipTranslate=["x", "z"], skipRotate=["x", "y", "z"])
             cmds.delete(constraint)
         cmds.parent(back_mch, world=True)
 
-        chest_mch = cmds.joint(radius=3, rotationOrder=RotateOrder.YZX.name, name=f"chest_{self.blueprint_nr}_MCH")
-        cmds.matchTransform(chest_mch, f"{segments[-1].name}_{self.blueprint_nr}_JNT", position=True, rotation=False,
+        chest_mch = cmds.joint(radius=3, rotationOrder=RotateOrder.YZX.name, name=f"chest_{self.module_nr}_MCH")
+        cmds.matchTransform(chest_mch, f"{segments[-1].name}_{self.module_nr}_JNT", position=True, rotation=False,
                             scale=False)
         cmds.parent(chest_mch, world=True)
 
@@ -127,7 +127,7 @@ class IKChain:
         cmds.setAttr(f"{chest_mch}.radius", 5)
         bake_transform_to_offset_parent_matrix(chest_mch)
 
-        pelvis_control = select_curve(shape=Shape.CUBE, name=f"pelvis_{self.blueprint_nr}_CTRL", scale=5)
+        pelvis_control = select_curve(shape=Shape.CUBE, name=f"pelvis_{self.module_nr}_CTRL", scale=5)
         cmds.addAttr(pelvis_control, niceName="blueprint", longName="blueprint", attributeType="message", readable=True,
                      writable=True)
         cmds.setAttr(f"{pelvis_control}.rotateOrder", RotateOrder.YZX)
@@ -135,7 +135,7 @@ class IKChain:
         bake_transform_to_offset_parent_matrix(pelvis_control)
         cmds.parent(pelvis_mch, pelvis_control)
 
-        back_control = select_curve(shape=Shape.CUBE, name=f"back_{self.blueprint_nr}_CTRL", scale=5)
+        back_control = select_curve(shape=Shape.CUBE, name=f"back_{self.module_nr}_CTRL", scale=5)
         cmds.addAttr(back_control, niceName="blueprint", longName="blueprint", attributeType="message", readable=True,
                      writable=True)
         cmds.setAttr(f"{back_control}.rotateOrder", RotateOrder.YZX)
@@ -143,7 +143,7 @@ class IKChain:
         bake_transform_to_offset_parent_matrix(back_control)
         cmds.parent(back_mch, back_control)
 
-        chest_control = select_curve(shape=Shape.CUBE, name=f"chest_{self.blueprint_nr}_CTRL", scale=5)
+        chest_control = select_curve(shape=Shape.CUBE, name=f"chest_{self.module_nr}_CTRL", scale=5)
         cmds.addAttr(chest_control, niceName="blueprint", longName="blueprint", attributeType="message", readable=True,
                      writable=True)
         cmds.setAttr(f"{chest_control}.rotateOrder", RotateOrder.YZX)
@@ -152,13 +152,13 @@ class IKChain:
         cmds.parent(chest_mch, chest_control)
 
         curve_points = [
-            cmds.xform(f"{segment.name}_{self.blueprint_nr}_JNT", query=True, translation=True, worldSpace=True)
+            cmds.xform(f"{segment.name}_{self.module_nr}_JNT", query=True, translation=True, worldSpace=True)
             for segment in segments]
-        spline_curve = cmds.curve(name=f"spine_{self.blueprint_nr}_curve", point=curve_points, degree=4)
+        spline_curve = cmds.curve(name=f"spine_{self.module_nr}_curve", point=curve_points, degree=4)
 
         spline_handle = cmds.ikHandle(
-            name=f"spine_{self.blueprint_nr}_ikHandle", startJoint=f"{segments[0].name}_{self.blueprint_nr}_IK",
-            endEffector=f"{segments[-1].name}_{self.blueprint_nr}_IK",
+            name=f"spine_{self.module_nr}_ikHandle", startJoint=f"{segments[0].name}_{self.module_nr}_IK",
+            endEffector=f"{segments[-1].name}_{self.module_nr}_IK",
             solver="ikSplineSolver", createCurve=False, parentCurve=False, curve=spline_curve
         )[0]
 
@@ -181,51 +181,51 @@ class IKChain:
 
     def spring_kinematic(self, segments):
         for segment in segments:
-            if cmds.objExists(f"{self.prefix}{segment.name}_{self.blueprint_nr}_IK"):
+            if cmds.objExists(f"{self.prefix}{segment.name}_{self.module_nr}_IK"):
                 continue
 
-            current_segment = cmds.duplicate(f"{self.prefix}{segment.name}_{self.blueprint_nr}_JNT",
-                                             name=f"{self.prefix}{segment.name}_{self.blueprint_nr}_IK",
+            current_segment = cmds.duplicate(f"{self.prefix}{segment.name}_{self.module_nr}_JNT",
+                                             name=f"{self.prefix}{segment.name}_{self.module_nr}_IK",
                                              parentOnly=True)[0]
-            cmds.parentConstraint(current_segment, f"{self.prefix}{segment.name}_{self.blueprint_nr}_JNT",
+            cmds.parentConstraint(current_segment, f"{self.prefix}{segment.name}_{self.module_nr}_JNT",
                                   maintainOffset=True)
 
             if segment.parent is not None:
-                cmds.parent(current_segment, f"{self.prefix}{segment.parent}_{self.blueprint_nr}_IK")
+                cmds.parent(current_segment, f"{self.prefix}{segment.parent}_{self.module_nr}_IK")
 
-        knee_handle = cmds.ikHandle(name=f"{self.prefix}{self.name}_{self.blueprint_nr}_knee_ikRPsolver",
-                                    startJoint=f"{self.prefix}{segments[0].name}_{self.blueprint_nr}_IK",
-                                    endEffector=f"{self.prefix}{segments[2].name}_{self.blueprint_nr}_IK",
+        knee_handle = cmds.ikHandle(name=f"{self.prefix}{self.name}_{self.module_nr}_knee_ikRPsolver",
+                                    startJoint=f"{self.prefix}{segments[0].name}_{self.module_nr}_IK",
+                                    endEffector=f"{self.prefix}{segments[2].name}_{self.module_nr}_IK",
                                     solver="ikRPsolver")[0]
 
-        hoc_handle = cmds.ikHandle(name=f"{self.prefix}{self.name}_{self.blueprint_nr}_hoc_ikSCsolver_#",
-                                   startJoint=f"{self.prefix}{segments[2].name}_{self.blueprint_nr}_IK",
-                                   endEffector=f"{self.prefix}{segments[3].name}_{self.blueprint_nr}_IK",
+        hoc_handle = cmds.ikHandle(name=f"{self.prefix}{self.name}_{self.module_nr}_hoc_ikSCsolver_#",
+                                   startJoint=f"{self.prefix}{segments[2].name}_{self.module_nr}_IK",
+                                   endEffector=f"{self.prefix}{segments[3].name}_{self.module_nr}_IK",
                                    solver="ikSCsolver")[0]
 
-        toe_handle = cmds.ikHandle(name=f"{self.prefix}{self.name}_{self.blueprint_nr}_toe_ikSCsolver_#",
-                                   startJoint=f"{self.prefix}{segments[3].name}_{self.blueprint_nr}_IK",
-                                   endEffector=f"{self.prefix}{segments[4].name}_{self.blueprint_nr}_IK",
+        toe_handle = cmds.ikHandle(name=f"{self.prefix}{self.name}_{self.module_nr}_toe_ikSCsolver_#",
+                                   startJoint=f"{self.prefix}{segments[3].name}_{self.module_nr}_IK",
+                                   endEffector=f"{self.prefix}{segments[4].name}_{self.module_nr}_IK",
                                    solver="ikSCsolver")[0]
 
-        ik_control = select_curve(shape=Shape.CUBE, name=f"{self.prefix}{self.name}_{self.blueprint_nr}_IK_CTRL",
+        ik_control = select_curve(shape=Shape.CUBE, name=f"{self.prefix}{self.name}_{self.module_nr}_IK_CTRL",
                                   scale=5)
-        cmds.matchTransform(ik_control, f"{self.prefix}{segments[3].name}_{self.blueprint_nr}_IK", rotation=True,
+        cmds.matchTransform(ik_control, f"{self.prefix}{segments[3].name}_{self.module_nr}_IK", rotation=True,
                             position=True, scale=False)
         cmds.setAttr(f"{ik_control}.rotateOrder", RotateOrder.YZX)
 
-        hoc_control = select_curve(shape=Shape.CUBE, name=f"{self.prefix}{self.name}_{self.blueprint_nr}_HOC_CTRL",
+        hoc_control = select_curve(shape=Shape.CUBE, name=f"{self.prefix}{self.name}_{self.module_nr}_HOC_CTRL",
                                    scale=5)
         cmds.setAttr(f"{hoc_control}.rotateOrder", RotateOrder.YZX)
-        cmds.matchTransform(hoc_control, f"{self.prefix}{segments[2].name}_{self.blueprint_nr}_IK")
-        position = cmds.xform(f"{self.prefix}{segments[3].name}_{self.blueprint_nr}_IK", query=True, translation=True,
+        cmds.matchTransform(hoc_control, f"{self.prefix}{segments[2].name}_{self.module_nr}_IK")
+        position = cmds.xform(f"{self.prefix}{segments[3].name}_{self.module_nr}_IK", query=True, translation=True,
                               worldSpace=True)
         cmds.parent(hoc_control, ik_control)
 
-        pole_control = select_curve(shape=Shape.CUBE, name=f"{self.prefix}{self.name}_{self.blueprint_nr}_POLE_CTRL",
+        pole_control = select_curve(shape=Shape.CUBE, name=f"{self.prefix}{self.name}_{self.module_nr}_POLE_CTRL",
                                     scale=5)
         cmds.setAttr(f"{pole_control}.rotateOrder", RotateOrder.YZX)
-        cmds.matchTransform(pole_control, f"{self.prefix}{segments[1].name}_{self.blueprint_nr}_IK", position=True,
+        cmds.matchTransform(pole_control, f"{self.prefix}{segments[1].name}_{self.module_nr}_IK", position=True,
                             rotation=False, scale=False)
         cmds.move(0, 0, 20 if self.prefix == "L" else 20, pole_control, relative=True, objectSpace=True)
         cmds.poleVectorConstraint(pole_control, knee_handle)
@@ -248,7 +248,7 @@ class IKChain:
         if not cmds.objExists(switch_control):
             select_curve(shape=Shape.CUBE, name=switch_control, scale=2.5)
 
-        attribute = f"{self.prefix}{self.name}_{self.blueprint_nr}_switch"
+        attribute = f"{self.prefix}{self.name}_{self.module_nr}_switch"
         if not cmds.attributeQuery(attribute, node=switch_control, exists=True):
             cmds.addAttr(
                 switch_control, attributeType="float", niceName=attribute,
@@ -256,7 +256,7 @@ class IKChain:
             )
 
         switch_control_reversed = cmds.createNode("reverse",
-                                                  name=f"{self.prefix}{self.name}_{self.blueprint_nr}_switch_reversed")
+                                                  name=f"{self.prefix}{self.name}_{self.module_nr}_switch_reversed")
         cmds.connectAttr(f"{switch_control}.{attribute}", f"{switch_control_reversed}.inputX")
 
         for ik_joint in ik_joints:

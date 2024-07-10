@@ -35,9 +35,9 @@ def build_blueprint(blueprint_component):
     if not cmds.objExists("master"):
         cmds.createNode("network", name="master", skipSelect=True)
         cmds.addAttr("master", niceName="children", longName="children", attributeType="message")
-        cmds.addAttr("master", niceName="component_type", longName="component_type", dataType="string", readable=False,
+        cmds.addAttr("master", niceName="module_type", longName="module_type", dataType="string", readable=False,
                      writable=False, hidden=True)
-        cmds.setAttr("master.component_type", "master", type="string")
+        cmds.setAttr("master.module_type", "master", type="string")
 
     segments_dict = {"arm": arm_module, "leg": leg_module,
                      "spine": create_chain_module(chain_amount=5, chain_name="spine"), "front_leg": front_leg_module,
@@ -49,8 +49,10 @@ def build_blueprint(blueprint_component):
 
 def create_blueprint_node(module):
     current_module = cmds.createNode("network", name=f"{module.name}_blueprint_#", skipSelect=True)
+
     add_default_node_attributes(node=current_module)
-    cmds.setAttr(f"{current_module}.component_type", module.component_type, type="string")
+    cmds.setAttr(f"{current_module}.module_type", module.module_type, type="string")
+    cmds.setAttr(f"{current_module}.module_nr",  current_module.rsplit("_", 1)[-1], type="string")
     cmds.setAttr(f"{current_module}.mirror", module.mirror)
     cmds.setAttr(f"{current_module}.stretch", module.stretch)
     cmds.setAttr(f"{current_module}.twist", module.twist)
@@ -74,9 +76,9 @@ def create_blueprint_node(module):
 
 
 def create_blueprint_segments(node, module):
-    blueprint_nr = node.rsplit("_", 1)[-1]
+    module_nr = cmds.getAttr(f"{node}.module_nr")
     for index, segment in enumerate(module.segments):
-        current_segment = cmds.spaceLocator(name=f"{segment.name}_#")[0]
+        current_segment = cmds.spaceLocator(name=f"{segment.name}_{module_nr}")[0]
         add_default_segment_attributes(segment=current_segment)
         cmds.setAttr(f"{current_segment}.control_shape", segment.control.control_shape)
         cmds.setAttr(f"{current_segment}.control_color", segment.control.control_color)
@@ -85,13 +87,13 @@ def create_blueprint_segments(node, module):
         selected_segment = segment_combobox.currentText()
 
         if segment.parent_joint:
-            cmds.matchTransform(current_segment, f"{segment.parent_joint}_{blueprint_nr}", position=True,
+            cmds.matchTransform(current_segment, f"{segment.parent_joint}_{module_nr}", position=True,
                                 rotation=True, scale=False)
             cmds.move(segment.translateX, segment.translateY, segment.translateZ, current_segment, relative=True,
                       objectSpace=True)
-            cmds.parent(current_segment, f"{segment.parent_joint}_{blueprint_nr}")
-            cmds.connectAttr(f"{segment.parent_joint}_{blueprint_nr}.children", f"{current_segment}.parent_joint")
-            create_visual_connection(from_node=f"{segment.parent_joint}_{blueprint_nr}", to_node=current_segment)
+            cmds.parent(current_segment, f"{segment.parent_joint}_{module_nr}")
+            cmds.connectAttr(f"{segment.parent_joint}_{module_nr}.children", f"{current_segment}.parent_joint")
+            create_visual_connection(from_node=f"{segment.parent_joint}_{module_nr}", to_node=current_segment)
 
         elif not segment.parent_joint and selected_segment:
             cmds.matchTransform(current_segment, selected_segment, position=True, rotation=False, scale=False)
@@ -109,7 +111,9 @@ def create_blueprint_segments(node, module):
 
 
 def add_default_node_attributes(node):
-    cmds.addAttr(node, niceName="component_type", longName="component_type", dataType="string", readable=False,
+    cmds.addAttr(node, niceName="module_type", longName="module_type", dataType="string", readable=False,
+                 writable=False, hidden=True)
+    cmds.addAttr(node, niceName="module_nr", longName="module_nr", dataType="string", readable=False,
                  writable=False, hidden=True)
     cmds.addAttr(node, niceName="parent_node", longName="parent_node", attributeType="message", readable=False,
                  writable=True)

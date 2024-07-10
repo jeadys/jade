@@ -79,7 +79,7 @@ wing_wrist = Segment(
 
 wing_module = Module(
     name="wing",
-    component_type="wing",
+    module_type="wing",
     children=[""],
     segments=[wing_upperarm, wing_lowerarm, wing_wrist],
     parent_node=None,

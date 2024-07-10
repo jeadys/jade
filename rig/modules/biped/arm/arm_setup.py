@@ -47,7 +47,7 @@ upperarm = Segment(
         control_shape=Shape.CUBE,
         control_color=Color.GREEN,
         control_scale=5,
-        parent_control="clavicle",
+        parent_control=None,
     )
 )
 
@@ -72,7 +72,7 @@ lowerarm = Segment(
         control_shape=Shape.CUBE,
         control_color=Color.GREEN,
         control_scale=5,
-        parent_control="clavicle",
+        parent_control="upperarm",
     )
 )
 
@@ -103,7 +103,7 @@ wrist = Segment(
 
 arm_module = Module(
     name="arm",
-    component_type="arm",
+    module_type="arm",
     children=[""],
     segments=[clavicle, upperarm, lowerarm, wrist],
     parent_node=None,

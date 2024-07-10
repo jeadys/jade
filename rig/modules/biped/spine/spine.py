@@ -15,7 +15,7 @@ class Spine:
         self.node = node
         self.segments = segments
         self.prefix = prefix
-        self.blueprint_nr = self.node.rsplit("_", 1)[-1]
+        self.module_nr = cmds.getAttr(f"{self.node}.module_nr")
         self.selection = cmds.listConnections(f"{self.node}.parent_joint")
 
         self.skeleton: Skeleton = Skeleton(node=self.node, prefix=self.prefix)
@@ -51,6 +51,6 @@ class Spine:
 
     def generate_module(self) -> None:
         self.base_skeleton()
-        self.forward_kinematic()
-        self.inverse_kinematic()
-        self.switch_kinematic()
+        # self.forward_kinematic()
+        # self.inverse_kinematic()
+        # self.switch_kinematic()

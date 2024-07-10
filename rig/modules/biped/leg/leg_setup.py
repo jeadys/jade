@@ -128,7 +128,7 @@ toe = Segment(
 
 leg_module = Module(
     name="leg",
-    component_type="leg",
+    module_type="leg",
     children=[""],
     segments=[upperleg, lowerleg, ankle, ball, toe],
     parent_node=None,
