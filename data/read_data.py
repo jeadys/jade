@@ -60,6 +60,7 @@ def apply_rig_segments(current_module: str, segments: list[Segment]):
             continue
         current_segment = cmds.spaceLocator(name=segment.name)[0]
         add_default_segment_attributes(segment=current_segment)
+        cmds.setAttr(f"{current_segment}.orientation", segment.orientation)
 
         if segment.control.control_shape:
             cmds.setAttr(f"{current_segment}.control_shape", segment.control.control_shape)
@@ -70,7 +71,8 @@ def apply_rig_segments(current_module: str, segments: list[Segment]):
             cmds.parent(current_segment, segment.parent_joint)
             cmds.connectAttr(f"{segment.parent_joint}.children", f"{current_segment}.parent_joint")
             create_visual_connection(from_node=segment.parent_joint, to_node=current_segment)
-            cmds.matchTransform(current_segment, segment.parent_joint)
+            cmds.matchTransform(current_segment, segment.parent_joint, position=True,
+                                rotation=True, scale=False)
 
         cmds.move(segment.translateX, segment.translateY, segment.translateZ, current_segment,
                   relative=True, objectSpace=True)

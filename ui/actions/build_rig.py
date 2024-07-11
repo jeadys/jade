@@ -35,21 +35,20 @@ def build_rig(blueprint="master"):
 def build_module(child, prefix) -> RigModule:
     module_type = cmds.getAttr(f"{child}.module_type")
 
+    segments = cmds.listConnections(f"{child}.segments")
+
     match module_type:
         case "arm":
-            segments = cmds.listConnections(f"{child}.segments")
-            print(segments)
             return Arm(node=child, segments=segments, prefix=prefix)
         case "leg":
-            return Leg(node=child, segments=leg_module.segments, prefix=prefix)
+            return Leg(node=child, segments=segments, prefix=prefix)
         case "spine":
-            spine_module = create_chain_module(chain_amount=5, chain_name="spine")
-            return Spine(node=child, segments=spine_module.segments)
+            return Spine(node=child, segments=segments)
         case "front_leg":
-            return FrontLeg(node=child, segments=front_leg_module.segments, prefix=prefix)
+            return FrontLeg(node=child, segments=segments, prefix=prefix)
         case "rear_leg":
-            return RearLeg(node=child, segments=rear_leg_module.segments, prefix=prefix)
+            return RearLeg(node=child, segments=segments, prefix=prefix)
         case "arachne_leg":
-            return ArachneLeg(node=child, segments=arachne_leg_module.segments, prefix=prefix)
+            return ArachneLeg(node=child, segments=segments, prefix=prefix)
         case "wing":
-            return Wing(node=child, segments=wing_module.segments, prefix=prefix)
+            return Wing(node=child, segments=segments, prefix=prefix)

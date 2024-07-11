@@ -66,12 +66,12 @@ class FrontLeg:
 
     def clavicle_control(self) -> None:
         clavicle_control = cmds.circle(normal=(0, 1, 0), center=(0, 0, 0), radius=5, degree=1, sections=32,
-                                       name=f"{self.prefix}{self.segments[0].name}_{self.module_nr}_CTRL")[0]
+                                       name=f"{self.prefix}{self.segments[0]}_CTRL")[0]
         cmds.parent(clavicle_control, f"{self.prefix}{FrontLeg.name}_{self.module_nr}_CONTROL_GROUP")
-        cmds.matchTransform(clavicle_control, f"{self.prefix}{self.segments[0].name}_{self.module_nr}_JNT",
+        cmds.matchTransform(clavicle_control, f"{self.prefix}{self.segments[0]}_JNT",
                             position=True,
                             rotation=True, scale=False)
-        cmds.parentConstraint(clavicle_control, f"{self.prefix}{self.segments[0].name}_{self.module_nr}_JNT",
+        cmds.parentConstraint(clavicle_control, f"{self.prefix}{self.segments[0]}_JNT",
                               maintainOffset=True)
 
         if cmds.objExists(f"{self.prefix}{FrontLeg.name}_{self.module_nr}_IK_GROUP"):

@@ -67,11 +67,11 @@ class Arm:
 
     def clavicle_control(self) -> None:
         clavicle_control = select_curve(shape=Shape.CUBE,
-                                        name=f"{self.prefix}{self.segments[0].name}_{self.module_nr}_CTRL", scale=5)
+                                        name=f"{self.prefix}{self.segments[0]}_CTRL", scale=5)
         cmds.parent(clavicle_control, f"{self.prefix}{Arm.name}_{self.module_nr}_CONTROL_GROUP")
-        cmds.matchTransform(clavicle_control, f"{self.prefix}{self.segments[0].name}_{self.module_nr}_JNT",
+        cmds.matchTransform(clavicle_control, f"{self.prefix}{self.segments[0]}_JNT",
                             position=True, rotation=True, scale=False)
-        cmds.parentConstraint(clavicle_control, f"{self.prefix}{self.segments[0].name}_{self.module_nr}_JNT",
+        cmds.parentConstraint(clavicle_control, f"{self.prefix}{self.segments[0]}_JNT",
                               maintainOffset=True)
 
         if cmds.objExists(f"{self.prefix}{Arm.name}_{self.module_nr}_IK_GROUP"):
@@ -98,12 +98,12 @@ class Arm:
 
     def generate_module(self) -> None:
         self.base_skeleton()
-        # self.forward_kinematic()
-        # self.inverse_kinematic()
-        # self.switch_kinematic()
-        # self.clavicle_control()
-        #
-        # if cmds.getAttr(f"{self.node}.twist"):
-        #     self.twist_mechanism()
-        # if cmds.getAttr(f"{self.node}.stretch"):
-        #     self.stretch_mechanism()
+        self.forward_kinematic()
+        self.inverse_kinematic()
+        self.switch_kinematic()
+        self.clavicle_control()
+
+        if cmds.getAttr(f"{self.node}.twist"):
+            self.twist_mechanism()
+        if cmds.getAttr(f"{self.node}.stretch"):
+            self.stretch_mechanism()

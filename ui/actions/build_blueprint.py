@@ -83,6 +83,7 @@ def create_blueprint_segments(node, module):
         cmds.setAttr(f"{current_segment}.control_shape", segment.control.control_shape)
         cmds.setAttr(f"{current_segment}.control_color", segment.control.control_color)
         cmds.setAttr(f"{current_segment}.control_scale", segment.control.control_scale)
+        cmds.setAttr(f"{current_segment}.orientation", segment.orientation)
 
         selected_segment = segment_combobox.currentText()
 

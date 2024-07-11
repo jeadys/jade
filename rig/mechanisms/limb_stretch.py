@@ -25,15 +25,16 @@ class Stretch:
 
         stretch_joints = []
         for segment in segments:
-            if cmds.objExists(f"{self.prefix}{segment.name}_{self.module_nr}_STRETCH"):
+            if cmds.objExists(f"{self.prefix}{segment}_STRETCH"):
                 continue
 
-            current_segment = cmds.duplicate(f"{self.prefix}{segment.name}_{self.module_nr}_JNT",
-                                             name=f"{self.prefix}{segment.name}_{self.module_nr}_STRETCH",
+            current_segment = cmds.duplicate(f"{self.prefix}{segment}_JNT",
+                                             name=f"{self.prefix}{segment}_STRETCH",
                                              parentOnly=True)[0]
 
-            if segment.control is not None and segment.control.parent_control is not None:
-                cmds.parent(current_segment, f"{self.prefix}{segment.parent_joint}_{self.module_nr}_STRETCH")
+            parent_joint = cmds.listConnections(f"{segment}.parent_joint")
+            if parent_joint is not None and cmds.objExists(f"{self.prefix}{parent_joint}_STRETCH"):
+                cmds.parent(current_segment, f"{self.prefix}{parent_joint[0]}_STRETCH")
             else:
                 cmds.parent(current_segment, joint_group)
 
@@ -56,17 +57,17 @@ class Stretch:
         # JOINT TO JOINT DISTANCE OF SEGMENT
         for index, segment in enumerate(segments[:-1]):
             distance_between_joints = cmds.createNode("distanceBetween",
-                                                      name=f"{self.prefix}{segment.name}_{self.module_nr}_distance_node")
+                                                      name=f"{self.prefix}{segment}_distance_node")
 
-            cmds.connectAttr(f"{self.prefix}{segment.name}_{self.module_nr}_STRETCH.worldMatrix",
+            cmds.connectAttr(f"{self.prefix}{segment}_STRETCH.worldMatrix",
                              f"{distance_between_joints}.inMatrix1")
-            cmds.connectAttr(f"{self.prefix}{segments[index + 1].name}_{self.module_nr}_STRETCH.worldMatrix",
+            cmds.connectAttr(f"{self.prefix}{segments[index + 1]}_STRETCH.worldMatrix",
                              f"{distance_between_joints}.inMatrix2")
 
-            cmds.connectAttr(f"{self.prefix}{segment.name}_{self.module_nr}_STRETCH.rotatePivotTranslate",
+            cmds.connectAttr(f"{self.prefix}{segment}_STRETCH.rotatePivotTranslate",
                              f"{distance_between_joints}.point1")
             cmds.connectAttr(
-                f"{self.prefix}{segments[index + 1].name}_{self.module_nr}_STRETCH.rotatePivotTranslate",
+                f"{self.prefix}{segments[index + 1]}_STRETCH.rotatePivotTranslate",
                 f"{distance_between_joints}.point2")
 
             cmds.connectAttr(f"{distance_between_joints}.distance", f"{stretch_length}.input1D[{index}]")
@@ -75,11 +76,11 @@ class Stretch:
         distance_between: str = cmds.createNode("distanceBetween",
                                                 name=f"{self.prefix}{self.name}_{self.module_nr}_distance_node")
 
-        cmds.connectAttr(f"{self.prefix}{segments[0].name}_{self.module_nr}_STRETCH.worldMatrix",
+        cmds.connectAttr(f"{self.prefix}{segments[0]}_STRETCH.worldMatrix",
                          f"{distance_between}.inMatrix1")
         cmds.connectAttr(f"{stretch_end_loc}.worldMatrix", f"{distance_between}.inMatrix2")
 
-        cmds.connectAttr(f"{self.prefix}{segments[0].name}_{self.module_nr}_STRETCH.rotatePivotTranslate",
+        cmds.connectAttr(f"{self.prefix}{segments[0]}_STRETCH.rotatePivotTranslate",
                          f"{distance_between}.point1")
         cmds.connectAttr(f"{stretch_end_loc}.rotatePivotTranslate", f"{distance_between}.point2")
 
@@ -129,7 +130,7 @@ class Stretch:
         # POSITION JOINTS ON STRETCH
         for segment in segments[:-1]:
             cmds.connectAttr(f"{stretch_condition}.outColorR",
-                             f"{self.prefix}{segment.name}_{self.module_nr}_IK.scale.scaleY")
+                             f"{self.prefix}{segment}_IK.scale.scaleY")
         # cmds.connectAttr(f"{stretch_condition}.outColorR",
         #                  f"{self.prefix}{segments[1].name}_{self.module_nr}_IK.scale.scaleY")
         # cmds.connectAttr(f"{stretch_condition}.outColorR",
@@ -158,14 +159,14 @@ class Stretch:
         cmds.connectAttr(f"{volume_preservation}.outputX", f"{stretch_condition}.colorIfTrueG")
 
         cmds.connectAttr(f"{stretch_ik_blend}.outputG",
-                         f"{self.prefix}{segments[1].name}_{self.module_nr}_JNT.scale.scaleX")
+                         f"{self.prefix}{segments[1]}_JNT.scale.scaleX")
         cmds.connectAttr(f"{stretch_ik_blend}.outputG",
-                         f"{self.prefix}{segments[1].name}_{self.module_nr}_JNT.scale.scaleZ")
+                         f"{self.prefix}{segments[1]}_JNT.scale.scaleZ")
 
         cmds.connectAttr(f"{stretch_ik_blend}.outputG",
-                         f"{self.prefix}{segments[-1].name}_{self.module_nr}_JNT.scale.scaleX")
+                         f"{self.prefix}{segments[-1]}_JNT.scale.scaleX")
         cmds.connectAttr(f"{stretch_ik_blend}.outputG",
-                         f"{self.prefix}{segments[-1].name}_{self.module_nr}_JNT.scale.scaleZ")
+                         f"{self.prefix}{segments[-1]}_JNT.scale.scaleZ")
 
     @staticmethod
     def stretch_twist_joint(stretch_ik_blend, twist_start_joint):

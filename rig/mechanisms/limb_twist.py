@@ -26,11 +26,11 @@ class Twist:
             cmds.group(empty=True, name=f"{self.prefix}{self.name}_{self.module_nr}_TWIST_GROUP")
             cmds.parent(joint_group, joint_layer_group)
 
-        start_joint = cmds.duplicate(f"{self.prefix}{start_segment.name}_{self.module_nr}_JNT",
+        start_joint = cmds.duplicate(f"{self.prefix}{start_segment}_JNT",
                                      name=f"{self.prefix}{self.name}_{self.module_nr}_TWIST_start_{twist_flow}",
                                      parentOnly=True)[0]
 
-        end_joint = cmds.duplicate(f"{self.prefix}{end_segment.name}_{self.module_nr}_JNT",
+        end_joint = cmds.duplicate(f"{self.prefix}{end_segment}_JNT",
                                    name=f"{self.prefix}{self.name}_{self.module_nr}_TWIST_end_{twist_flow}",
                                    parentOnly=True)[0]
 
@@ -38,16 +38,16 @@ class Twist:
         cmds.parent(end_joint, start_joint)
 
         if twist_flow == TwistFlow.FORWARD:
-            cmds.orientConstraint(f"{self.prefix}{start_segment.name}_{self.module_nr}_JNT", end_joint,
+            cmds.orientConstraint(f"{self.prefix}{start_segment}_JNT", end_joint,
                                   maintainOffset=True, skip=["x", "z"])
-            cmds.orientConstraint(f"{self.prefix}{start_segment.name}_{self.module_nr}_JNT", start_joint,
+            cmds.orientConstraint(f"{self.prefix}{start_segment}_JNT", start_joint,
                                   maintainOffset=True, skip=["y"])
-            cmds.pointConstraint(f"{self.prefix}{parent_segment.name}_{self.module_nr}_JNT", start_joint,
+            cmds.pointConstraint(f"{self.prefix}{parent_segment}_JNT", start_joint,
                                  maintainOffset=True)
         elif twist_flow == TwistFlow.BACKWARD:
-            cmds.orientConstraint(f"{self.prefix}{end_segment.name}_{self.module_nr}_JNT", end_joint,
+            cmds.orientConstraint(f"{self.prefix}{end_segment}_JNT", end_joint,
                                   maintainOffset=True)
-            cmds.parentConstraint(f"{self.prefix}{parent_segment.name}_{self.module_nr}_JNT", start_joint,
+            cmds.parentConstraint(f"{self.prefix}{parent_segment}_JNT", start_joint,
                                   maintainOffset=True)
 
         return start_joint, end_joint

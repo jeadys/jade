@@ -11,7 +11,7 @@ from utilities.set_rgb_color import set_rgb_color
 
 class FKChain:
 
-    def __init__(self, node, name,  prefix: Literal["L_", "R_"] = ""):
+    def __init__(self, node, name, prefix: Literal["L_", "R_"] = ""):
         self.node = node
         self.name = name
         self.prefix = prefix
@@ -28,16 +28,16 @@ class FKChain:
 
         fk_joints: list[str] = []
         for segment in segments:
-            if cmds.objExists(f"{self.prefix}{segment.name}_{self.module_nr}_FK"):
+            if cmds.objExists(f"{self.prefix}{segment}_FK"):
                 continue
 
-            current_segment = cmds.duplicate(f"{self.prefix}{segment.name}_{self.module_nr}_JNT",
-                                             name=f"{self.prefix}{segment.name}_{self.module_nr}_FK", parentOnly=True)[0]
-            cmds.parentConstraint(current_segment, f"{self.prefix}{segment.name}_{self.module_nr}_JNT",
-                                  maintainOffset=True)
+            current_segment = cmds.duplicate(f"{self.prefix}{segment}_JNT",
+                                             name=f"{self.prefix}{segment}_FK", parentOnly=True)[0]
+            cmds.parentConstraint(current_segment, f"{self.prefix}{segment}_JNT", maintainOffset=True)
 
-            if segment.control is not None and segment.control.parent_control is not None:
-                cmds.parent(current_segment, f"{self.prefix}{segment.parent_joint}_{self.module_nr}_FK")
+            parent_joint = cmds.listConnections(f"{segment}.parent_joint")
+            if parent_joint and cmds.objExists(f"{self.prefix}{parent_joint[0]}_FK"):
+                cmds.parent(current_segment, f"{self.prefix}{parent_joint[0]}_FK")
             else:
                 cmds.parent(current_segment, joint_group)
 
@@ -55,18 +55,18 @@ class FKChain:
 
         fk_controls: list[str] = []
         for segment in segments:
-            if cmds.objExists(f"{self.prefix}{segment.name}_{self.module_nr}_FK_CTRL") or segment.control is None:
+            if cmds.objExists(f"{self.prefix}{segment}_FK_CTRL"):
                 continue
 
-            current_segment = f"{self.prefix}{segment.name}_{self.module_nr}_FK" if cmds.objExists(
-                f"{self.prefix}{segment.name}_{self.module_nr}_FK") else f"{self.prefix}{segment.name}_{self.module_nr}_JNT"
+            current_segment = f"{self.prefix}{segment}_FK" if cmds.objExists(
+                f"{self.prefix}{segment}_FK") else f"{self.prefix}{segment}_JNT"
 
-            control_shape = cmds.getAttr(f"{segment.name}_{self.module_nr}.control_shape")
-            control_color = cmds.getAttr(f"{segment.name}_{self.module_nr}.control_color")
-            control_scale = cmds.getAttr(f"{segment.name}_{self.module_nr}.control_scale")
+            control_shape = cmds.getAttr(f"{segment}.control_shape")
+            control_color = cmds.getAttr(f"{segment}.control_color")
+            control_scale = cmds.getAttr(f"{segment}.control_scale")
 
             current_control = select_curve(shape=control_shape,
-                                           name=f"{self.prefix}{segment.name}_{self.module_nr}_FK_CTRL",
+                                           name=f"{self.prefix}{segment}_FK_CTRL",
                                            scale=control_scale)
             set_rgb_color(current_control, (1, 0, 1))
             cmds.setAttr(f"{current_control}.rotateOrder", RotateOrder.YZX)
@@ -74,8 +74,9 @@ class FKChain:
             cmds.matchTransform(current_control, current_segment, position=True, rotation=True, scale=False)
             cmds.parentConstraint(current_control, current_segment, maintainOffset=True)
 
-            if segment.control is not None and segment.control.parent_control is not None:
-                cmds.parent(current_control, f"{self.prefix}{segment.control.parent_control}_{self.module_nr}_FK_CTRL")
+            parent_control = cmds.listConnections(f"{segment}.parent_joint")
+            if parent_control and cmds.objExists(f"{self.prefix}{parent_control[0]}_FK_CTRL"):
+                cmds.parent(current_control, f"{self.prefix}{parent_control[0]}_FK_CTRL")
             else:
                 cmds.parent(current_control, control_group)
 

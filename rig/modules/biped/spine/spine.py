@@ -51,6 +51,6 @@ class Spine:
 
     def generate_module(self) -> None:
         self.base_skeleton()
-        # self.forward_kinematic()
-        # self.inverse_kinematic()
-        # self.switch_kinematic()
+        self.forward_kinematic()
+        self.inverse_kinematic()
+        self.switch_kinematic()
