@@ -31,7 +31,7 @@ node_combobox.currentIndexChanged.connect(
 
 
 @undoable_action
-def build_blueprint(blueprint_component):
+def build_module(module_component):
     if not cmds.objExists("master"):
         cmds.createNode("network", name="master", skipSelect=True)
         cmds.addAttr("master", niceName="children", longName="children", attributeType="message")
@@ -43,12 +43,12 @@ def build_blueprint(blueprint_component):
                      "spine": create_chain_module(chain_amount=5, chain_name="spine"), "front_leg": front_leg_module,
                      "rear_leg": rear_leg_module, "arachne_leg": arachne_leg_module, "wing": wing_module}
 
-    current_node = create_blueprint_node(module=segments_dict[blueprint_component])
-    create_blueprint_segments(node=current_node, module=segments_dict[blueprint_component])
+    current_node = create_module_node(module=segments_dict[module_component])
+    create_module_segments(node=current_node, module=segments_dict[module_component])
 
 
-def create_blueprint_node(module):
-    current_module = cmds.createNode("network", name=f"{module.name}_blueprint_#", skipSelect=True)
+def create_module_node(module):
+    current_module = cmds.createNode("network", name=f"{module.name}_module_#", skipSelect=True)
 
     add_default_node_attributes(node=current_module)
     cmds.setAttr(f"{current_module}.module_type", module.module_type, type="string")
@@ -75,7 +75,7 @@ def create_blueprint_node(module):
     return current_module
 
 
-def create_blueprint_segments(node, module):
+def create_module_segments(node, module):
     module_nr = cmds.getAttr(f"{node}.module_nr")
     for index, segment in enumerate(module.segments):
         current_segment = cmds.spaceLocator(name=f"{segment.name}_{module_nr}")[0]

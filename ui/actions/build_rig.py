@@ -12,8 +12,8 @@ from rig.modules.rig_module import RigModule
 
 
 @undoable_action
-def build_rig(blueprint="master"):
-    children = cmds.listConnections(f"{blueprint}.children") or []
+def build_rig(module="master"):
+    children = cmds.listConnections(f"{module}.children") or []
 
     for child in children:
         is_built = cmds.getAttr(f"{child}.is_built")
@@ -29,7 +29,7 @@ def build_rig(blueprint="master"):
             right_module.generate_module()
 
         cmds.setAttr(f"{child}.is_built", True)
-        build_rig(blueprint=child)
+        build_rig(module=child)
 
 
 def build_module(child, prefix) -> RigModule:

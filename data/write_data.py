@@ -11,14 +11,14 @@ def export_rig_data():
     save_data_to_file(file_path=file_path, data=rig_instance.to_json())
 
 
-def retrieve_rig_data(blueprint="master", data=None):
-    if not cmds.objExists(blueprint):
+def retrieve_rig_data(module="master", data=None):
+    if not cmds.objExists(module):
         return
 
     if data is None:
         data = {}
 
-    modules = cmds.listConnections(f"{blueprint}.children") or []
+    modules = cmds.listConnections(f"{module}.children") or []
 
     for module in modules:
         module_dict = Module(
@@ -73,6 +73,6 @@ def retrieve_rig_data(blueprint="master", data=None):
 
         data[module] = module_dict
 
-        retrieve_rig_data(blueprint=module, data=data)
+        retrieve_rig_data(module=module, data=data)
 
     return data

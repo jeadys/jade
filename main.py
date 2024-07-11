@@ -1,18 +1,15 @@
 from maya import OpenMayaUI
-from shiboken2 import wrapInstance
 from PySide2 import QtCore, QtWidgets
+from shiboken2 import wrapInstance
 
+from data.read_data import import_rig_data
+from data.write_data import export_rig_data
+from ui.actions.build_module import build_module
+from ui.actions.build_rig import build_rig
+from ui.actions.tree_view import connect_button, delete_button, node_widget, segment_widget, tree_view
 from ui.widgets.combobox import create_combobox
 from ui.widgets.spinbox import create_spinbox
-
 from utilities.unload_packages import unload_packages
-
-from ui.actions.build_rig import build_rig
-from ui.actions.build_blueprint import build_blueprint
-from ui.actions.tree_view import tree_view, node_widget, segment_widget, connect_button, delete_button
-
-from data.write_data import export_rig_data
-from data.read_data import import_rig_data
 
 
 class MayaUITemplate(QtWidgets.QWidget):
@@ -108,9 +105,9 @@ class MayaUITemplate(QtWidgets.QWidget):
         import_rig_button.clicked.connect(import_rig_data)
         operation_layout.addWidget(import_rig_button)
 
-        blueprint_button = QtWidgets.QPushButton("build blueprint")
-        blueprint_button.clicked.connect(lambda: build_blueprint(self.limb_module_combobox.currentText()))
-        operation_layout.addWidget(blueprint_button)
+        module_button = QtWidgets.QPushButton("build module")
+        module_button.clicked.connect(lambda: build_module(self.limb_module_combobox.currentText()))
+        operation_layout.addWidget(module_button)
 
         rig_button = QtWidgets.QPushButton("build rig")
         rig_button.clicked.connect(build_rig)

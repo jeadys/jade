@@ -17,7 +17,7 @@ Mesh + Skeleton           |  Skeleton
 
 ## TODO
 - Multi limb support
-- Blueprints
+- modules
 - Modular building blocks
 - Hierarchy tree view of modules
 - Import, export and save rig data

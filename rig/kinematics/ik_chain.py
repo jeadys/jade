@@ -130,7 +130,7 @@ class IKChain:
         bake_transform_to_offset_parent_matrix(chest_mch)
 
         pelvis_control = select_curve(shape=Shape.CUBE, name=f"pelvis_{self.module_nr}_CTRL", scale=5)
-        cmds.addAttr(pelvis_control, niceName="blueprint", longName="blueprint", attributeType="message", readable=True,
+        cmds.addAttr(pelvis_control, niceName="module", longName="module", attributeType="message", readable=True,
                      writable=True)
         cmds.setAttr(f"{pelvis_control}.rotateOrder", RotateOrder.YZX)
         cmds.matchTransform(pelvis_control, pelvis_mch, position=True, rotation=False, scale=False)
@@ -138,7 +138,7 @@ class IKChain:
         cmds.parent(pelvis_mch, pelvis_control)
 
         back_control = select_curve(shape=Shape.CUBE, name=f"back_{self.module_nr}_CTRL", scale=5)
-        cmds.addAttr(back_control, niceName="blueprint", longName="blueprint", attributeType="message", readable=True,
+        cmds.addAttr(back_control, niceName="module", longName="module", attributeType="message", readable=True,
                      writable=True)
         cmds.setAttr(f"{back_control}.rotateOrder", RotateOrder.YZX)
         cmds.matchTransform(back_control, back_mch, position=True, rotation=False, scale=False)
@@ -146,7 +146,7 @@ class IKChain:
         cmds.parent(back_mch, back_control)
 
         chest_control = select_curve(shape=Shape.CUBE, name=f"chest_{self.module_nr}_CTRL", scale=5)
-        cmds.addAttr(chest_control, niceName="blueprint", longName="blueprint", attributeType="message", readable=True,
+        cmds.addAttr(chest_control, niceName="module", longName="module", attributeType="message", readable=True,
                      writable=True)
         cmds.setAttr(f"{chest_control}.rotateOrder", RotateOrder.YZX)
         cmds.matchTransform(chest_control, chest_mch, position=True, rotation=False, scale=False)

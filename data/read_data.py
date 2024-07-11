@@ -2,7 +2,7 @@ import maya.cmds as cmds
 
 from data.file_handler import get_open_file_name, read_data_from_file
 from data.rig_structure import Module, Rig, Segment
-from ui.actions.build_blueprint import add_default_node_attributes, add_default_segment_attributes
+from ui.actions.build_module import add_default_node_attributes, add_default_segment_attributes
 from ui.actions.tree_view import node_combobox, StandardItem, tree_view
 from helpers.decorators.undoable_action import undoable_action
 from utilities.curve_from_locators import create_visual_connection
