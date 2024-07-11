@@ -1,6 +1,7 @@
 import maya.cmds as cmds
 from PySide2 import QtWidgets
 
+from helpers.decorators.undoable_action import undoable_action
 from rig.modules.biped.arm import arm_module
 from rig.modules.biped.leg import leg_module
 from rig.modules.biped.spine import create_chain_module
@@ -9,7 +10,6 @@ from rig.modules.creature.wing import wing_module
 from rig.modules.quadruped.front_leg import front_leg_module
 from rig.modules.quadruped.rear_leg import rear_leg_module
 from ui.actions.tree_view import node_combobox, segment_combobox, StandardItem, tree_view
-from helpers.decorators.undoable_action import undoable_action
 from utilities.curve_from_locators import create_visual_connection
 from utilities.enums import Color, Orient, Shape
 
@@ -52,7 +52,7 @@ def create_blueprint_node(module):
 
     add_default_node_attributes(node=current_module)
     cmds.setAttr(f"{current_module}.module_type", module.module_type, type="string")
-    cmds.setAttr(f"{current_module}.module_nr",  current_module.rsplit("_", 1)[-1], type="string")
+    cmds.setAttr(f"{current_module}.module_nr", current_module.rsplit("_", 1)[-1], type="string")
     cmds.setAttr(f"{current_module}.mirror", module.mirror)
     cmds.setAttr(f"{current_module}.stretch", module.stretch)
     cmds.setAttr(f"{current_module}.twist", module.twist)
@@ -84,6 +84,7 @@ def create_blueprint_segments(node, module):
         cmds.setAttr(f"{current_segment}.control_color", segment.control.control_color)
         cmds.setAttr(f"{current_segment}.control_scale", segment.control.control_scale)
         cmds.setAttr(f"{current_segment}.orientation", segment.orientation)
+        cmds.setAttr(f"{current_segment}.rotateOrder", segment.rotateOrder)
 
         selected_segment = segment_combobox.currentText()
 

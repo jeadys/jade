@@ -17,6 +17,11 @@ class RotateOrder(int, Enum):
     def __int__(self) -> int:
         return int.__int__(self)
 
+    @classmethod
+    def enum_to_string_attribute(cls):
+        enums = ':'.join([f"{x.name}={x.value}" for x in cls])
+        return enums
+
 
 # Condition node operation
 class CONOperation(CustomEnum):
@@ -187,4 +192,3 @@ def enum_to_string_attribute(enum):
 
 
 enum_to_string_attribute(Color)
-

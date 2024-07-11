@@ -25,7 +25,9 @@ class Skeleton:
 
             cmds.select(deselect=True)
 
-            current_segment = cmds.joint(name=f"{self.prefix}{segment}_JNT", rotationOrder=RotateOrder.YZX.name)
+            rotate_order = cmds.getAttr(f"{segment}.rotateOrder")
+            current_segment = cmds.joint(name=f"{self.prefix}{segment}_JNT",
+                                         rotationOrder=RotateOrder(rotate_order).name)
             cmds.matchTransform(current_segment, segment, position=True, rotation=False, scale=False)
 
             if self.prefix == "R_":
