@@ -3,6 +3,7 @@ from typing import Literal
 import maya.cmds as cmds
 
 from data.rig_structure import Segment
+from utilities.check_relation import has_parent
 from utilities.enums import MUDOperation, StretchMode
 
 
@@ -16,12 +17,16 @@ class Stretch:
         self.selection = cmds.listConnections(f"{self.node}.parent_joint")
 
     def stretch_joint(self, segments: list[Segment]) -> list[str]:
-        joint_group = cmds.group(empty=True, name=f"{self.prefix}{self.name}_{self.module_nr}_STRETCH_GROUP")
+        joint_group = f"{self.prefix}{self.name}_{self.module_nr}_STRETCH_GROUP"
+        if not cmds.objExists(joint_group):
+            cmds.group(empty=True, name=joint_group)
 
         joint_layer_group = f"{self.prefix}{self.name}_{self.module_nr}_LAYER_GROUP"
         if not cmds.objExists(joint_layer_group):
             joint_layer_group = cmds.group(empty=True, name=joint_layer_group)
-        cmds.parent(joint_group, joint_layer_group)
+
+        if not has_parent(joint_group, joint_layer_group):
+            cmds.parent(joint_group, joint_layer_group)
 
         stretch_joints = []
         for segment in segments:

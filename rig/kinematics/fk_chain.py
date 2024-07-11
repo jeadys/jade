@@ -4,6 +4,7 @@ import maya.cmds as cmds
 
 from data.rig_structure import Segment
 from utilities.bake_transform import bake_transform_to_offset_parent_matrix
+from utilities.check_relation import has_parent
 from utilities.curve import select_curve
 from utilities.enums import RotateOrder
 from utilities.set_rgb_color import set_rgb_color
@@ -19,12 +20,16 @@ class FKChain:
         self.selection = cmds.listConnections(f"{self.node}.parent_joint")
 
     def fk_joint(self, segments: list[Segment]) -> list[str]:
-        joint_group = cmds.group(empty=True, name=f"{self.prefix}{self.name}_{self.module_nr}_FK_GROUP")
+        joint_group = f"{self.prefix}{self.name}_{self.module_nr}_FK_GROUP"
+        if not cmds.objExists(joint_group):
+            cmds.group(empty=True, name=joint_group)
 
         joint_layer_group = f"{self.prefix}{self.name}_{self.module_nr}_LAYER_GROUP"
         if not cmds.objExists(joint_layer_group):
             joint_layer_group = cmds.group(empty=True, name=joint_layer_group)
-        cmds.parent(joint_group, joint_layer_group)
+
+        if not has_parent(joint_group, joint_layer_group):
+            cmds.parent(joint_group, joint_layer_group)
 
         fk_joints: list[str] = []
         for segment in segments:
@@ -46,12 +51,16 @@ class FKChain:
         return fk_joints
 
     def fk_control(self, segments: list[Segment]) -> list[str]:
-        control_group = cmds.group(empty=True, name=f"{self.prefix}{self.name}_{self.module_nr}_FK_CTRL_GROUP")
+        control_group = f"{self.prefix}{self.name}_{self.module_nr}_FK_CTRL_GROUP"
+        if not cmds.objExists(control_group):
+            cmds.group(empty=True, name=control_group)
 
         joint_control_group = f"{self.prefix}{self.name}_{self.module_nr}_CONTROL_GROUP"
         if not cmds.objExists(joint_control_group):
             cmds.group(empty=True, name=joint_control_group)
-        cmds.parent(control_group, joint_control_group)
+
+        if not has_parent(control_group, joint_control_group):
+            cmds.parent(control_group, joint_control_group)
 
         fk_controls: list[str] = []
         for segment in segments:

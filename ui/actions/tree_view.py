@@ -1,6 +1,8 @@
-from PySide2 import QtWidgets, QtGui, QtCore
 import maya.cmds as cmds
+from PySide2 import QtCore, QtGui, QtWidgets
+
 from ui.widgets.combobox import create_combobox
+from utilities.check_relation import has_parent
 
 
 class StandardItem(QtGui.QStandardItem):
@@ -106,15 +108,6 @@ segment_widget, segment_combobox = create_combobox(name="Parent Joint", items=[]
 def has_connection(from_connection, to_connection):
     is_connected = cmds.isConnected(from_connection, to_connection)
     return is_connected
-
-
-def has_parent(from_parent, to_parent=None):
-    current_parent = cmds.listRelatives(from_parent, parent=True)
-
-    if to_parent is None:
-        return current_parent is None
-
-    return current_parent and current_parent[0] == to_parent
 
 
 def delete_module_selection():
