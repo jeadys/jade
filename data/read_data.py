@@ -31,7 +31,7 @@ def apply_rig_data(data: Rig):
 
 
 def apply_rig_module(module: Module):
-    root_item = StandardItem(module.name, font_size=12)
+    root_item = StandardItem(module.name, font_size=10, icon=module.module_type)
     tree_view.add_item(module.name, root_item, module.parent_node)
     node_combobox.addItem(module.name)
 

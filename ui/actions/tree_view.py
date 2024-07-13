@@ -1,17 +1,18 @@
 import maya.cmds as cmds
 from PySide2 import QtCore, QtGui, QtWidgets
 
+from source.get_source import get_source
 from ui.widgets.combobox import create_combobox
 from utilities.check_relation import has_parent
 
 
 class StandardItem(QtGui.QStandardItem):
-    def __init__(self, text, font_size):
+    def __init__(self, text, font_size, icon):
         super(StandardItem, self).__init__()
-
         self.setEditable(False)
         self.setText(text)
         self.setFont(QtGui.QFont("Open Sans", font_size))
+        self.setIcon(QtGui.QIcon(get_source(icon=icon)))
 
 
 class TreeView(QtWidgets.QTreeView):
@@ -24,6 +25,35 @@ class TreeView(QtWidgets.QTreeView):
         self.setModel(self.model)
         self.undo_stack = QtWidgets.QUndoStack(self)
         self.items_map = {}
+        self.setIconSize(QtCore.QSize(24, 24))
+
+        stylesheet = """   
+        QTreeView::branch:has-siblings:!adjoins-item {
+            border-image: url(C:/Users/Realm/Desktop/programming/maya/maya_modular_rig/source/icons/branch/branch-vline.svg) 0;
+        }
+        
+        QTreeView::branch:has-siblings:adjoins-item {
+            border-image: url(C:/Users/Realm/Desktop/programming/maya/maya_modular_rig/source/icons/branch/branch-more.svg) 0;
+        }
+        
+        QTreeView::branch:!has-children:!has-siblings:adjoins-item {
+            border-image: url(C:/Users/Realm/Desktop/programming/maya/maya_modular_rig/source/icons/branch/branch-end.svg) 0;
+        }
+        
+        QTreeView::branch:closed:has-children:!has-siblings,
+        QTreeView::branch:closed:has-children:has-siblings {
+            border-image: none;
+            image: url(C:/Users/Realm/Desktop/programming/maya/maya_modular_rig/source/icons/branch/branch-root-closed.svg);
+        }
+        
+        QTreeView::branch:open:has-children:!has-siblings,
+        QTreeView::branch:open:has-children:has-siblings {
+            border-image: none;
+            image: url(C:/Users/Realm/Desktop/programming/maya/maya_modular_rig/source/icons/branch/branch-root-open.svg);
+        }
+    """
+
+        self.setStyleSheet(stylesheet)
 
     def add_item(self, name: str, item: StandardItem, parent_name):
         if self.find_item(name):

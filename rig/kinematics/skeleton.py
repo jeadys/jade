@@ -37,7 +37,8 @@ class Skeleton:
             parent_joint = cmds.listConnections(f"{segment}.parent_joint")
 
             if parent_joint is not None:
-                cmds.parent(current_segment, f"{self.prefix}{parent_joint[0]}_JNT")
+                cmds.parent(current_segment, f"{self.prefix}{parent_joint[0]}_JNT" if cmds.objExists(
+                    f"{self.prefix}{parent_joint[0]}_JNT") else f"{parent_joint[0]}_JNT")
             elif parent_joint is None and self.selection:
                 if cmds.objExists(f"{self.prefix}{self.selection[0]}_JNT"):
                     cmds.parent(current_segment, f"{self.prefix}{self.selection[0]}_JNT")

@@ -13,7 +13,6 @@ from ui.actions.tree_view import node_combobox, segment_combobox, StandardItem, 
 from utilities.curve_from_locators import create_visual_connection
 from utilities.enums import Color, Orient, Shape
 
-
 # from rig.modules.creature.wing import wing_segments
 
 
@@ -40,8 +39,9 @@ def build_module(module):
         cmds.setAttr("master.module_type", "master", type="string")
 
     segments_dict = {"arm": arm_module, "leg": leg_module,
-                     "spine": create_chain_module(chain_amount=5, chain_name="spine"), "front_leg": front_leg_module,
-                     "rear_leg": rear_leg_module, "arachne_leg": arachne_leg_module, "wing": wing_module}
+                     "spine": create_chain_module(chain_amount=5, chain_name="spine", max_distance=50),
+                     "front_leg": front_leg_module, "rear_leg": rear_leg_module, "arachne_leg": arachne_leg_module,
+                     "wing": wing_module}
 
     current_node = create_module_node(module=segments_dict[module])
     create_module_segments(node=current_node, module=segments_dict[module])
@@ -68,7 +68,7 @@ def create_module_node(module):
     if selected_node:
         cmds.connectAttr(f"{selected_node}.children", f"{current_module}.parent_node")
 
-    root_item = StandardItem(current_module, font_size=12)
+    root_item = StandardItem(current_module, font_size=10, icon=module.module_type)
     tree_view.add_item(name=current_module, item=root_item, parent_name=selected_node)
     node_combobox.addItem(current_module)
 
