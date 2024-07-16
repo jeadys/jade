@@ -1,7 +1,7 @@
 from utilities.enums import Orient, Color, Shape, RotateOrder
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 import json
-from typing import Optional
+from typing import Literal
 
 
 @dataclass
@@ -11,10 +11,12 @@ class Control:
     control_color: Color | None
     control_scale: float | None
     parent_control: str | None
+    control_points: list[list[float | int]] | None = field(default_factory=lambda:  [[0.0, 0.0, 0.0, 1.0]])
+    control_rgb: list[float | int] | None = field(default_factory=lambda: [0.0, 0.0, 0.0])
     rotateOrder: RotateOrder = RotateOrder.XYZ
 
     @classmethod
-    def from_dict(cls, data: dict):
+    def from_dict(cls, data: dict | None):
         return cls(**data)
 
 
@@ -35,12 +37,13 @@ class Segment:
     parent_node: str | None
     parent_joint: str | None
     children: list[str]
-    control: Control
+    control: Control | None
 
     @classmethod
     def from_dict(cls, data: dict):
-        control_data = data.pop("control", {})
-        return cls(control=Control.from_dict(control_data), **data)
+        control_data = data.pop("control", None)
+        control_instance = Control.from_dict(control_data) if control_data is not None else None
+        return cls(control=control_instance, **data)
 
 
 @dataclass
@@ -57,6 +60,7 @@ class Module:
     twist_joints: int
     twist_influence: float
     module_nr: str | None = None
+    side: Literal["L_", "R_"] = ""
 
     @classmethod
     def from_dict(cls, data: dict):
