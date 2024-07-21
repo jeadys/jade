@@ -22,6 +22,7 @@ def get_source(icon):
         "mouth": os.path.join(current_directory, "icons", "facial", "facial_mouth_85.png"),
         "nose": os.path.join(current_directory, "icons", "facial", "facial_nose_85.png"),
         "tongue": os.path.join(current_directory, "icons", "facial", "facial_tongue_85.png"),
+        "joint": os.path.join(current_directory, "icons", "joint.png"),
     }
 
     return icon_paths.get(icon, None)
