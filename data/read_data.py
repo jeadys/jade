@@ -2,9 +2,11 @@ import maya.cmds as cmds
 
 from data.file_handler import get_open_file_name, read_data_from_file
 from data.rig_structure import Module, Rig, Segment
-from ui.actions.build_module import add_default_node_attributes, add_default_segment_attributes
-from ui.actions.tree_view import node_combobox, StandardItem, tree_view
 from helpers.decorators.undoable_action import undoable_action
+from ui.actions.build_module import add_default_node_attributes, add_default_segment_attributes
+from ui.actions.refresh_ui import refresh_ui
+from ui.widgets.combobox import node_combobox
+from ui.widgets.tree_widget import tree_widget
 from utilities.curve_from_locators import create_visual_connection
 
 
@@ -14,6 +16,7 @@ def import_rig_data():
     if rig_data:
         rig_instance = Rig.from_dict(rig_data)
         apply_rig_data(data=rig_instance)
+        refresh_ui(tree=tree_widget, combobox=node_combobox)
 
 
 @undoable_action
@@ -31,10 +34,6 @@ def apply_rig_data(data: Rig):
 
 
 def apply_rig_module(module: Module):
-    root_item = StandardItem(module.name, font_size=10, icon=module.module_type)
-    tree_view.add_item(module.name, root_item, module.parent_node)
-    node_combobox.addItem(module.name)
-
     if cmds.objExists(f"{module.name}"):
         return
 
@@ -62,10 +61,10 @@ def apply_rig_segments(current_module: str, segments: list[Segment]):
         add_default_segment_attributes(segment=current_segment)
         cmds.setAttr(f"{current_segment}.orientation", segment.orientation)
 
-        if segment.control.control_shape:
-            cmds.setAttr(f"{current_segment}.control_shape", segment.control.control_shape)
-            cmds.setAttr(f"{current_segment}.control_color", segment.control.control_color)
-            cmds.setAttr(f"{current_segment}.control_scale", segment.control.control_scale)
+        if segment.control:
+            cmds.setAttr(f"{current_segment}.control_points", len(segment.control.control_points),
+                         *segment.control.control_points, type="pointArray")
+            cmds.setAttr(f"{current_segment}.control_rgb", *segment.control.control_rgb, type="float3")
 
         if segment.parent_joint:
             cmds.parent(current_segment, segment.parent_joint)

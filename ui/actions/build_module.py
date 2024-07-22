@@ -1,5 +1,5 @@
 import maya.cmds as cmds
-from PySide2 import QtWidgets
+from PySide2 import QtGui
 
 from helpers.decorators.undoable_action import undoable_action
 from rig.modules.biped.arm import arm_module
@@ -9,24 +9,11 @@ from rig.modules.creature.arachne_leg import arachne_leg_module
 from rig.modules.creature.wing import wing_module
 from rig.modules.quadruped.front_leg import front_leg_module
 from rig.modules.quadruped.rear_leg import rear_leg_module
-from ui.actions.tree_view import node_combobox, segment_combobox, StandardItem, tree_view
+from source.get_source import get_source
+from ui.widgets.combobox import node_combobox, segment_combobox
+from ui.widgets.tree_widget import refresh_ui, tree_widget, TreeWidgetItem
 from utilities.curve_from_locators import create_visual_connection
 from utilities.enums import Color, Orient, Shape
-
-# from rig.modules.creature.wing import wing_segments
-
-
-def update_driven_combobox(driver_combobox: QtWidgets.QComboBox, driven_combobox: QtWidgets.QComboBox, attribute: str):
-    selected_item = driver_combobox.currentText()
-    has_attribute = cmds.attributeQuery(attribute, node=selected_item, exists=True)
-    retrieved_items = cmds.listConnections(f"{selected_item}.{attribute}") if has_attribute else []
-    driven_combobox.clear()
-    driven_combobox.addItems(retrieved_items)
-
-
-node_combobox.currentIndexChanged.connect(
-    lambda val: update_driven_combobox(driver_combobox=node_combobox, driven_combobox=segment_combobox,
-                                       attribute="segments"))
 
 
 @undoable_action
@@ -53,6 +40,7 @@ def create_module_node(module):
     add_default_node_attributes(node=current_module)
     cmds.setAttr(f"{current_module}.module_type", module.module_type, type="string")
     cmds.setAttr(f"{current_module}.module_nr", current_module.rsplit("_", 1)[-1], type="string")
+    cmds.setAttr(f"{current_module}.side", module.side, type="string")
     cmds.setAttr(f"{current_module}.mirror", module.mirror)
     cmds.setAttr(f"{current_module}.stretch", module.stretch)
     cmds.setAttr(f"{current_module}.twist", module.twist)
@@ -68,21 +56,28 @@ def create_module_node(module):
     if selected_node:
         cmds.connectAttr(f"{selected_node}.children", f"{current_module}.parent_node")
 
-    root_item = StandardItem(current_module, font_size=10, icon=module.module_type)
-    tree_view.add_item(name=current_module, item=root_item, parent_name=selected_node)
-    node_combobox.addItem(current_module)
+    root_item = TreeWidgetItem(text=current_module, font_size=10, icon=module.module_type)
+    tree_widget.add_item(item=root_item, parent=selected_node)
+
+    icon = QtGui.QIcon(get_source(icon=module.module_type))
+    node_combobox.addItem(icon, current_module)
+    refresh_ui(tree=tree_widget, combobox=node_combobox)
 
     return current_module
 
 
 def create_module_segments(node, module):
     module_nr = cmds.getAttr(f"{node}.module_nr")
+
     for index, segment in enumerate(module.segments):
         current_segment = cmds.spaceLocator(name=f"{segment.name}_{module_nr}")[0]
         add_default_segment_attributes(segment=current_segment)
         cmds.setAttr(f"{current_segment}.control_shape", segment.control.control_shape)
         cmds.setAttr(f"{current_segment}.control_color", segment.control.control_color)
         cmds.setAttr(f"{current_segment}.control_scale", segment.control.control_scale)
+        cmds.setAttr(f"{current_segment}.control_points", len(segment.control.control_points),
+                     *segment.control.control_points, type="pointArray")
+        cmds.setAttr(f"{current_segment}.control_rgb", *segment.control.control_rgb, type="float3")
         cmds.setAttr(f"{current_segment}.orientation", segment.orientation)
         cmds.setAttr(f"{current_segment}.rotateOrder", segment.rotateOrder)
 
@@ -94,13 +89,13 @@ def create_module_segments(node, module):
             cmds.move(segment.translateX, segment.translateY, segment.translateZ, current_segment, relative=True,
                       objectSpace=True)
             cmds.parent(current_segment, f"{segment.parent_joint}_{module_nr}")
-            cmds.connectAttr(f"{segment.parent_joint}_{module_nr}.children", f"{current_segment}.parent_joint")
+            # cmds.connectAttr(f"{segment.parent_joint}_{module_nr}.children", f"{current_segment}.parent_joint")
             create_visual_connection(from_node=f"{segment.parent_joint}_{module_nr}", to_node=current_segment)
 
         elif not segment.parent_joint and selected_segment:
             cmds.matchTransform(current_segment, selected_segment, position=True, rotation=False, scale=False)
             cmds.parent(current_segment, selected_segment)
-            cmds.connectAttr(f"{selected_segment}.children", f"{current_segment}.parent_joint")
+            # cmds.connectAttr(f"{selected_segment}.children", f"{current_segment}.parent_joint")
             create_visual_connection(from_node=selected_segment, to_node=current_segment)
 
         cmds.rotate(segment.rotateX, segment.rotateY, segment.rotateZ, current_segment, relative=True,
@@ -115,8 +110,10 @@ def create_module_segments(node, module):
 def add_default_node_attributes(node):
     cmds.addAttr(node, niceName="module_type", longName="module_type", dataType="string", readable=False,
                  writable=False, hidden=True)
-    cmds.addAttr(node, niceName="module_nr", longName="module_nr", dataType="string", readable=False,
-                 writable=False, hidden=True)
+    cmds.addAttr(node, niceName="module_nr", longName="module_nr", dataType="string", readable=True,
+                 writable=True, hidden=False)
+    cmds.addAttr(node, niceName="side", longName="side", dataType="string", readable=True,
+                 writable=True, hidden=False)
     cmds.addAttr(node, niceName="parent_node", longName="parent_node", attributeType="message", readable=False,
                  writable=True)
     cmds.addAttr(node, niceName="parent_joint", longName="parent_joint", attributeType="message")
@@ -152,5 +149,7 @@ def add_default_segment_attributes(segment):
                  enumName=Color.enum_to_string_attribute(), defaultValue=0)
     cmds.addAttr(segment, niceName="control_scale", longName="control_scale", attributeType="float", minValue=1,
                  maxValue=10, defaultValue=1)
+    cmds.addAttr(segment, niceName="control_points", longName="control_points", dataType="pointArray")
+    cmds.addAttr(segment, niceName="control_rgb", longName="control_rgb", dataType="float3")
     cmds.addAttr(segment, niceName="orientation", longName="orientation", attributeType="enum",
                  enumName=Orient.enum_to_string_attribute(), defaultValue=0)

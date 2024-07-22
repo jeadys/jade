@@ -55,20 +55,24 @@ def retrieve_rig_data(module="master", data=None):
                 parent_node=(cmds.listConnections(f"{segment}.parent_node") or [None])[0],
                 parent_joint=(cmds.listConnections(f"{segment}.parent_joint") or [None])[0],
                 children=cmds.listConnections(f"{segment}.children"),
-                control=Control(
+                control=None
+            )
+
+            control = cmds.objExists(f"L_{segment}_FK_CTRL")
+            if control:
+                cvs = cmds.ls(f"L_{segment}_FK_CTRL.cv[*]", flatten=True)
+                points = [cmds.xform(cv, query=True, objectSpace=True, translation=True) for cv in cvs]
+
+                segment_dict.control = Control(
                     name=segment,
                     control_shape=None,
                     control_color=None,
                     control_scale=None,
+                    control_points=points,
+                    control_rgb=(cmds.getAttr(f"L_{segment}_FK_CTRL.overrideColorRGB") or [None])[0],
                     parent_control=(cmds.listConnections(f"{segment}.parent_joint") or [None])[0],
                 )
-            )
-            if cmds.attributeQuery("control_shape", node=segment, exists=True):
-                segment_dict.control.control_shape = cmds.getAttr(f"{segment}.control_shape")
-            if cmds.attributeQuery("control_color", node=segment, exists=True):
-                segment_dict.control.control_color = cmds.getAttr(f"{segment}.control_color")
-            if cmds.attributeQuery("control_scale", node=segment, exists=True):
-                segment_dict.control.control_scale = cmds.getAttr(f"{segment}.control_scale")
+
             module_dict.segments.append(segment_dict)
 
         data[module] = module_dict
