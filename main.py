@@ -5,8 +5,10 @@ from shiboken2 import wrapInstance
 from data.read_data import import_rig_data
 from data.write_data import export_rig_data
 from ui.actions.build_rig import build_rig
-from ui.actions.tree_view import connect_button, delete_button, node_widget, segment_widget, tree_view
+from ui.actions.connect_module import connect_button
+from ui.widgets.combobox import node_widget, segment_widget
 from ui.widgets.tab_widget import tab_widget
+from ui.widgets.tree_widget import refresh_button, tree_widget
 from utilities.unload_packages import unload_packages
 
 
@@ -43,8 +45,8 @@ class MainWindow(QtWidgets.QMainWindow):
         hierarchy_group.setLayout(hierarchy_layout)
         main_layout.addWidget(hierarchy_group)
 
-        hierarchy_layout.addWidget(tree_view)
-        hierarchy_layout.addWidget(delete_button)
+        hierarchy_layout.addWidget(tree_widget)
+        hierarchy_layout.addWidget(refresh_button)
 
         settings_group = QtWidgets.QGroupBox("module settings")
         settings_layout = QtWidgets.QVBoxLayout()
@@ -93,5 +95,5 @@ def open_window():
 if __name__ == "__main__":
     DEBUG = True
     if DEBUG:
-        unload_packages(silent=False, packages=["data", "helpers", "logging", "rig", "source", "ui", "utilities"])
+        unload_packages(silent=True, packages=["data", "helpers", "logging", "rig", "source", "ui", "utilities"])
     open_window()
