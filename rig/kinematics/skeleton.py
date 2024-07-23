@@ -8,10 +8,9 @@ from utilities.enums import Orient, RotateOrder
 
 class Skeleton:
 
-    def __init__(self, node, prefix: Literal["L_", "R_"] = ""):
+    def __init__(self, node):
         self.node = node
-        self.prefix = prefix
-        self.module_nr = cmds.getAttr(f"{self.node}.module_nr")
+        self.side = cmds.getAttr(f"{self.node}.side")
         self.selection = cmds.listConnections(f"{self.node}.parent_joint")
 
     def generate_skeleton(self, segments: list[Segment]):
@@ -19,33 +18,24 @@ class Skeleton:
         if not cmds.objExists(skeleton_group):
             cmds.group(empty=True, name=skeleton_group)
 
-        for segment in segments:
-            if cmds.objExists(f"{self.prefix}{segment}_JNT"):
+        for index, segment in enumerate(segments):
+            if cmds.objExists(f"{segment}_JNT"):
                 continue
 
             cmds.select(deselect=True)
 
             rotate_order = cmds.getAttr(f"{segment}.rotateOrder")
-            current_segment = cmds.joint(name=f"{self.prefix}{segment}_JNT",
-                                         rotationOrder=RotateOrder(rotate_order).name)
+            current_segment = cmds.joint(name=f"{segment}_JNT", rotationOrder=RotateOrder(rotate_order).name)
             cmds.matchTransform(current_segment, segment, position=True, rotation=False, scale=False)
 
-            if self.prefix == "R_":
-                position = cmds.xform(current_segment, query=True, translation=True, worldSpace=True)
-                cmds.move(position[0] * -1, current_segment, moveX=True, absolute=True, worldSpace=True)
+            parent_joint = cmds.listRelatives(segment, parent=True, shapes=False, type="transform")
 
-            parent_joint = cmds.listConnections(f"{segment}.parent_joint")
-
-            if parent_joint is not None:
-                cmds.parent(current_segment, f"{self.prefix}{parent_joint[0]}_JNT" if cmds.objExists(
-                    f"{self.prefix}{parent_joint[0]}_JNT") else f"{parent_joint[0]}_JNT")
-            elif parent_joint is None and self.selection:
-                if cmds.objExists(f"{self.prefix}{self.selection[0]}_JNT"):
-                    cmds.parent(current_segment, f"{self.prefix}{self.selection[0]}_JNT")
-                else:
-                    cmds.parent(current_segment, f"{self.selection[0]}_JNT")
-            else:
+            if index == 0 and self.selection:
+                cmds.parent(current_segment, f"{self.selection[0]}_JNT")
+            elif index == 0 and not self.selection:
                 cmds.parent(current_segment, skeleton_group)
+            elif parent_joint:
+                cmds.parent(current_segment, f"{parent_joint[0]}_JNT")
 
     def orient_skeleton(self, segments: list[Segment]):
         for segment in segments:
@@ -55,13 +45,12 @@ class Skeleton:
                 case Orient.SKIP:
                     continue
                 case Orient.WORLD:
-                    cmds.joint(f"{self.prefix}{segment}_JNT", edit=True, orientJoint="none",
+                    cmds.joint(f"{segment}_JNT", edit=True, orientJoint="none",
                                zeroScaleOrient=True)
                 case Orient.BONE:
-                    cmds.joint(f"{self.prefix}{segment}_JNT", edit=True, orientJoint="yzx",
+                    cmds.joint(f"{segment}_JNT", edit=True, orientJoint="yzx",
                                secondaryAxisOrient="zup",
                                zeroScaleOrient=True)
 
-            if self.prefix == "R_":
-                cmds.rotate(180, 0, 0, f"{self.prefix}{segment}_JNT.rotateAxis", relative=True,
-                            objectSpace=True)
+            if self.side == "R_":
+                cmds.rotate(180, 0, 0, f"{segment}_JNT.rotateAxis", relative=True, objectSpace=True)

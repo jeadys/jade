@@ -1,5 +1,3 @@
-from typing import Literal
-
 import maya.cmds as cmds
 
 from data.rig_structure import Segment
@@ -15,18 +13,18 @@ from utilities.enums import TwistFlow
 class FrontLeg:
     name = "front_leg"
 
-    def __init__(self, node, segments: list[Segment], prefix: Literal["L_", "R_"] = ""):
+    def __init__(self, node, segments: list[Segment]):
         self.node = node
         self.segments = segments
-        self.prefix = prefix
+        self.side = cmds.getAttr(f"{self.node}.side")
         self.module_nr = cmds.getAttr(f"{self.node}.module_nr")
         self.selection = cmds.listConnections(f"{self.node}.parent_joint")
 
-        self.skeleton: Skeleton = Skeleton(node=self.node, prefix=self.prefix)
-        self.ik_chain: IKChain = IKChain(node=self.node, name=FrontLeg.name, prefix=self.prefix)
-        self.fk_chain: FKChain = FKChain(node=self.node, name=FrontLeg.name, prefix=self.prefix)
-        self.stretch: Stretch = Stretch(node=self.node, name=FrontLeg.name, prefix=self.prefix)
-        self.twist: Twist = Twist(node=self.node, name=FrontLeg.name, prefix=self.prefix)
+        self.skeleton: Skeleton = Skeleton(node=self.node)
+        self.ik_chain: IKChain = IKChain(node=self.node, name=FrontLeg.name)
+        self.fk_chain: FKChain = FKChain(node=self.node, name=FrontLeg.name)
+        self.stretch: Stretch = Stretch(node=self.node, name=FrontLeg.name)
+        self.twist: Twist = Twist(node=self.node, name=FrontLeg.name)
 
         self.fk_joints: list[str] = []
         self.fk_controls: list[str] = []
@@ -66,28 +64,28 @@ class FrontLeg:
 
     def clavicle_control(self) -> None:
         clavicle_control = cmds.circle(normal=(0, 1, 0), center=(0, 0, 0), radius=5, degree=1, sections=32,
-                                       name=f"{self.prefix}{self.segments[0]}_CTRL")[0]
-        cmds.parent(clavicle_control, f"{self.prefix}{FrontLeg.name}_{self.module_nr}_CONTROL_GROUP")
-        cmds.matchTransform(clavicle_control, f"{self.prefix}{self.segments[0]}_JNT",
+                                       name=f"{self.side}{self.segments[0]}_CTRL")[0]
+        cmds.parent(clavicle_control, f"{self.side}{FrontLeg.name}_{self.module_nr}_CONTROL_GROUP")
+        cmds.matchTransform(clavicle_control, f"{self.side}{self.segments[0]}_JNT",
                             position=True,
                             rotation=True, scale=False)
-        cmds.parentConstraint(clavicle_control, f"{self.prefix}{self.segments[0]}_JNT",
+        cmds.parentConstraint(clavicle_control, f"{self.side}{self.segments[0]}_JNT",
                               maintainOffset=True)
 
-        if cmds.objExists(f"{self.prefix}{FrontLeg.name}_{self.module_nr}_IK_GROUP"):
-            cmds.parentConstraint(clavicle_control, f"{self.prefix}{FrontLeg.name}_{self.module_nr}_IK_GROUP",
+        if cmds.objExists(f"{self.side}{FrontLeg.name}_{self.module_nr}_IK_GROUP"):
+            cmds.parentConstraint(clavicle_control, f"{self.side}{FrontLeg.name}_{self.module_nr}_IK_GROUP",
                                   maintainOffset=True)
 
-        if cmds.objExists(f"{self.prefix}{FrontLeg.name}_{self.module_nr}_FK_CTRL_GROUP"):
-            cmds.parentConstraint(clavicle_control, f"{self.prefix}{FrontLeg.name}_{self.module_nr}_FK_CTRL_GROUP",
+        if cmds.objExists(f"{self.side}{FrontLeg.name}_{self.module_nr}_FK_CTRL_GROUP"):
+            cmds.parentConstraint(clavicle_control, f"{self.side}{FrontLeg.name}_{self.module_nr}_FK_CTRL_GROUP",
                                   maintainOffset=True)
 
         if self.selection:
             clavicle_group = cmds.group(empty=True, name="clavicle_GROUP")
             cmds.matchTransform(clavicle_group, clavicle_control, position=True, rotation=True, scale=False)
             cmds.parent(clavicle_control, clavicle_group)
-            cmds.parentConstraint(f"{self.prefix}{self.selection[0]}_JNT", clavicle_group, maintainOffset=True)
-            cmds.parent(clavicle_group, f"{self.prefix}{FrontLeg.name}_{self.module_nr}_CONTROL_GROUP")
+            cmds.parentConstraint(f"{self.side}{self.selection[0]}_JNT", clavicle_group, maintainOffset=True)
+            cmds.parent(clavicle_group, f"{self.side}{FrontLeg.name}_{self.module_nr}_CONTROL_GROUP")
 
         bake_transform_to_offset_parent_matrix(clavicle_control)
 

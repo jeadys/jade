@@ -1,7 +1,3 @@
-from typing import Literal
-
-import maya.cmds as cmds
-
 from data.rig_structure import Segment
 from rig.kinematics.fk_chain import FKChain
 from rig.kinematics.ik_chain import IKChain
@@ -11,16 +7,13 @@ from rig.kinematics.skeleton import Skeleton
 class Spine:
     name = "spine"
 
-    def __init__(self, node, segments: list[Segment], prefix: Literal["L_", "R_"] = ""):
+    def __init__(self, node, segments: list[Segment]):
         self.node = node
         self.segments = segments
-        self.prefix = prefix
-        self.module_nr = cmds.getAttr(f"{self.node}.module_nr")
-        self.selection = cmds.listConnections(f"{self.node}.parent_joint")
 
-        self.skeleton: Skeleton = Skeleton(node=self.node, prefix=self.prefix)
-        self.ik_chain: IKChain = IKChain(node=self.node, name=Spine.name, prefix=self.prefix)
-        self.fk_chain: FKChain = FKChain(node=self.node, name=Spine.name, prefix=self.prefix)
+        self.skeleton: Skeleton = Skeleton(node=self.node)
+        self.ik_chain: IKChain = IKChain(node=self.node, name=Spine.name)
+        self.fk_chain: FKChain = FKChain(node=self.node, name=Spine.name)
 
         self.fk_joints: list[str] = []
         self.fk_controls: list[str] = []

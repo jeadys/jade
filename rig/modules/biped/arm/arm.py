@@ -1,5 +1,3 @@
-from typing import Literal
-
 import maya.cmds as cmds
 
 from data.rig_structure import Segment
@@ -9,25 +7,25 @@ from rig.kinematics.skeleton import Skeleton
 from rig.mechanisms.limb_stretch import Stretch
 from rig.mechanisms.limb_twist import Twist
 from utilities.bake_transform import bake_transform_to_offset_parent_matrix
-from utilities.curve import select_curve
-from utilities.enums import Shape, TwistFlow
+from utilities.enums import TwistFlow
+from utilities.set_rgb_color import set_rgb_color
 
 
 class Arm:
     name = "arm"
 
-    def __init__(self, node, segments: list[Segment], prefix: Literal["L_", "R_"] = ""):
+    def __init__(self, node, segments: list[Segment]):
         self.node = node
         self.segments = segments
-        self.prefix = prefix
+        self.side = cmds.getAttr(f"{self.node}.side")
         self.module_nr = cmds.getAttr(f"{self.node}.module_nr")
         self.selection = cmds.listConnections(f"{self.node}.parent_joint")
 
-        self.skeleton: Skeleton = Skeleton(node=self.node, prefix=self.prefix)
-        self.ik_chain: IKChain = IKChain(node=self.node, name=Arm.name, prefix=self.prefix)
-        self.fk_chain: FKChain = FKChain(node=self.node, name=Arm.name, prefix=self.prefix)
-        self.stretch: Stretch = Stretch(node=self.node, name=Arm.name, prefix=self.prefix)
-        self.twist: Twist = Twist(node=self.node, name=Arm.name, prefix=self.prefix)
+        self.skeleton: Skeleton = Skeleton(node=self.node)
+        self.ik_chain: IKChain = IKChain(node=self.node, name=Arm.name)
+        self.fk_chain: FKChain = FKChain(node=self.node, name=Arm.name)
+        self.stretch: Stretch = Stretch(node=self.node, name=Arm.name)
+        self.twist: Twist = Twist(node=self.node, name=Arm.name)
 
         self.fk_joints: list[str] = []
         self.fk_controls: list[str] = []
@@ -66,20 +64,28 @@ class Arm:
         self.stretch.stretch_node(segments=self.segments[1:])
 
     def clavicle_control(self) -> None:
-        clavicle_control = select_curve(shape=Shape.CUBE,
-                                        name=f"{self.prefix}{self.segments[0]}_CTRL", scale=5)
-        cmds.parent(clavicle_control, f"{self.prefix}{Arm.name}_{self.module_nr}_CONTROL_GROUP")
-        cmds.matchTransform(clavicle_control, f"{self.prefix}{self.segments[0]}_JNT",
+        control_rgb = cmds.getAttr(f"{self.segments[0]}.control_rgb")
+        control_points = cmds.getAttr(f"{self.segments[0]}.control_points")
+
+        if self.side == "R_":
+            control_points = [(x * -1, y * -1, z * -1, w) for x, y, z, w in control_points]
+
+        clavicle_control = cmds.curve(name=f"{self.segments[0]}_FK_CTRL", pointWeight=control_points, degree=1)
+
+        set_rgb_color(node=clavicle_control, color=control_rgb[0])
+
+        cmds.parent(clavicle_control, f"{self.side}{Arm.name}_{self.module_nr}_CONTROL_GROUP")
+        cmds.matchTransform(clavicle_control, f"{self.segments[0]}_JNT",
                             position=True, rotation=True, scale=False)
-        cmds.parentConstraint(clavicle_control, f"{self.prefix}{self.segments[0]}_JNT",
+        cmds.parentConstraint(clavicle_control, f"{self.segments[0]}_JNT",
                               maintainOffset=True)
 
-        if cmds.objExists(f"{self.prefix}{Arm.name}_{self.module_nr}_IK_GROUP"):
-            cmds.parentConstraint(clavicle_control, f"{self.prefix}{Arm.name}_{self.module_nr}_IK_GROUP",
+        if cmds.objExists(f"{self.side}{Arm.name}_{self.module_nr}_IK_GROUP"):
+            cmds.parentConstraint(clavicle_control, f"{self.side}{Arm.name}_{self.module_nr}_IK_GROUP",
                                   maintainOffset=True)
 
-        if cmds.objExists(f"{self.prefix}{Arm.name}_{self.module_nr}_FK_CTRL_GROUP"):
-            cmds.parentConstraint(clavicle_control, f"{self.prefix}{Arm.name}_{self.module_nr}_FK_CTRL_GROUP",
+        if cmds.objExists(f"{self.side}{Arm.name}_{self.module_nr}_FK_CTRL_GROUP"):
+            cmds.parentConstraint(clavicle_control, f"{self.side}{Arm.name}_{self.module_nr}_FK_CTRL_GROUP",
                                   maintainOffset=True)
 
         if self.selection:
@@ -87,12 +93,12 @@ class Arm:
             cmds.matchTransform(clavicle_group, clavicle_control, position=True, rotation=True, scale=False)
             cmds.parent(clavicle_control, clavicle_group)
 
-            if cmds.objExists(f"{self.prefix}{self.selection[0]}_JNT"):
-                cmds.parentConstraint(f"{self.prefix}{self.selection[0]}_JNT", clavicle_group, maintainOffset=True)
-            elif cmds.objExists(f"{self.prefix}{self.selection[0]}_JNT"):
+            if cmds.objExists(f"{self.selection[0]}_JNT"):
+                cmds.parentConstraint(f"{self.selection[0]}_JNT", clavicle_group, maintainOffset=True)
+            elif cmds.objExists(f"{self.selection[0]}_JNT"):
                 cmds.parentConstraint(f"{self.selection[0]}_JNT", clavicle_group, maintainOffset=True)
 
-            cmds.parent(clavicle_group, f"{self.prefix}{Arm.name}_{self.module_nr}_CONTROL_GROUP")
+            cmds.parent(clavicle_group, f"{self.side}{Arm.name}_{self.module_nr}_CONTROL_GROUP")
 
         bake_transform_to_offset_parent_matrix(clavicle_control)
 
@@ -101,9 +107,9 @@ class Arm:
         self.forward_kinematic()
         self.inverse_kinematic()
         self.switch_kinematic()
-        self.clavicle_control()
-
-        if cmds.getAttr(f"{self.node}.twist"):
-            self.twist_mechanism()
-        if cmds.getAttr(f"{self.node}.stretch"):
-            self.stretch_mechanism()
+        # self.clavicle_control()
+        #
+        # if cmds.getAttr(f"{self.node}.twist"):
+        #     self.twist_mechanism()
+        # if cmds.getAttr(f"{self.node}.stretch"):
+        #     self.stretch_mechanism()

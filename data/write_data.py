@@ -25,6 +25,7 @@ def retrieve_rig_data(module="master", data=None):
             name=module,
             module_type=cmds.getAttr(f"{module}.module_type"),
             module_nr=cmds.getAttr(f"{module}.module_nr"),
+            side=cmds.getAttr(f"{module}.side"),
             children=cmds.listConnections(f"{module}.children"),
             segments=[],
             parent_node=(cmds.listConnections(f"{module}.parent_node") or [None])[0],

@@ -1,5 +1,3 @@
-from typing import Literal
-
 import maya.cmds as cmds
 
 from data.rig_structure import Segment
@@ -14,18 +12,15 @@ from utilities.enums import TwistFlow
 class ArachneLeg:
     name = "arachne_leg"
 
-    def __init__(self, node: str, segments: list[Segment], prefix: Literal["L_", "R_"] = ""):
+    def __init__(self, node: str, segments: list[Segment]):
         self.node = node
         self.segments = segments
-        self.prefix = prefix
-        self.module_nr = cmds.getAttr(f"{self.node}.module_nr")
-        self.selection = cmds.listConnections(f"{self.node}.parent_joint")
 
-        self.skeleton: Skeleton = Skeleton(node=self.node, prefix=self.prefix)
-        self.ik_chain: IKChain = IKChain(node=self.node, name=ArachneLeg.name, prefix=self.prefix)
-        self.fk_chain: FKChain = FKChain(node=self.node, name=ArachneLeg.name, prefix=self.prefix)
-        self.stretch: Stretch = Stretch(node=self.node, name=ArachneLeg.name, prefix=self.prefix)
-        self.twist: Twist = Twist(node=self.node, name=ArachneLeg.name, prefix=self.prefix)
+        self.skeleton: Skeleton = Skeleton(node=self.node)
+        self.ik_chain: IKChain = IKChain(node=self.node, name=ArachneLeg.name)
+        self.fk_chain: FKChain = FKChain(node=self.node, name=ArachneLeg.name)
+        self.stretch: Stretch = Stretch(node=self.node, name=ArachneLeg.name)
+        self.twist: Twist = Twist(node=self.node, name=ArachneLeg.name)
 
         self.fk_joints: list[str] = []
         self.fk_controls: list[str] = []
