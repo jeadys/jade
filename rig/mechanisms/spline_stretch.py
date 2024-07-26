@@ -12,7 +12,7 @@ class SplineStretch:
         self.module_nr = cmds.getAttr(f"{self.node}.module_nr")
         self.prefix = f"{self.side}{self.name}_{self.module_nr}"
 
-    def stretch_node(self, segments, curve, control):
+    def stretch_node(self, segments, curve, main_control):
         curve_info = cmds.createNode("curveInfo", name=f"{self.prefix}_curve_info")
         curve_shape = cmds.listRelatives(curve, shapes=True)[0]
 
@@ -29,13 +29,13 @@ class SplineStretch:
         # SEGMENT STRETCH CONDITION
         stretch_condition: str = cmds.createNode("condition", name=f"{self.prefix}_stretch_condition")
         cmds.setAttr(f"{stretch_condition}.secondTerm", 1)
-        cmds.connectAttr(f"{control}.Stretch_Type", f"{stretch_condition}.operation")
+        cmds.connectAttr(f"{main_control}.Stretch_Type", f"{stretch_condition}.operation")
         cmds.connectAttr(f"{scale_factor}.outputX", f"{stretch_condition}.firstTerm")
 
         # BLEND COLOR NODES
         color_attributes: list[str] = ["R", "G", "B"]
         stretch_blend = cmds.createNode("blendColors", name=f"{self.prefix}_stretch_blend")
-        cmds.connectAttr(f"{control}.Stretchiness", f"{stretch_blend}.blender")
+        cmds.connectAttr(f"{main_control}.Stretchiness", f"{stretch_blend}.blender")
 
         for color_attribute in color_attributes:
             cmds.setAttr(f"{stretch_blend}.color1{color_attribute}", 1)
@@ -61,7 +61,7 @@ class SplineStretch:
         # PRESERVE JOINTS VOLUME ON STRETCH
         volume_preservation: str = cmds.createNode("multiplyDivide", name=f"{self.prefix}_volume_preservation")
         cmds.setAttr(f"{volume_preservation}.operation", MUDOperation.POWER.value)
-        cmds.connectAttr(f"{control}.Volume", f"{volume_preservation}.input2X")
+        cmds.connectAttr(f"{main_control}.Volume", f"{volume_preservation}.input2X")
         cmds.connectAttr(f"{stretch_condition}.outColorR", f"{volume_preservation}.input1X")
         cmds.connectAttr(f"{volume_preservation}.outputX", f"{stretch_ik_blend}.color1G")
 
@@ -70,10 +70,10 @@ class SplineStretch:
             cmds.connectAttr(f"{stretch_ik_blend}.outputG", f"{segment}_JNT.scale.scaleZ")
 
     @staticmethod
-    def stretch_attribute(control):
-        if not cmds.attributeQuery("Stretchiness", node=control, exists=True):
+    def stretch_attribute(main_control):
+        if not cmds.attributeQuery("Stretchiness", node=main_control, exists=True):
             cmds.addAttr(
-                control,
+                main_control,
                 attributeType="float",
                 niceName="Stretchiness",
                 longName="Stretchiness",
@@ -83,9 +83,9 @@ class SplineStretch:
                 keyable=True,
             )
 
-        if not cmds.attributeQuery("Volume", node=control, exists=True):
+        if not cmds.attributeQuery("Volume", node=main_control, exists=True):
             cmds.addAttr(
-                control,
+                main_control,
                 attributeType="float",
                 niceName="Volume",
                 longName="Volume",
@@ -95,9 +95,9 @@ class SplineStretch:
                 keyable=True,
             )
 
-        if not cmds.attributeQuery("Stretch_Type", node=control, exists=True):
+        if not cmds.attributeQuery("Stretch_Type", node=main_control, exists=True):
             cmds.addAttr(
-                control,
+                main_control,
                 attributeType="enum",
                 niceName="Stretch_Type",
                 longName="Stretch_Type",

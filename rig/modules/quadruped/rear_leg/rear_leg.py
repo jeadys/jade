@@ -57,8 +57,8 @@ class RearLeg:
 
     def stretch_mechanism(self) -> None:
         self.stretch.stretch_joint(segments=self.segments[:-1])
-        self.stretch.stretch_attribute()
-        self.stretch.stretch_node(segments=self.segments[:-1])
+        self.stretch.stretch_attribute(main_control=self.ik_controls[0])
+        self.stretch.stretch_node(segments=self.segments[:-1], main_control=self.ik_controls[0])
 
     def ribbon_mechanism(self) -> None:
         self.ribbon.ribbon_plane(divisions=8, width=50, length=0.1)
