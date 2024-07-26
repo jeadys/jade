@@ -48,8 +48,8 @@ class Skeleton:
                     cmds.joint(f"{segment}_JNT", edit=True, orientJoint="none",
                                zeroScaleOrient=True)
                 case Orient.BONE:
-                    cmds.joint(f"{segment}_JNT", edit=True, orientJoint="yzx",
-                               secondaryAxisOrient="zup",
+                    cmds.joint(f"{segment}_JNT", edit=True, orientJoint="xyz",
+                               secondaryAxisOrient="xup",
                                zeroScaleOrient=True)
 
             if self.side == "R_":

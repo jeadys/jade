@@ -63,7 +63,7 @@ class Twist:
         previous_joint = None
         for x in range(twist_amount):
             cmds.select(deselect=True)
-            between_joint = cmds.joint(name=f"{self.prefix}_TWIST_#", rotationOrder=RotateOrder.YZX.name)
+            between_joint = cmds.joint(name=f"{self.prefix}_TWIST_#", rotationOrder=RotateOrder.XYZ.name)
 
             cmds.matchTransform(between_joint, end_joint, position=True, rotation=False, scale=False)
             cmds.parent(between_joint, start_joint)

@@ -41,6 +41,7 @@ def apply_rig_module(module: Module):
     add_default_node_attributes(node=current_module)
     cmds.setAttr(f"{current_module}.module_type", module.module_type, type="string")
     cmds.setAttr(f"{current_module}.module_nr", module.module_nr, type="string")
+    cmds.setAttr(f"{current_module}.side", module.side, type="string")
     cmds.setAttr(f"{current_module}.mirror", module.mirror)
     cmds.setAttr(f"{current_module}.stretch", module.stretch)
     cmds.setAttr(f"{current_module}.twist", module.twist)
@@ -68,10 +69,8 @@ def apply_rig_segments(current_module: str, segments: list[Segment]):
 
         if segment.parent_joint:
             cmds.parent(current_segment, segment.parent_joint)
-            cmds.connectAttr(f"{segment.parent_joint}.children", f"{current_segment}.parent_joint")
             create_visual_connection(from_node=segment.parent_joint, to_node=current_segment)
-            cmds.matchTransform(current_segment, segment.parent_joint, position=True,
-                                rotation=True, scale=False)
+            cmds.matchTransform(current_segment, segment.parent_joint, position=True, rotation=True, scale=False)
 
         cmds.move(segment.translateX, segment.translateY, segment.translateZ, current_segment,
                   relative=True, objectSpace=True)

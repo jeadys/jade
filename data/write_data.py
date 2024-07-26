@@ -54,14 +54,14 @@ def retrieve_rig_data(module="master", data=None):
                 rotateOrder=cmds.getAttr(f"{segment}.rotateOrder"),
                 orientation=cmds.getAttr(f"{segment}.orientation"),
                 parent_node=(cmds.listConnections(f"{segment}.parent_node") or [None])[0],
-                parent_joint=(cmds.listConnections(f"{segment}.parent_joint") or [None])[0],
+                parent_joint=(cmds.listRelatives(segment, parent=True, shapes=False, type="transform") or [None])[0],
                 children=cmds.listConnections(f"{segment}.children"),
                 control=None
             )
 
-            control = cmds.objExists(f"L_{segment}_FK_CTRL")
+            control = cmds.objExists(f"{segment}_FK_CTRL")
             if control:
-                cvs = cmds.ls(f"L_{segment}_FK_CTRL.cv[*]", flatten=True)
+                cvs = cmds.ls(f"{segment}_FK_CTRL.cv[*]", flatten=True)
                 points = [cmds.xform(cv, query=True, objectSpace=True, translation=True) for cv in cvs]
 
                 segment_dict.control = Control(
@@ -70,7 +70,7 @@ def retrieve_rig_data(module="master", data=None):
                     control_color=None,
                     control_scale=None,
                     control_points=points,
-                    control_rgb=(cmds.getAttr(f"L_{segment}_FK_CTRL.overrideColorRGB") or [None])[0],
+                    control_rgb=(cmds.getAttr(f"{segment}_FK_CTRL.overrideColorRGB") or [None])[0],
                     parent_control=(cmds.listConnections(f"{segment}.parent_joint") or [None])[0],
                 )
 
