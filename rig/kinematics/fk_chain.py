@@ -71,7 +71,7 @@ class FKChain:
             current_control = cmds.curve(name=f"{segment}_FK_CTRL", pointWeight=control_points, degree=1)
 
             set_rgb_color(node=current_control, color=control_rgb[0])
-            cmds.setAttr(f"{current_control}.rotateOrder", RotateOrder.YZX)
+            cmds.setAttr(f"{current_control}.rotateOrder", RotateOrder.XYZ)
 
             cmds.matchTransform(current_control, f"{segment}_FK", position=True, rotation=True, scale=False)
             cmds.parentConstraint(current_control, f"{segment}_FK", maintainOffset=True)

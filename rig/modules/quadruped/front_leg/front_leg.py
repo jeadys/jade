@@ -6,6 +6,7 @@ from rig.kinematics.ik_chain import IKChain
 from rig.kinematics.skeleton import Skeleton
 from rig.mechanisms.limb_stretch import Stretch
 from rig.mechanisms.limb_twist import Twist
+from rig.mechanisms.ribbon import Ribbon
 from utilities.bake_transform import bake_transform_to_offset_parent_matrix
 from utilities.enums import TwistFlow
 
@@ -25,6 +26,7 @@ class FrontLeg:
         self.fk_chain: FKChain = FKChain(node=self.node, name=FrontLeg.name)
         self.stretch: Stretch = Stretch(node=self.node, name=FrontLeg.name)
         self.twist: Twist = Twist(node=self.node, name=FrontLeg.name)
+        self.ribbon: Ribbon = Ribbon(node=self.node, name=RearLeg.name)
 
         self.fk_joints: list[str] = []
         self.fk_controls: list[str] = []
@@ -62,6 +64,14 @@ class FrontLeg:
         self.stretch.stretch_attribute()
         self.stretch.stretch_node(segments=self.segments[1:])
 
+    def ribbon_mechanism(self) -> None:
+        self.ribbon.ribbon_plane(divisions=8, width=50, length=0.1)
+        self.ribbon.ribbon_intermediate_controls(control_amount=1)
+        self.ribbon.ribbon_tweak_controls(control_amount=2)
+        self.ribbon.attach_ribbon_to_module(segments=self.segments[:-1])
+        self.ribbon.add_sine_deform(main_control=self.ik_controls[0])
+        self.ribbon.add_twist_deform(main_control=self.ik_controls[0])
+
     def clavicle_control(self) -> None:
         clavicle_control = cmds.circle(normal=(0, 1, 0), center=(0, 0, 0), radius=5, degree=1, sections=32,
                                        name=f"{self.side}{self.segments[0]}_CTRL")[0]
@@ -94,9 +104,9 @@ class FrontLeg:
         self.forward_kinematic()
         self.inverse_kinematic()
         self.switch_kinematic()
-        self.clavicle_control()
-
-        if cmds.getAttr(f"{self.node}.twist"):
-            self.twist_mechanism()
-        if cmds.getAttr(f"{self.node}.stretch"):
-            self.stretch_mechanism()
+        # self.clavicle_control()
+        #
+        # if cmds.getAttr(f"{self.node}.twist"):
+        #     self.twist_mechanism()
+        # if cmds.getAttr(f"{self.node}.stretch"):
+        #     self.stretch_mechanism()

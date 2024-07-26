@@ -1,5 +1,6 @@
 from data.rig_structure import Control, Module, Segment
 from utilities.enums import Color, Orient, RotateOrder, Shape
+from utilities.shapes import cube_points
 
 clavicle = Segment(
     name="clavicle",
@@ -23,6 +24,7 @@ clavicle = Segment(
         control_color=Color.GREEN,
         control_scale=5,
         parent_control=None,
+        control_points=cube_points,
     )
 )
 
@@ -48,6 +50,8 @@ upperarm = Segment(
         control_color=Color.GREEN,
         control_scale=5,
         parent_control=None,
+        control_points=cube_points,
+
     )
 )
 
@@ -73,6 +77,7 @@ lowerarm = Segment(
         control_color=Color.GREEN,
         control_scale=5,
         parent_control="upperarm",
+        control_points=cube_points,
     )
 )
 
@@ -98,6 +103,7 @@ wrist = Segment(
         control_color=Color.GREEN,
         control_scale=5,
         parent_control="lowerarm",
+        control_points=cube_points,
     )
 )
 

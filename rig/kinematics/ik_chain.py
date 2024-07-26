@@ -72,14 +72,14 @@ class IKChain:
                                   solver="ikRPsolver")[0]
 
         ik_control = select_curve(shape=Shape.CUBE, name=f"{self.prefix}_IK_CTRL", scale=5)
-        cmds.setAttr(f"{ik_control}.rotateOrder", RotateOrder.YZX)
+        cmds.setAttr(f"{ik_control}.rotateOrder", RotateOrder.XYZ)
         cmds.matchTransform(ik_control, f"{segments[-1]}_IK", position=True, rotation=True, scale=False)
         cmds.orientConstraint(ik_control, f"{segments[-1]}_IK", maintainOffset=True)
 
         cmds.parent(ik_handle, ik_control)
 
         pole_control = select_curve(shape=Shape.CUBE, name=f"{self.prefix}_POLE_CTRL", scale=5)
-        cmds.setAttr(f"{pole_control}.rotateOrder", RotateOrder.YZX)
+        cmds.setAttr(f"{pole_control}.rotateOrder", RotateOrder.XYZ)
         cmds.matchTransform(pole_control, f"{segments[1]}_IK", position=True, rotation=False, scale=False)
         # cmds.move(0, 0, -20, pole_control, relative=True, objectSpace=True)
         cmds.poleVectorConstraint(pole_control, ik_handle)
@@ -174,7 +174,7 @@ class IKChain:
         cmds.connectAttr(f"{pelvis_mch}.worldMatrix", f"{spline_handle}.dWorldUpMatrix")
         cmds.connectAttr(f"{chest_mch}.worldMatrix", f"{spline_handle}.dWorldUpMatrixEnd")
 
-        return [pelvis_control, back_control, chest_control, pelvis_mch, back_mch, chest_mch]
+        return [pelvis_control, back_control, chest_control, pelvis_mch, back_mch, chest_mch], spline_curve
 
     def spring_kinematic(self, segments):
         knee_handle = cmds.ikHandle(name=f"{self.prefix}_knee_ikRPsolver",

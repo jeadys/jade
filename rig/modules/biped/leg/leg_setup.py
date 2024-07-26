@@ -1,5 +1,6 @@
 from data.rig_structure import Control, Module, Segment
 from utilities.enums import Color, Orient, RotateOrder, Shape
+from utilities.shapes import cube_points
 
 upperleg = Segment(
     name="upperleg",
@@ -23,6 +24,7 @@ upperleg = Segment(
         control_color=Color.GREEN,
         control_scale=5,
         parent_control=None,
+        control_points=cube_points,
     )
 )
 
@@ -48,6 +50,7 @@ lowerleg = Segment(
         control_color=Color.GREEN,
         control_scale=5,
         parent_control="upperleg",
+        control_points=cube_points,
     )
 )
 
@@ -73,6 +76,7 @@ ankle = Segment(
         control_color=Color.GREEN,
         control_scale=5,
         parent_control="lowerleg",
+        control_points=cube_points,
     )
 )
 
@@ -98,6 +102,7 @@ ball = Segment(
         control_color=Color.GREEN,
         control_scale=5,
         parent_control="ankle",
+        control_points=cube_points,
     )
 )
 
@@ -123,6 +128,7 @@ toe = Segment(
         control_color=Color.GREEN,
         control_scale=5,
         parent_control="ball",
+        control_points=cube_points,
     )
 )
 
