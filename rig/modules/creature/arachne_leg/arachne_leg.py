@@ -6,7 +6,7 @@ from rig.kinematics.ik_chain import IKChain
 from rig.kinematics.skeleton import Skeleton
 from rig.mechanisms.limb_stretch import Stretch
 from rig.mechanisms.limb_twist import Twist
-from utilities.enums import TwistFlow
+from rig.mechanisms.ribbon import Ribbon
 
 
 class ArachneLeg:
@@ -21,6 +21,7 @@ class ArachneLeg:
         self.fk_chain: FKChain = FKChain(node=self.node, name=ArachneLeg.name)
         self.stretch: Stretch = Stretch(node=self.node, name=ArachneLeg.name)
         self.twist: Twist = Twist(node=self.node, name=ArachneLeg.name)
+        self.ribbon: Ribbon = Ribbon(node=self.node, name=ArachneLeg.name)
 
         self.fk_joints: list[str] = []
         self.fk_controls: list[str] = []
@@ -45,18 +46,26 @@ class ArachneLeg:
                                        ik_joints=self.ik_joints, ik_controls=self.ik_controls)
 
     def twist_mechanism(self) -> None:
-        start, end = self.twist.twist_joint(parent_segment=self.segments[1], start_segment=self.segments[1],
-                                            end_segment=self.segments[2], twist_flow=TwistFlow.FORWARD)
-        self.twist.setup_twist_hierarchy(start_joint=start, end_joint=end)
-
-        start, end = self.twist.twist_joint(parent_segment=self.segments[2], start_segment=self.segments[2],
-                                            end_segment=self.segments[3], twist_flow=TwistFlow.BACKWARD)
-        self.twist.setup_twist_hierarchy(start_joint=start, end_joint=end)
+        twist_amount = cmds.getAttr(f"{self.node}.twist_joints")
+        self.twist.twist_joint(segments=self.segments[:-1], twist_amount=twist_amount)
 
     def stretch_mechanism(self) -> None:
         self.stretch.stretch_joint(segments=self.segments)
-        self.stretch.stretch_attribute()
-        self.stretch.stretch_node(segments=self.segments)
+        self.stretch.stretch_attribute(main_control=self.ik_controls[0])
+        self.stretch.stretch_node(segments=self.segments, main_control=self.ik_controls[0])
+
+    def ribbon_mechanism(self) -> None:
+        ribbon_divisions = cmds.getAttr(f"{self.node}.ribbon_divisions")
+        ribbon_width = cmds.getAttr(f"{self.node}.ribbon_width")
+        ribbon_length = cmds.getAttr(f"{self.node}.ribbon_length")
+        ribbon_controls = cmds.getAttr(f"{self.node}.ribbon_controls")
+        tweak_controls = cmds.getAttr(f"{self.node}.tweak_controls")
+        self.ribbon.ribbon_plane(divisions=ribbon_divisions, width=ribbon_width, length=ribbon_length)
+        self.ribbon.ribbon_intermediate_controls(control_amount=ribbon_controls)
+        self.ribbon.ribbon_tweak_controls(control_amount=tweak_controls)
+        self.ribbon.attach_ribbon_to_module(segments=self.segments[:-2])
+        self.ribbon.add_sine_deform(main_control=self.ik_controls[0])
+        self.ribbon.add_twist_deform(main_control=self.ik_controls[0])
 
     def generate_module(self) -> None:
         self.base_skeleton()
@@ -64,7 +73,14 @@ class ArachneLeg:
         self.inverse_kinematic()
         self.switch_kinematic()
 
-        if cmds.getAttr(f"{self.node}.twist"):
+        if cmds.attributeQuery("twist", node=self.node, exists=True) and cmds.getAttr(
+                f"{self.node}.twist_enabled"):
             self.twist_mechanism()
-        if cmds.getAttr(f"{self.node}.stretch"):
+
+        if cmds.attributeQuery("stretch", node=self.node, exists=True) and cmds.getAttr(
+                f"{self.node}.stretch_enabled"):
             self.stretch_mechanism()
+
+        if cmds.attributeQuery("ribbon", node=self.node, exists=True) and cmds.getAttr(
+                f"{self.node}.ribbon_enabled"):
+            self.ribbon_mechanism()

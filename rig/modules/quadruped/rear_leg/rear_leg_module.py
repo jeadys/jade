@@ -1,5 +1,5 @@
-from data.rig_structure import Control, Module, Segment
-from utilities.enums import Color, Orient, RotateOrder, Shape
+from data.rig_structure import Control, Module, Ribbon, Segment, Stretch, Twist
+from utilities.enums import Orient, RotateOrder, StretchMode
 
 rear_hip = Segment(
     name="rear_hip",
@@ -19,9 +19,6 @@ rear_hip = Segment(
     children=["rear_knee"],
     control=Control(
         name="rear_hip",
-        control_shape=Shape.CUBE,
-        control_color=Color.GREEN,
-        control_scale=5,
         parent_control=None,
     )
 )
@@ -44,9 +41,6 @@ rear_knee = Segment(
     children=["rear_heel"],
     control=Control(
         name="rear_knee",
-        control_shape=Shape.CUBE,
-        control_color=Color.GREEN,
-        control_scale=5,
         parent_control="rear_hip",
     )
 )
@@ -69,9 +63,6 @@ rear_heel = Segment(
     children=["rear_foot"],
     control=Control(
         name="rear_heel",
-        control_shape=Shape.CUBE,
-        control_color=Color.GREEN,
-        control_scale=5,
         parent_control="rear_knee",
     )
 )
@@ -94,9 +85,6 @@ rear_foot = Segment(
     children=["rear_toe"],
     control=Control(
         name="rear_foot",
-        control_shape=Shape.CUBE,
-        control_color=Color.GREEN,
-        control_scale=5,
         parent_control="rear_heel",
     )
 )
@@ -119,9 +107,6 @@ rear_toe = Segment(
     children=[""],
     control=Control(
         name="rear_toe",
-        control_shape=Shape.CUBE,
-        control_color=Color.GREEN,
-        control_scale=5,
         parent_control="rear_foot",
     )
 )
@@ -133,9 +118,23 @@ rear_leg_module = Module(
     segments=[rear_hip, rear_knee, rear_heel, rear_foot, rear_toe],
     parent_node=None,
     parent_joint=None,
-    mirror=True,
-    stretch=True,
-    twist=True,
-    twist_joints=5,
-    twist_influence=0.5
+    twist=Twist(
+        enabled=True,
+        twist_joints=5,
+        twist_influence=0.5
+    ),
+    stretch=Stretch(
+        enabled=True,
+        stretch_type=StretchMode.STRETCH,
+        stretchiness=0,
+        stretch_volume=0,
+    ),
+    ribbon=Ribbon(
+        enabled=False,
+        divisions=8,
+        width=50,
+        length=0.1,
+        ribbon_controls=1,
+        tweak_controls=2
+    )
 )

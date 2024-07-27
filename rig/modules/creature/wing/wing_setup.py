@@ -1,6 +1,6 @@
-from data.rig_structure import Control, Module, Segment
+from data.rig_structure import Control, Module, Ribbon, Segment, Stretch, Twist
 from rig.modules.biped.spine import create_chain_module
-from utilities.enums import Color, Orient, RotateOrder, Shape
+from utilities.enums import Orient, RotateOrder, StretchMode
 
 wing_upperarm = Segment(
     name="wing_upperarm",
@@ -20,9 +20,6 @@ wing_upperarm = Segment(
     children=["wing_lowerarm"],
     control=Control(
         name="wing_upperarm",
-        control_shape=Shape.CUBE,
-        control_color=Color.GREEN,
-        control_scale=2.5,
         parent_control=None,
     )
 )
@@ -45,9 +42,6 @@ wing_lowerarm = Segment(
     children=["wing_wrist"],
     control=Control(
         name="wing_lowerarm",
-        control_shape=Shape.CUBE,
-        control_color=Color.GREEN,
-        control_scale=2.5,
         parent_control="wing_upperarm",
     )
 )
@@ -70,9 +64,6 @@ wing_wrist = Segment(
     children=[""],
     control=Control(
         name="wing_wrist",
-        control_shape=Shape.CUBE,
-        control_color=Color.GREEN,
-        control_scale=2.5,
         parent_control="wing_lowerarm",
     )
 )
@@ -84,11 +75,25 @@ wing_module = Module(
     segments=[wing_upperarm, wing_lowerarm, wing_wrist],
     parent_node=None,
     parent_joint=None,
-    mirror=True,
-    stretch=True,
-    twist=True,
-    twist_joints=5,
-    twist_influence=0.5
+    twist=Twist(
+        enabled=True,
+        twist_joints=5,
+        twist_influence=0.5
+    ),
+    stretch=Stretch(
+        enabled=True,
+        stretch_type=StretchMode.STRETCH,
+        stretchiness=0,
+        stretch_volume=0,
+    ),
+    ribbon=Ribbon(
+        enabled=False,
+        divisions=8,
+        width=50,
+        length=0.1,
+        ribbon_controls=1,
+        tweak_controls=2
+    )
 )
 
 wing_fingers = {

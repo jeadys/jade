@@ -1,5 +1,5 @@
-from data.rig_structure import Control, Module, Segment
-from utilities.enums import Color, Orient, RotateOrder, Shape
+from data.rig_structure import Control, Module, Ribbon, Segment, Stretch, Twist
+from utilities.enums import Orient, RotateOrder, StretchMode
 
 arachne_thigh = Segment(
     name="arachne_thigh",
@@ -19,9 +19,6 @@ arachne_thigh = Segment(
     children=["arachne_shin"],
     control=Control(
         name="arachne_thigh",
-        control_shape=Shape.CUBE,
-        control_color=Color.GREEN,
-        control_scale=2.5,
         parent_control=None,
     )
 )
@@ -44,9 +41,6 @@ arachne_shin = Segment(
     children=["arachne_foot"],
     control=Control(
         name="arachne_shin",
-        control_shape=Shape.CUBE,
-        control_color=Color.GREEN,
-        control_scale=2.5,
         parent_control="arachne_thigh",
     )
 )
@@ -69,9 +63,6 @@ arachne_foot = Segment(
     children=["arachne_toe"],
     control=Control(
         name="arachne_foot",
-        control_shape=Shape.CUBE,
-        control_color=Color.GREEN,
-        control_scale=2.5,
         parent_control="arachne_shin",
     )
 )
@@ -94,13 +85,9 @@ arachne_toe = Segment(
     children=[""],
     control=Control(
         name="arachne_toe",
-        control_shape=Shape.CUBE,
-        control_color=Color.GREEN,
-        control_scale=2.5,
         parent_control="arachne_foot",
     )
 )
-
 
 arachne_leg_module = Module(
     name="arachne_leg",
@@ -109,9 +96,23 @@ arachne_leg_module = Module(
     segments=[arachne_thigh, arachne_shin, arachne_foot, arachne_toe],
     parent_node=None,
     parent_joint=None,
-    mirror=True,
-    stretch=True,
-    twist=True,
-    twist_joints=5,
-    twist_influence=0.5
+    twist=Twist(
+        enabled=True,
+        twist_joints=5,
+        twist_influence=0.5
+    ),
+    stretch=Stretch(
+        enabled=True,
+        stretch_type=StretchMode.STRETCH,
+        stretchiness=0,
+        stretch_volume=0,
+    ),
+    ribbon=Ribbon(
+        enabled=False,
+        divisions=8,
+        width=50,
+        length=0.1,
+        ribbon_controls=1,
+        tweak_controls=2
+    )
 )

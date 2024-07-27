@@ -1,5 +1,5 @@
-from data.rig_structure import Control, Module, Segment
-from utilities.enums import Color, Orient, RotateOrder, Shape
+from data.rig_structure import Control, Module, Ribbon, Segment, Stretch, Twist
+from utilities.enums import Orient, RotateOrder, StretchMode
 from utilities.shapes import cube_points
 
 upperleg = Segment(
@@ -20,9 +20,6 @@ upperleg = Segment(
     children=["lowerleg"],
     control=Control(
         name="upperleg",
-        control_shape=Shape.CUBE,
-        control_color=Color.GREEN,
-        control_scale=5,
         parent_control=None,
         control_points=cube_points,
     )
@@ -46,9 +43,6 @@ lowerleg = Segment(
     children=["ankle"],
     control=Control(
         name="lowerleg",
-        control_shape=Shape.CUBE,
-        control_color=Color.GREEN,
-        control_scale=5,
         parent_control="upperleg",
         control_points=cube_points,
     )
@@ -72,9 +66,6 @@ ankle = Segment(
     children=["ball"],
     control=Control(
         name="ankle",
-        control_shape=Shape.CUBE,
-        control_color=Color.GREEN,
-        control_scale=5,
         parent_control="lowerleg",
         control_points=cube_points,
     )
@@ -98,9 +89,6 @@ ball = Segment(
     children=["toe"],
     control=Control(
         name="ball",
-        control_shape=Shape.CUBE,
-        control_color=Color.GREEN,
-        control_scale=5,
         parent_control="ankle",
         control_points=cube_points,
     )
@@ -124,9 +112,6 @@ toe = Segment(
     children=[""],
     control=Control(
         name="toe",
-        control_shape=Shape.CUBE,
-        control_color=Color.GREEN,
-        control_scale=5,
         parent_control="ball",
         control_points=cube_points,
     )
@@ -139,9 +124,23 @@ leg_module = Module(
     segments=[upperleg, lowerleg, ankle, ball, toe],
     parent_node=None,
     parent_joint=None,
-    mirror=True,
-    stretch=True,
-    twist=True,
-    twist_joints=5,
-    twist_influence=0.5
+    twist=Twist(
+        enabled=True,
+        twist_joints=2,
+        twist_influence=0.5
+    ),
+    stretch=Stretch(
+        enabled=True,
+        stretch_type=StretchMode.STRETCH,
+        stretchiness=1,
+        stretch_volume=0.5,
+    ),
+    ribbon=Ribbon(
+        enabled=False,
+        divisions=8,
+        width=50,
+        length=0.1,
+        ribbon_controls=1,
+        tweak_controls=2
+    )
 )

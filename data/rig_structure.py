@@ -1,17 +1,15 @@
-from utilities.enums import Orient, Color, Shape, RotateOrder
-from dataclasses import dataclass, asdict, field
 import json
+from dataclasses import asdict, dataclass, field
 from typing import Literal
+
+from utilities.enums import Orient, RotateOrder
 
 
 @dataclass
 class Control:
     name: str
-    control_shape: Shape | None
-    control_color: Color | None
-    control_scale: float | None
     parent_control: str | None
-    control_points: list[list[float | int]] | None = field(default_factory=lambda:  [[0.0, 0.0, 0.0, 1.0]])
+    control_points: list[list[float | int]] | None = field(default_factory=lambda: [[0.0, 0.0, 0.0, 1.0]])
     control_rgb: list[float | int] | None = field(default_factory=lambda: [0.0, 0.0, 0.0])
     rotateOrder: RotateOrder = RotateOrder.XYZ
 
@@ -47,6 +45,43 @@ class Segment:
 
 
 @dataclass
+class Twist:
+    enabled: bool
+    twist_joints: int
+    twist_influence: float
+
+    @classmethod
+    def from_dict(cls, data: dict | None):
+        return cls(**data)
+
+
+@dataclass
+class Stretch:
+    enabled: bool
+    stretchiness: float
+    stretch_volume: float
+    stretch_type: int
+
+    @classmethod
+    def from_dict(cls, data: dict | None):
+        return cls(**data)
+
+
+@dataclass
+class Ribbon:
+    enabled: bool
+    divisions: int
+    width: float
+    length: float
+    ribbon_controls: int
+    tweak_controls: int
+
+    @classmethod
+    def from_dict(cls, data: dict | None):
+        return cls(**data)
+
+
+@dataclass
 class Module:
     name: str
     module_type: str
@@ -54,19 +89,31 @@ class Module:
     segments: list[Segment]
     parent_node: str | None
     parent_joint: str | None
-    mirror: bool
-    stretch: bool
-    twist: float
-    twist_joints: int
-    twist_influence: float
     module_nr: str | None = None
     side: Literal["L_", "R_"] = ""
+    twist: Twist | None = None
+    stretch: Stretch | None = None
+    ribbon: Ribbon | None = None
 
     @classmethod
     def from_dict(cls, data: dict):
         segments_data = data.pop("segments", [])
         segments = [Segment.from_dict(segment_data) for segment_data in segments_data]
-        return cls(segments=segments, **data)
+        twist_data = data.pop("twist", None)
+        stretch_data = data.pop("stretch", None)
+        ribbon_data = data.pop("ribbon", None)
+
+        twist = Twist.from_dict(twist_data) if twist_data else None
+        stretch = Stretch.from_dict(stretch_data) if stretch_data else None
+        ribbon = Ribbon.from_dict(ribbon_data) if ribbon_data else None
+
+        return cls(
+            segments=segments,
+            twist=twist,
+            stretch=stretch,
+            ribbon=ribbon,
+            **data
+        )
 
 
 @dataclass
@@ -83,18 +130,3 @@ class Rig:
 
     def to_json(self):
         return json.dumps(asdict(self))
-
-
-@dataclass
-class Twist:
-    add_twist: bool
-    twist_joints: int
-    twist_influence: float
-
-
-@dataclass
-class Stretch:
-    add_stretch: bool
-    stretchiness: float
-    stretch_volume: float
-    stretch_type: int

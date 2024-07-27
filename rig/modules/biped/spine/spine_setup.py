@@ -1,10 +1,5 @@
-from data.rig_structure import Control
-from data.rig_structure import Module
-from data.rig_structure import Segment
-from utilities.enums import Color
-from utilities.enums import Orient
-from utilities.enums import RotateOrder
-from utilities.enums import Shape
+from data.rig_structure import Control, Module, Ribbon, Segment, Stretch, Twist
+from utilities.enums import Orient, RotateOrder, StretchMode
 
 
 def create_chain_module(chain_amount, chain_name, max_distance=100):
@@ -15,11 +10,25 @@ def create_chain_module(chain_amount, chain_name, max_distance=100):
         segments=[],
         parent_node=None,
         parent_joint=None,
-        mirror=False,
-        stretch=True,
-        twist=True,
-        twist_joints=5,
-        twist_influence=0.5
+        twist=Twist(
+            enabled=True,
+            twist_joints=2,
+            twist_influence=0.5
+        ),
+        stretch=Stretch(
+            enabled=True,
+            stretch_type=StretchMode.STRETCH,
+            stretchiness=1,
+            stretch_volume=0.5,
+        ),
+        ribbon=Ribbon(
+            enabled=False,
+            divisions=8,
+            width=50,
+            length=0.1,
+            ribbon_controls=3,
+            tweak_controls=2
+        )
     )
 
     previous_segment = None
@@ -39,15 +48,12 @@ def create_chain_module(chain_amount, chain_name, max_distance=100):
             scaleY=1,
             scaleZ=1,
             rotateOrder=RotateOrder.XYZ,
-            orientation=Orient.BONE,
+            orientation=Orient.WORLD if index == chain_amount - 1 else Orient.BONE,
             parent_node=chain_module.name,
             parent_joint=previous_segment.name if previous_segment else None,
             children=[],
             control=Control(
                 name=f"{chain_name}_{index + 1}",
-                control_shape=Shape.CUBE,
-                control_color=Color.GREEN,
-                control_scale=5,
                 parent_control=previous_segment.name if previous_segment else None,
             )
         )

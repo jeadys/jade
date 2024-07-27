@@ -1,5 +1,5 @@
-from data.rig_structure import Control, Module, Segment
-from utilities.enums import Color, Orient, RotateOrder, Shape
+from data.rig_structure import Control, Module, Segment, Twist, Ribbon, Stretch
+from utilities.enums import Color, Orient, RotateOrder, Shape, StretchMode
 from utilities.shapes import cube_points
 
 clavicle = Segment(
@@ -20,9 +20,6 @@ clavicle = Segment(
     children=["upperarm"],
     control=Control(
         name="clavicle",
-        control_shape=Shape.CUBE,
-        control_color=Color.GREEN,
-        control_scale=5,
         parent_control=None,
         control_points=cube_points,
     )
@@ -46,9 +43,6 @@ upperarm = Segment(
     children=["lowerarm"],
     control=Control(
         name="upperarm",
-        control_shape=Shape.CUBE,
-        control_color=Color.GREEN,
-        control_scale=5,
         parent_control=None,
         control_points=cube_points,
 
@@ -73,9 +67,6 @@ lowerarm = Segment(
     children=["wrist"],
     control=Control(
         name="lowerarm",
-        control_shape=Shape.CUBE,
-        control_color=Color.GREEN,
-        control_scale=5,
         parent_control="upperarm",
         control_points=cube_points,
     )
@@ -99,9 +90,6 @@ wrist = Segment(
     children=[""],
     control=Control(
         name="wrist",
-        control_shape=Shape.CUBE,
-        control_color=Color.GREEN,
-        control_scale=5,
         parent_control="lowerarm",
         control_points=cube_points,
     )
@@ -114,9 +102,23 @@ arm_module = Module(
     segments=[clavicle, upperarm, lowerarm, wrist],
     parent_node=None,
     parent_joint=None,
-    mirror=True,
-    stretch=True,
-    twist=True,
-    twist_joints=5,
-    twist_influence=0.5
+    twist=Twist(
+        enabled=True,
+        twist_joints=2,
+        twist_influence=0.5
+    ),
+    stretch=Stretch(
+        enabled=True,
+        stretch_type=StretchMode.STRETCH,
+        stretchiness=1,
+        stretch_volume=0.5,
+    ),
+    ribbon=Ribbon(
+        enabled=False,
+        divisions=8,
+        width=50,
+        length=0.1,
+        ribbon_controls=1,
+        tweak_controls=2
+    )
 )
