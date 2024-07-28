@@ -23,6 +23,7 @@ Mesh + Skeleton           |  Skeleton
 - Import, export and save rig data
 - Attach and detach modules from each other
 - Ribbon based system
+- UI overhaul
 
 ## Installation
 To install the Maya Rigging Tool, follow these steps:
