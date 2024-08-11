@@ -81,10 +81,18 @@ class UpAxis(CustomEnum):
     CLOSEST_X = 8
 
 
-class StretchMode(Enum):
+class StretchMode(int, Enum):
     BOTH = 1
     STRETCH = 3
     SQUASH = 5
+
+    def __int__(self) -> int:
+        return int.__int__(self)
+
+    @classmethod
+    def enum_to_string_attribute(cls):
+        enums = ':'.join([f"{x.name}={x.value}" for x in cls])
+        return enums
 
 
 class Mirror(int, Enum):

@@ -1,5 +1,26 @@
-# 2D shapes
+import maya.cmds as cmds
 
+
+def get_shape(transform):
+    if not cmds.objExists(transform):
+        return cmds.warning(f"Couldn't find {transform} shape")
+
+    shape = cmds.listRelatives(transform, shapes=True)
+
+    if not shape:
+        return None
+
+    return shape[0]
+
+
+def replace_shape(transform, points):
+    if not cmds.objExists(transform):
+        return cmds.warning(f"Couldn't replace {transform} shape")
+
+    cmds.curve(transform, point=points, replace=True)
+
+
+# 2D shapes
 square_points = [
     (10.0, 0.0, 10.0, 1.0),
     (10.0, 0.0, -10.0, 1.0),
@@ -166,4 +187,3 @@ pyramid_points = [
     (0.0, 10.0, 0.0, 1.0),
     (-10.0, -10.0, -10.0, 1.0),
 ]
-
