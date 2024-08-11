@@ -1,10 +1,9 @@
 import maya.cmds as cmds
 from PySide2 import QtWidgets
 
-from ui.actions.refresh_ui import refresh_ui
 from ui.widgets.combobox import node_combobox, segment_combobox
 from ui.widgets.tree_widget import tree_widget
-from utilities.check_relation import has_parent
+from utilities.relations import has_parent
 
 
 def parent_module_to_selected_module():
@@ -52,14 +51,12 @@ def parent_module_to_selected_module():
         if not cmds.isConnected(f"{parent_joint}.children", f"{selected_module}.parent_joint"):
             cmds.connectAttr(f"{parent_joint}.children", f"{selected_module}.parent_joint", force=True)
 
-
         if not has_parent(from_parent=root_segment, to_parent=parent_joint):
             cmds.parent(root_segment, parent_joint)
 
         cmds.matchTransform(root_segment, parent_joint, position=True, rotation=True, scale=False)
 
     tree_widget.move_item(parent_node)
-    refresh_ui(tree=tree_widget, combobox=node_combobox)
 
 
 connect_button = QtWidgets.QPushButton("connect module")

@@ -1,17 +1,30 @@
-from PySide2 import QtWidgets
+from PySide2 import QtCore, QtWidgets
+
+from ui.widgets.horizontal import HorizontalWidget
+from ui.widgets.label import LabelWidget
 
 
-def create_spinbox(name: str, value: int, minimum: int, maximum: int):
-    widget = QtWidgets.QWidget()
-    layout = QtWidgets.QHBoxLayout(widget)
+class SpinBoxWidget(QtWidgets.QSpinBox):
 
-    label = QtWidgets.QLabel(name)
-    layout.addWidget(label)
+    def __init__(self, value, minimum, maximum):
+        super(SpinBoxWidget, self).__init__()
 
-    spinbox = QtWidgets.QSpinBox()
-    spinbox.setValue(value)
-    spinbox.setMinimum(minimum)
-    spinbox.setMaximum(maximum)
-    layout.addWidget(spinbox)
+        self.setValue(value)
+        self.setMinimum(minimum)
+        self.setMaximum(maximum)
+        self.setFixedWidth(75)
+        self.setFocusPolicy(QtCore.Qt.StrongFocus)
+        self.wheelEvent = lambda event: None
+        self.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
+
+
+def create_spinbox(name: str, value: int, minimum: int, maximum: int) -> object:
+    widget = HorizontalWidget()
+
+    label = LabelWidget(name=name)
+    spinbox = SpinBoxWidget(value=value, minimum=minimum, maximum=maximum)
+
+    widget.layout().addWidget(label, 0, 0)
+    widget.layout().addWidget(spinbox, 0, 1)
 
     return widget, spinbox

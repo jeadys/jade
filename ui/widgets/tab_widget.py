@@ -1,20 +1,12 @@
 from PySide2 import QtCore, QtGui, QtWidgets
 
-from source.get_source import get_source
 from ui.actions.build_module import build_module
-
-
-class TabWidget(QtWidgets.QTabWidget):
-
-    def __init__(self, parent=None):
-        super(TabWidget, self).__init__(parent)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        self.addTab(BipedTab(), "Biped")
-        self.addTab(FacialTab(), "Facial")
-        self.addTab(QuadrupedTab(), "Quadruped")
-        self.addTab(CreatureTab(), "Creature")
-        self.addTab(ChainTab(), "Chain")
-        self.addTab(MiscTab(), "Misc")
+from ui.actions.connect_module import connect_button
+from ui.icons.get_source import get_source
+from ui.widgets.checkbox import ribbon_widget, stretch_widget, twist_widget
+from ui.widgets.combobox import node_widget, segment_widget
+from ui.widgets.container import Container
+# from ui.widgets.slider import ribbon_divisions_widget, ribbon_tweaks_widget, twist_amount_widget
 
 
 class ModuleButton(QtWidgets.QPushButton):
@@ -24,95 +16,102 @@ class ModuleButton(QtWidgets.QPushButton):
         self.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.setIconSize(QtCore.QSize(36, 36))
         self.setIcon(QtGui.QIcon(get_source(icon=module)))
+        self.setToolTip(module)
         self.clicked.connect(lambda: build_module(module=module))
 
 
-class BipedTab(QtWidgets.QWidget):
-    def __init__(self):
-        super(BipedTab, self).__init__()
+class ModuleTab(QtWidgets.QWidget):
+    def __init__(self, modules):
+        super().__init__()
         tab_layout = QtWidgets.QHBoxLayout()
         tab_layout.setSizeConstraint(QtWidgets.QHBoxLayout.SetMinimumSize)
         tab_layout.setAlignment(QtCore.Qt.AlignLeft)
 
-        arm_module_button = ModuleButton(module="arm")
-        leg_module_button = ModuleButton(module="leg")
-        spine_module_button = ModuleButton(module="spine")
-        foot_module_button = ModuleButton(module="foot")
-        hand_module_button = ModuleButton(module="hand")
-        head_module_button = ModuleButton(module="head")
-        breast_module_button = ModuleButton(module="breasts")
-        buttocks_module_button = ModuleButton(module="buttocks")
-
-        tab_layout.addWidget(arm_module_button)
-        tab_layout.addWidget(leg_module_button)
-        tab_layout.addWidget(spine_module_button)
-        tab_layout.addWidget(foot_module_button)
-        tab_layout.addWidget(hand_module_button)
-        tab_layout.addWidget(head_module_button)
-        tab_layout.addWidget(breast_module_button)
-        tab_layout.addWidget(buttocks_module_button)
+        for module in modules:
+            module_button = ModuleButton(module=module)
+            tab_layout.addWidget(module_button)
 
         self.setLayout(tab_layout)
 
 
-class FacialTab(QtWidgets.QWidget):
-    def __init__(self):
-        super(FacialTab, self).__init__()
-        tab_layout = QtWidgets.QHBoxLayout()
-        tab_layout.setSizeConstraint(QtWidgets.QHBoxLayout.SetMinimumSize)
-        tab_layout.setAlignment(QtCore.Qt.AlignLeft)
+def create_modules_tab_group():
+    biped_tab = ModuleTab(modules=["arm", "leg", "spine", "foot", "hand", "head", "breasts", "buttocks"])
+    facial_tab = ModuleTab(modules=["face", "eye", "eyebrow", "lips", "mouth", "tongue", "ear", "nose"])
+    quadruped_tab = ModuleTab(modules=[])
+    creature_tab = ModuleTab(modules=[])
 
-        ear_module_button = ModuleButton(module="ear")
-        eye_module_button = ModuleButton(module="eye")
-        eyebrow_module_button = ModuleButton(module="eyebrow")
-        lips_module_button = ModuleButton(module="lips")
-        mouth_module_button = ModuleButton(module="mouth")
-        tongue_module_button = ModuleButton(module="tongue")
-        nose_module_button = ModuleButton(module="nose")
-        face_module_button = ModuleButton(module="face")
+    tab = QtWidgets.QTabWidget()
+    tab.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+    tab.addTab(biped_tab, "Biped")
+    tab.addTab(facial_tab, "Facial")
+    tab.addTab(quadruped_tab, "Quadruped")
+    tab.addTab(creature_tab, "Creature")
 
-        tab_layout.addWidget(face_module_button)
-        tab_layout.addWidget(eye_module_button)
-        tab_layout.addWidget(eyebrow_module_button)
-        tab_layout.addWidget(lips_module_button)
-        tab_layout.addWidget(mouth_module_button)
-        tab_layout.addWidget(tongue_module_button)
-        tab_layout.addWidget(ear_module_button)
-        tab_layout.addWidget(nose_module_button)
-
-        self.setLayout(tab_layout)
+    return tab
 
 
-class QuadrupedTab(QtWidgets.QWidget):
-    def __init__(self):
-        super().__init__()
+tab_widget = create_modules_tab_group()
 
-        tab_layout = QtWidgets.QHBoxLayout()
-        self.setLayout(tab_layout)
-
-
-class CreatureTab(QtWidgets.QWidget):
-    def __init__(self):
-        super().__init__()
-
-        tab_layout = QtWidgets.QHBoxLayout()
-        self.setLayout(tab_layout)
-
-
-class ChainTab(QtWidgets.QWidget):
-    def __init__(self):
-        super().__init__()
-
-        tab_layout = QtWidgets.QHBoxLayout()
-        self.setLayout(tab_layout)
-
-
-class MiscTab(QtWidgets.QWidget):
-    def __init__(self):
-        super().__init__()
-
-        tab_layout = QtWidgets.QHBoxLayout()
-        self.setLayout(tab_layout)
-
-
-tab_widget = TabWidget()
+#
+# class BaseTab(QtWidgets.QWidget):
+#     def __init__(self):
+#         super(BaseTab, self).__init__()
+#         self.module_layout = QtWidgets.QVBoxLayout()
+#         self.module_layout.setAlignment(QtCore.Qt.AlignTop)
+#         self.setLayout(self.module_layout)
+#
+#     def add_section(self, title, widgets, layout_type=QtWidgets.QVBoxLayout):
+#         section_layout = QtWidgets.QVBoxLayout()
+#         self.module_layout.addLayout(section_layout)
+#
+#         container = Container(title)
+#         container.collapse()
+#         section_layout.addWidget(container)
+#
+#         content_layout = layout_type(container.contentWidget)
+#         content_layout.setSpacing(10)
+#
+#         for widget in widgets:
+#             content_layout.addWidget(widget)
+#
+#         return container
+#
+#
+# class RelationTab(QtWidgets.QWidget):
+#     def __init__(self):
+#         super().__init__()
+#         self.module_layout = QtWidgets.QVBoxLayout()
+#         self.module_layout.setAlignment(QtCore.Qt.AlignTop)
+#         self.setLayout(self.module_layout)
+#
+#         self.module_layout.addWidget(node_widget)
+#         self.module_layout.addWidget(segment_widget)
+#         self.module_layout.addWidget(connect_button)
+#
+#
+# class MechanismTab(BaseTab):
+#     def __init__(self):
+#         super().__init__()
+#
+#         twist_widgets = [twist_widget, twist_amount_widget]
+#         self.twist_container = self.add_section("Twist", twist_widgets)
+#
+#         stretch_widgets = [stretch_widget]
+#         self.stretch_container = self.add_section("Stretch", stretch_widgets)
+#
+#         ribbon_widgets = [ribbon_widget, ribbon_divisions_widget, ribbon_tweaks_widget]
+#         self.ribbon_container = self.add_section("Ribbon", ribbon_widgets)
+#
+#
+# def create_settings_tab_group():
+#     relation_tab = RelationTab()
+#     mechanism_tab = MechanismTab()
+#
+#     tab = QtWidgets.QTabWidget()
+#     tab.addTab(relation_tab, "Relations")
+#     tab.addTab(mechanism_tab, "Mechanisms")
+#
+#     return tab
+#
+#
+# settings_tab = create_settings_tab_group()

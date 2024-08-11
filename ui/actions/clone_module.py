@@ -1,7 +1,9 @@
 import maya.cmds as cmds
 from PySide2 import QtWidgets
+from helpers.decorators.undoable_action import undoable_action
 
 
+@undoable_action
 def clone_module(item: QtWidgets.QTreeWidgetItem, original_prefix="", clone_prefix=""):
     module = item.text(0)
     parent_node = cmds.listConnections(f"{module}.parent_node")
@@ -49,6 +51,14 @@ def rename_module(module, cloned_module, original_prefix, clone_prefix):
     for segment, cloned_segment in zip(segments, cloned_segments):
         segment_name, _, segment_nr = segment.rpartition("_")
 
+        translate_x = cmds.getAttr(f"{cloned_segment}.translateX")
+        rotate_y = cmds.getAttr(f"{cloned_segment}.rotateY")
+        rotate_z = cmds.getAttr(f"{cloned_segment}.rotateZ")
+
+        cmds.setAttr(f"{cloned_segment}.translateX", translate_x * -1)
+        cmds.setAttr(f"{cloned_segment}.rotateY", rotate_y * -1)
+        cmds.setAttr(f"{cloned_segment}.rotateZ", rotate_z * -1)
+
         cmds.rename(segment, f"{original_prefix}{segment_name}_{module_nr}")
         cmds.rename(cloned_segment, f"{clone_prefix}{segment_name}_{module_nr}")
 
@@ -76,6 +86,14 @@ def rename_module_children(children, cloned_children, original_prefix, clone_pre
 
         for segment, cloned_segment in zip(segments, cloned_segments):
             segment_name, _, segment_nr = segment.rpartition("_")
+
+            translate_x = cmds.getAttr(f"{cloned_segment}.translateX")
+            rotate_y = cmds.getAttr(f"{cloned_segment}.rotateY")
+            rotate_z = cmds.getAttr(f"{cloned_segment}.rotateZ")
+
+            cmds.setAttr(f"{cloned_segment}.translateX", translate_x * -1)
+            cmds.setAttr(f"{cloned_segment}.rotateY", rotate_y * -1)
+            cmds.setAttr(f"{cloned_segment}.rotateZ", rotate_z * -1)
 
             cmds.rename(segment, f"{original_prefix}{segment_name}_{module_nr}")
             cmds.rename(cloned_segment, f"{clone_prefix}{segment_name}_{module_nr}")

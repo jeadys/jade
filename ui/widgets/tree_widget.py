@@ -1,10 +1,44 @@
-import maya.cmds as cmds
+from maya import cmds as cmds
 from PySide2 import QtCore, QtGui, QtWidgets
 
-from source.get_source import get_source
-from ui.actions.refresh_ui import refresh_ui
-from ui.widgets.combobox import node_combobox, segment_combobox
-from ui.widgets.context_menu import ContextMenu
+from ui.actions.clone_module import clone_module, remove_module
+from ui.icons.get_source import get_source
+from ui.settings.relation_setting import parent_setting
+
+
+class TreeContextMenu:
+    def __init__(self, tree):
+        self.tree = tree
+
+    def show(self, position):
+        item = self.tree.itemAt(position)
+        if item:
+            self.item_context_menu(item, position)
+        else:
+            self.tree_context_menu(position)
+
+    def item_context_menu(self, item, position):
+        menu = QtWidgets.QMenu()
+        clone_action = menu.addAction("Clone")
+        remove_action = menu.addAction("Remove")
+
+        action = menu.exec_(self.tree.mapToGlobal(position))
+
+        if action == remove_action:
+            remove_module(item)
+            refresh_ui()
+        elif action == clone_action:
+            clone_module(item, original_prefix="L_", clone_prefix="R_")
+            refresh_ui()
+
+    def tree_context_menu(self, position):
+        menu = QtWidgets.QMenu()
+        refresh_action = menu.addAction("Refresh")
+
+        action = menu.exec_(self.tree.mapToGlobal(position))
+
+        if action == refresh_action:
+            refresh_ui()
 
 
 class TreeWidgetItem(QtWidgets.QTreeWidgetItem):
@@ -23,7 +57,7 @@ class TreeWidget(QtWidgets.QTreeWidget):
         self.setSortingEnabled(False)
         self.setIconSize(QtCore.QSize(24, 24))
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.context_menu = ContextMenu(self)
+        self.context_menu = TreeContextMenu(self)
         self.customContextMenuRequested.connect(self.context_menu.show)
 
     def add_item(self, item: TreeWidgetItem, parent=None):
@@ -56,7 +90,6 @@ class TreeWidget(QtWidgets.QTreeWidget):
 
         self.remove_item(item=item)
         self.add_item(item=item, parent=parent)
-        refresh_ui(tree=tree_widget, combobox=node_combobox)
 
     def find_item(self, search: TreeWidgetItem):
         if isinstance(search, QtWidgets.QTreeWidgetItem):
@@ -79,25 +112,37 @@ class TreeWidget(QtWidgets.QTreeWidget):
 
 tree_widget = TreeWidget()
 refresh_button = QtWidgets.QPushButton("refresh")
-refresh_button.clicked.connect(lambda: refresh_ui(tree_widget, node_combobox))
+refresh_button.clicked.connect(lambda: refresh_ui())
 
 
-def display_module_parents_in_combobox(tree_widget: TreeWidget):
-    selected_items = tree_widget.selectedItems()
-    if not selected_items:
+def refresh_ui():
+    tree_widget.clear()
+    parent_setting.parent_node_combobox.clear()
+    parent_setting.parent_node_combobox.addItem("master")
+    refresh_modules("master")
+
+
+def refresh_modules(module):
+    if not cmds.objExists(module):
         return
 
-    selected_module = selected_items[0].text(0)
-    if not cmds.objExists(selected_module):
-        return
-
-    cmds.select(selected_module)
-
-    parent_node = cmds.listConnections(f"{selected_module}.parent_node")
-    parent_joint = cmds.listConnections(f"{selected_module}.parent_joint")
-
-    node_combobox.setCurrentText(parent_node[0] if parent_node else "")
-    segment_combobox.setCurrentText(parent_joint[0] if parent_joint else "")
+    children = cmds.listConnections(f"{module}.children") or []
+    for child in children:
+        populate_tree(child)
+        populate_combobox(child)
+        refresh_modules(child)
 
 
-tree_widget.itemSelectionChanged.connect(lambda: display_module_parents_in_combobox(tree_widget))
+def populate_tree(child):
+    root_item = QtWidgets.QTreeWidgetItem()
+    root_item.setText(0, child)
+    root_item.setFont(0, QtGui.QFont("Open Sans", 10))
+    root_item.setIcon(0, QtGui.QIcon(get_source(icon=cmds.getAttr(f"{child}.module_type"))))
+
+    parent_node = cmds.listConnections(f"{child}.parent_node") or None
+    tree_widget.add_item(item=root_item, parent=parent_node[0] if parent_node else None)
+
+
+def populate_combobox(child):
+    icon = QtGui.QIcon(get_source(icon=cmds.getAttr(f"{child}.module_type")))
+    parent_setting.parent_node_combobox.addItem(icon, child)

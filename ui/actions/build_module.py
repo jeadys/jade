@@ -8,10 +8,10 @@ from rig.modules.creature.arachne_leg import arachne_leg_module
 from rig.modules.creature.wing import wing_module
 from rig.modules.quadruped.front_leg import front_leg_module
 from rig.modules.quadruped.rear_leg import rear_leg_module
-from ui.widgets.combobox import node_combobox, segment_combobox
-from ui.widgets.tree_widget import refresh_ui, tree_widget
-from utilities.curve_from_locators import create_curve_from_points
+from ui.widgets.tree_widget import refresh_ui
+from utilities.colors import set_rgb_color
 from utilities.enums import Orient
+from utilities.shapes import get_shape
 
 
 @undoable_action
@@ -27,20 +27,23 @@ def build_module(module):
 
     current_node = create_module_node(module=segments_dict[module])
     create_module_segments(node=current_node, module=segments_dict[module])
-    refresh_ui(tree=tree_widget, combobox=node_combobox)
+
+    refresh_ui()
 
 
 def create_module_node(module):
     current_module = cmds.createNode("network", name=f"{module.name}_module_#", skipSelect=True)
     add_default_module_attributes(node=current_module, module=module)
 
-    selected_node = node_combobox.currentText()
-    selected_segment = segment_combobox.currentText()
+    cmds.connectAttr(f"master.children", f"{current_module}.parent_node")
 
-    if selected_node:
-        cmds.connectAttr(f"{selected_node}.children", f"{current_module}.parent_node")
-    if selected_segment:
-        cmds.connectAttr(f"{selected_segment}.children", f"{current_module}.parent_joint")
+    # selected_node = node_combobox.currentText()
+    # selected_segment = segment_combobox.currentText()
+    #
+    # if selected_node:
+    #     cmds.connectAttr(f"{selected_node}.children", f"{current_module}.parent_node")
+    # if selected_segment:
+    #     cmds.connectAttr(f"{selected_segment}.children", f"{current_module}.parent_joint")
 
     return current_module
 
@@ -49,13 +52,16 @@ def create_module_segments(node, module):
     module_nr = cmds.getAttr(f"{node}.module_nr")
 
     points = [(segment.translateX, segment.translateY, segment.translateZ) for segment in module.segments]
-    curve, curve_shape = create_curve_from_points(points=points, name=f"{node}_curve")
+
+    curve = cmds.curve(name=f"{node}_curve", point=points, degree=1)
+    curve_shape = get_shape(transform=curve)
+    set_rgb_color(transform=curve, rgb=(1.0, 1.0, 1.0))
 
     for index, segment in enumerate(module.segments):
         current_segment = cmds.spaceLocator(name=f"{segment.name}_{module_nr}")[0]
         add_default_segment_attributes(node=current_segment, segment=segment)
 
-        selected_segment = segment_combobox.currentText()
+        # selected_segment = segment_combobox.currentText()
 
         shape = cmds.listRelatives(current_segment, shapes=True, children=True)[0]
         cmds.connectAttr(f"{shape}.worldPosition[0]",
@@ -68,14 +74,14 @@ def create_module_segments(node, module):
                       objectSpace=True)
             cmds.parent(current_segment, f"{segment.parent_joint}_{module_nr}")
 
-        elif not segment.parent_joint and selected_segment:
-            cmds.matchTransform(current_segment, selected_segment, position=True, rotation=False, scale=False)
-            cmds.parent(current_segment, selected_segment)
-
-            position = cmds.xform(query=True, translation=True, worldSpace=True)
-            cmds.curve(curve, append=True, point=position)
-            shape = cmds.listRelatives(selected_segment, shapes=True, children=True)[0]
-            cmds.connectAttr(f"{shape}.worldPosition[0]", f"{curve_shape}.controlPoints[{len(module.segments)}]")
+        # elif not segment.parent_joint and selected_segment:
+        #     cmds.matchTransform(current_segment, selected_segment, position=True, rotation=False, scale=False)
+        #     cmds.parent(current_segment, selected_segment)
+        #
+        #     position = cmds.xform(query=True, translation=True, worldSpace=True)
+        #     cmds.curve(curve, append=True, point=position)
+        #     shape = cmds.listRelatives(selected_segment, shapes=True, children=True)[0]
+        #     cmds.connectAttr(f"{shape}.worldPosition[0]", f"{curve_shape}.controlPoints[{len(module.segments)}]")
 
         cmds.rotate(segment.rotateX, segment.rotateY, segment.rotateZ, current_segment, relative=True, objectSpace=True)
 
@@ -140,7 +146,7 @@ def add_default_module_attributes(node, module):
         cmds.addAttr(node, longName="ribbon", numberOfChildren=6, attributeType="compound")
 
         cmds.addAttr(node, niceName="ribbon_enabled", longName="ribbon_enabled", attributeType="bool",
-                     defaultValue=True, parent="ribbon")
+                     defaultValue=module.ribbon.enabled, parent="ribbon")
 
         cmds.addAttr(node, niceName="ribbon_divisions", longName="ribbon_divisions", attributeType="long", minValue=1,
                      maxValue=20, defaultValue=module.ribbon.divisions, parent="ribbon")
