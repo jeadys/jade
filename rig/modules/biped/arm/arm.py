@@ -7,8 +7,8 @@ from rig.kinematics.skeleton import Skeleton
 from rig.mechanisms.limb_stretch import Stretch
 from rig.mechanisms.limb_twist import Twist
 from rig.mechanisms.ribbon import Ribbon
-from utilities.bake_transform import bake_transform_to_offset_parent_matrix
-from utilities.set_rgb_color import set_rgb_color
+from utilities.transforms import bake_transform_to_offset_parent_matrix
+from utilities.colors import set_rgb_color
 
 
 class Arm:

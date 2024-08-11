@@ -1,12 +1,10 @@
-from typing import Literal
-
 import maya.cmds as cmds
 
 from data.rig_structure import Segment
-from utilities.bake_transform import bake_transform_to_offset_parent_matrix
-from utilities.check_relation import has_parent
+from utilities.transforms import bake_transform_to_offset_parent_matrix
+from utilities.relations import has_parent
 from utilities.enums import RotateOrder
-from utilities.set_rgb_color import set_rgb_color
+from utilities.colors import set_rgb_color
 
 
 class FKChain:
@@ -70,7 +68,7 @@ class FKChain:
             control_points = cmds.getAttr(f"{segment}.control_points")
             current_control = cmds.curve(name=f"{segment}_FK_CTRL", pointWeight=control_points, degree=1)
 
-            set_rgb_color(node=current_control, color=control_rgb[0])
+            set_rgb_color(transform=current_control, rgb=control_rgb[0])
             cmds.setAttr(f"{current_control}.rotateOrder", RotateOrder.XYZ)
 
             cmds.matchTransform(current_control, f"{segment}_FK", position=True, rotation=True, scale=False)

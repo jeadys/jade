@@ -5,10 +5,8 @@ from data.rig_structure import Module, Rig, Segment
 from helpers.decorators.undoable_action import undoable_action
 from ui.actions.build_module import add_default_module_attributes, add_default_rig_attributes, \
     add_default_segment_attributes
-from ui.actions.refresh_ui import refresh_ui
-from ui.widgets.combobox import node_combobox
-from ui.widgets.tree_widget import tree_widget
-from utilities.curve_from_locators import create_visual_connection
+from ui.widgets.tree_widget import refresh_ui
+from utilities.colors import set_rgb_color
 
 
 def import_rig_data():
@@ -17,7 +15,7 @@ def import_rig_data():
     if rig_data:
         rig_instance = Rig.from_dict(rig_data)
         apply_rig_data(data=rig_instance)
-        refresh_ui(tree=tree_widget, combobox=node_combobox)
+        refresh_ui()
 
 
 @undoable_action
@@ -45,6 +43,10 @@ def apply_rig_module(module: Module):
 
 
 def apply_rig_segments(current_module: str, segments: list[Segment]):
+    points = [(segment.translateX, segment.translateY, segment.translateZ) for segment in segments]
+    curve = cmds.curve(name=f"{current_module}_curve", point=points, degree=1)
+    set_rgb_color(transform=curve, rgb=(1.0, 1.0, 1.0))
+
     for index, segment in enumerate(segments):
         if cmds.objExists(f"{segment.name}"):
             continue
@@ -54,7 +56,6 @@ def apply_rig_segments(current_module: str, segments: list[Segment]):
 
         if segment.parent_joint:
             cmds.parent(current_segment, segment.parent_joint)
-            create_visual_connection(from_node=segment.parent_joint, to_node=current_segment)
             cmds.matchTransform(current_segment, segment.parent_joint, position=True, rotation=True, scale=False)
 
         cmds.move(segment.translateX, segment.translateY, segment.translateZ, current_segment,

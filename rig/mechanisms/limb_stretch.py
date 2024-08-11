@@ -1,7 +1,7 @@
 import maya.cmds as cmds
 
 from data.rig_structure import Segment
-from utilities.check_relation import has_parent
+from utilities.relations import has_parent
 from utilities.enums import MUDOperation, StretchMode
 
 

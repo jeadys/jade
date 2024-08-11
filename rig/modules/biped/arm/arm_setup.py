@@ -1,6 +1,6 @@
-from data.rig_structure import Control, Module, Segment, Twist, Ribbon, Stretch
-from utilities.enums import Color, Orient, RotateOrder, Shape, StretchMode
-from utilities.shapes import cube_points
+from data.rig_structure import Control, Module, Ribbon, Segment, Stretch, Twist
+from utilities.enums import Orient, RotateOrder, StretchMode
+from utilities.shapes import cube_points, diamond_points
 
 clavicle = Segment(
     name="clavicle",
@@ -21,7 +21,7 @@ clavicle = Segment(
     control=Control(
         name="clavicle",
         parent_control=None,
-        control_points=cube_points,
+        control_points=diamond_points,
     )
 )
 
@@ -108,7 +108,7 @@ arm_module = Module(
         twist_influence=0.5
     ),
     stretch=Stretch(
-        enabled=True,
+        enabled=False,
         stretch_type=StretchMode.STRETCH,
         stretchiness=1,
         stretch_volume=0.5,

@@ -48,9 +48,9 @@ class Skeleton:
                     cmds.joint(f"{segment}_JNT", edit=True, orientJoint="none",
                                zeroScaleOrient=True)
                 case Orient.BONE:
-                    cmds.joint(f"{segment}_JNT", edit=True, orientJoint="xyz",
-                               secondaryAxisOrient="xup",
+                    cmds.joint(f"{segment}_JNT", edit=True, orientJoint="xzy",
+                               secondaryAxisOrient="zup",
                                zeroScaleOrient=True)
 
             if self.side == "R_":
-                cmds.rotate(180, 0, 0, f"{segment}_JNT.rotateAxis", relative=True, objectSpace=True)
+                cmds.rotate(0, 180, 0, f"{segment}_JNT.rotateAxis", relative=True, objectSpace=True)

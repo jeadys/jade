@@ -1,12 +1,10 @@
-from typing import Literal
-
 import maya.cmds as cmds
 
 from data.rig_structure import Segment
-from utilities.bake_transform import bake_transform_to_offset_parent_matrix
-from utilities.check_relation import has_parent
-from utilities.curve import select_curve
-from utilities.enums import ForwardAxis, RotateOrder, Shape, UpAxis, WorldUpType
+from utilities.enums import ForwardAxis, RotateOrder, UpAxis, WorldUpType
+from utilities.relations import has_parent
+from utilities.shapes import cube_points
+from utilities.transforms import bake_transform_to_offset_parent_matrix
 
 
 class IKChain:
@@ -71,14 +69,14 @@ class IKChain:
                                   endEffector=f"{segments[-1]}_IK",
                                   solver="ikRPsolver")[0]
 
-        ik_control = select_curve(shape=Shape.CUBE, name=f"{self.prefix}_IK_CTRL", scale=5)
+        ik_control = cmds.curve(name=f"{self.prefix}_IK_CTRL", pointWeight=cube_points, degree=1)
         cmds.setAttr(f"{ik_control}.rotateOrder", RotateOrder.XYZ)
         cmds.matchTransform(ik_control, f"{segments[-1]}_IK", position=True, rotation=True, scale=False)
         cmds.orientConstraint(ik_control, f"{segments[-1]}_IK", maintainOffset=True)
 
         cmds.parent(ik_handle, ik_control)
 
-        pole_control = select_curve(shape=Shape.CUBE, name=f"{self.prefix}_POLE_CTRL", scale=5)
+        pole_control = cmds.curve(name=f"{self.prefix}_POLE_CTRL", pointWeight=cube_points, degree=1)
         cmds.setAttr(f"{pole_control}.rotateOrder", RotateOrder.XYZ)
         cmds.matchTransform(pole_control, f"{segments[1]}_IK", position=True, rotation=False, scale=False)
         # cmds.move(0, 0, -20, pole_control, relative=True, objectSpace=True)
@@ -98,10 +96,12 @@ class IKChain:
         return [ik_control, pole_control]
 
     def spline_kinematic(self, segments):
-        pelvis_mch = cmds.joint(radius=3, rotationOrder=RotateOrder.YZX.name, name=f"{self.side}pelvis_{self.module_nr}_MCH")
+        pelvis_mch = cmds.joint(radius=3, rotationOrder=RotateOrder.YZX.name,
+                                name=f"{self.side}pelvis_{self.module_nr}_MCH")
         cmds.matchTransform(pelvis_mch, f"{segments[0]}_JNT", position=True, rotation=False, scale=False)
 
-        back_mch = cmds.joint(radius=3, rotationOrder=RotateOrder.YZX.name, name=f"{self.side}back_{self.module_nr}_MCH")
+        back_mch = cmds.joint(radius=3, rotationOrder=RotateOrder.YZX.name,
+                              name=f"{self.side}back_{self.module_nr}_MCH")
         cmds.matchTransform(back_mch, f"{segments[len(segments) // 2]}_JNT", position=True, rotation=False, scale=False)
         # We need to get the center between the start/end of the segments when the number of segments is an even number.
         if len(segments) % 2 == 0:
@@ -110,7 +110,8 @@ class IKChain:
             cmds.delete(temp_constraint)
         cmds.parent(back_mch, world=True)
 
-        chest_mch = cmds.joint(radius=3, rotationOrder=RotateOrder.YZX.name, name=f"{self.side}chest_{self.module_nr}_MCH")
+        chest_mch = cmds.joint(radius=3, rotationOrder=RotateOrder.YZX.name,
+                               name=f"{self.side}chest_{self.module_nr}_MCH")
         cmds.matchTransform(chest_mch, f"{segments[-1]}_JNT", position=True, rotation=False, scale=False)
         cmds.parent(chest_mch, world=True)
 
@@ -123,7 +124,7 @@ class IKChain:
         cmds.setAttr(f"{chest_mch}.radius", 5)
         bake_transform_to_offset_parent_matrix(chest_mch)
 
-        pelvis_control = select_curve(shape=Shape.CUBE, name=f"{self.side}pelvis_{self.module_nr}_CTRL", scale=5)
+        pelvis_control = cmds.curve(name=f"{self.side}pelvis_{self.module_nr}_CTRL", pointWeight=cube_points, degree=1)
         cmds.addAttr(pelvis_control, niceName="module", longName="module", attributeType="message", readable=True,
                      writable=True)
         cmds.setAttr(f"{pelvis_control}.rotateOrder", RotateOrder.YZX)
@@ -131,7 +132,7 @@ class IKChain:
         bake_transform_to_offset_parent_matrix(pelvis_control)
         cmds.parent(pelvis_mch, pelvis_control)
 
-        back_control = select_curve(shape=Shape.CUBE, name=f"{self.side}back_{self.module_nr}_CTRL", scale=5)
+        back_control = cmds.curve(name=f"{self.side}back_{self.module_nr}_CTRL", pointWeight=cube_points, degree=1)
         cmds.addAttr(back_control, niceName="module", longName="module", attributeType="message", readable=True,
                      writable=True)
         cmds.setAttr(f"{back_control}.rotateOrder", RotateOrder.YZX)
@@ -139,7 +140,7 @@ class IKChain:
         bake_transform_to_offset_parent_matrix(back_control)
         cmds.parent(back_mch, back_control)
 
-        chest_control = select_curve(shape=Shape.CUBE, name=f"{self.side}chest_{self.module_nr}_CTRL", scale=5)
+        chest_control = cmds.curve(name=f"{self.side}chest_{self.module_nr}_CTRL", pointWeight=cube_points, degree=1)
         cmds.addAttr(chest_control, niceName="module", longName="module", attributeType="message", readable=True,
                      writable=True)
         cmds.setAttr(f"{chest_control}.rotateOrder", RotateOrder.YZX)
@@ -192,18 +193,17 @@ class IKChain:
                                    endEffector=f"{segments[4]}_IK",
                                    solver="ikSCsolver")[0]
 
-        ik_control = select_curve(shape=Shape.CUBE, name=f"{self.prefix}_IK_CTRL", scale=5)
+        ik_control = cmds.curve(name=f"{self.prefix}_IK_CTRL", pointWeight=cube_points, degree=1)
         cmds.matchTransform(ik_control, f"{segments[3]}_IK", rotation=True, position=True, scale=False)
         cmds.setAttr(f"{ik_control}.rotateOrder", RotateOrder.YZX)
 
-        hoc_control = select_curve(shape=Shape.CUBE, name=f"{self.prefix}_HOC_CTRL",
-                                   scale=5)
+        hoc_control = cmds.curve(name=f"{self.prefix}_HOC_CTRL", pointWeight=cube_points, degree=1)
         cmds.setAttr(f"{hoc_control}.rotateOrder", RotateOrder.YZX)
         cmds.matchTransform(hoc_control, f"{segments[2]}_IK")
         position = cmds.xform(f"{segments[3]}_IK", query=True, translation=True, worldSpace=True)
         cmds.parent(hoc_control, ik_control)
 
-        pole_control = select_curve(shape=Shape.CUBE, name=f"{self.prefix}_POLE_CTRL", scale=5)
+        pole_control = cmds.curve(name=f"{self.prefix}_POLE_CTRL", pointWeight=cube_points, degree=1)
         cmds.setAttr(f"{pole_control}.rotateOrder", RotateOrder.YZX)
         cmds.matchTransform(pole_control, f"{segments[1]}_IK", position=True, rotation=False, scale=False)
         # cmds.move(0, 0, 20, pole_control, relative=True, objectSpace=True)
@@ -224,7 +224,7 @@ class IKChain:
     def switch_kinematic(self, fk_joints, fk_controls, ik_joints, ik_controls):
         switch_control = "switch_control"
         if not cmds.objExists(switch_control):
-            select_curve(shape=Shape.CUBE, name=switch_control, scale=2.5)
+            cmds.curve(name=switch_control, pointWeight=cube_points, degree=1)
 
         attribute = f"{self.prefix}_switch"
         if not cmds.attributeQuery(attribute, node=switch_control, exists=True):

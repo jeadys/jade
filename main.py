@@ -5,8 +5,7 @@ from shiboken2 import wrapInstance
 from data.read_data import import_rig_data
 from data.write_data import export_rig_data
 from ui.actions.build_rig import build_rig
-from ui.actions.connect_module import connect_button
-from ui.widgets.combobox import node_widget, segment_widget
+from ui.settings.setting import setting_group
 from ui.widgets.tab_widget import tab_widget
 from ui.widgets.tree_widget import refresh_button, tree_widget
 from utilities.unload_packages import unload_packages
@@ -41,6 +40,7 @@ class MainWindow(QtWidgets.QMainWindow):
         root_layout.addLayout(main_layout)
 
         hierarchy_group = QtWidgets.QGroupBox("modules")
+        hierarchy_group.setMinimumWidth(300)
         hierarchy_layout = QtWidgets.QVBoxLayout()
         hierarchy_group.setLayout(hierarchy_layout)
         main_layout.addWidget(hierarchy_group)
@@ -48,17 +48,7 @@ class MainWindow(QtWidgets.QMainWindow):
         hierarchy_layout.addWidget(tree_widget)
         hierarchy_layout.addWidget(refresh_button)
 
-        settings_group = QtWidgets.QGroupBox("module settings")
-        settings_layout = QtWidgets.QVBoxLayout()
-        settings_group.setLayout(settings_layout)
-        main_layout.addWidget(settings_group)
-
-        module_layout = QtWidgets.QVBoxLayout()
-        module_layout.setAlignment(QtCore.Qt.AlignTop)
-        module_layout.addWidget(node_widget)
-        module_layout.addWidget(segment_widget)
-        module_layout.addWidget(connect_button)
-        settings_layout.addLayout(module_layout)
+        main_layout.addWidget(setting_group)
 
         operation_group = QtWidgets.QGroupBox("operations")
         operation_layout = QtWidgets.QVBoxLayout()
