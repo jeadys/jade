@@ -1,0 +1,10 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file alias="biped_arm_85.png">biped_arm_85.png</file>
+    <file alias="biped_leg_85.png">biped_leg_85.png</file>
+    <file alias="biped_spine_85.png">biped_spine_85.png</file>
+    <file alias="biped_breasts_85.png">biped_breasts_85.png</file>
+    <file alias="biped_buttocks_85.png">biped_buttocks_85.png</file>
+<!--    <file alias="locator.png">locator.png</file>-->
+</qresource>
+</RCC>
