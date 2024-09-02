@@ -13,7 +13,7 @@ def unload_packages(silent=True, packages=None):
     reload_list = []
     for i in sys.modules.keys():
         for package in packages:
-            if i.startswith(package):
+            if i.startswith(f"jade.{package}"):
                 reload_list.append(i)
 
     # unload everything
