@@ -1,12 +1,11 @@
 import maya.cmds as cmds
 
 from data.file_handler import get_open_file_name, read_data_from_file
-from data.rig_structure import Module, Rig, Segment
-from helpers.decorators.undoable_action import undoable_action
-from ui.actions.build_module import add_default_module_attributes, add_default_rig_attributes, \
+from jade.maya.rig.meta_structure import Module, Rig, Segment
+from jade.decorators import undoable_chunk
+from jade.maya.actions.build_module import add_default_module_attributes, add_default_rig_attributes, \
     add_default_segment_attributes
-from ui.widgets.tree_widget import refresh_ui
-from utilities.colors import set_rgb_color
+from jade.maya.colors import set_rgb_color
 
 
 def import_rig_data():
@@ -15,10 +14,9 @@ def import_rig_data():
     if rig_data:
         rig_instance = Rig.from_dict(rig_data)
         apply_rig_data(data=rig_instance)
-        refresh_ui()
 
 
-@undoable_action
+@undoable_chunk
 def apply_rig_data(data: Rig):
     if not cmds.objExists("master"):
         current_rig = cmds.createNode("network", name="master", skipSelect=True)
