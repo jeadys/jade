@@ -1,7 +1,7 @@
 import maya.cmds as cmds
 
 from data.file_handler import get_save_file_name, save_data_to_file
-from data.rig_structure import Control, Module, Rig, Segment
+from jade.maya.rig.meta_structure import Control, Module, Ribbon, Rig, Segment, Stretch, Twist
 
 
 def export_rig_data():
@@ -11,29 +11,54 @@ def export_rig_data():
     save_data_to_file(file_path=file_path, data=rig_instance.to_json())
 
 
-def retrieve_rig_data(blueprint="master", data=None):
-    if not cmds.objExists(blueprint):
+def retrieve_rig_data(module="master", data=None):
+    if not cmds.objExists(module):
         return
 
     if data is None:
         data = {}
 
-    modules = cmds.listConnections(f"{blueprint}.children") or []
+    modules = cmds.listConnections(f"{module}.children") or []
 
     for module in modules:
         module_dict = Module(
             name=module,
-            component_type=cmds.getAttr(f"{module}.component_type"),
-            children=cmds.listConnections(f"{module}.children"),
-            segments=[],
+            module_type=cmds.getAttr(f"{module}.module_type"),
+            module_nr=cmds.getAttr(f"{module}.module_nr"),
+            side=cmds.getAttr(f"{module}.side"),
             parent_node=(cmds.listConnections(f"{module}.parent_node") or [None])[0],
             parent_joint=(cmds.listConnections(f"{module}.parent_joint") or [None])[0],
-            mirror=cmds.getAttr(f"{module}.mirror"),
-            stretch=cmds.getAttr(f"{module}.stretch"),
-            twist=cmds.getAttr(f"{module}.twist"),
-            twist_joints=cmds.getAttr(f"{module}.twist_joints"),
-            twist_influence=cmds.getAttr(f"{module}.twist_influence")
+            children=cmds.listConnections(f"{module}.children"),
+            segments=[],
+            twist=None,
+            stretch=None,
+            ribbon=None,
         )
+
+        if cmds.attributeQuery("twist", node=module, exists=True):
+            module_dict.twist = Twist(
+                enabled=cmds.getAttr(f"{module}.twist_enabled"),
+                twist_joints=cmds.getAttr(f"{module}.twist_joints"),
+                twist_influence=0,
+            )
+
+        if cmds.attributeQuery("stretch", node=module, exists=True):
+            module_dict.stretch = Stretch(
+                enabled=cmds.getAttr(f"{module}.stretch_enabled"),
+                stretchiness=0,
+                stretch_volume=0,
+                stretch_type=0,
+            )
+
+        if cmds.attributeQuery("ribbon", node=module, exists=True):
+            module_dict.ribbon = Ribbon(
+                enabled=cmds.getAttr(f"{module}.ribbon_enabled"),
+                divisions=cmds.getAttr(f"{module}.ribbon_divisions"),
+                width=cmds.getAttr(f"{module}.ribbon_width"),
+                length=cmds.getAttr(f"{module}.ribbon_length"),
+                ribbon_controls=cmds.getAttr(f"{module}.ribbon_controls"),
+                tweak_controls=cmds.getAttr(f"{module}.tweak_controls"),
+            )
 
         segments = cmds.listConnections(f"{module}.segments")
 
@@ -52,26 +77,27 @@ def retrieve_rig_data(blueprint="master", data=None):
                 rotateOrder=cmds.getAttr(f"{segment}.rotateOrder"),
                 orientation=cmds.getAttr(f"{segment}.orientation"),
                 parent_node=(cmds.listConnections(f"{segment}.parent_node") or [None])[0],
-                parent_joint=(cmds.listConnections(f"{segment}.parent_joint") or [None])[0],
+                parent_joint=(cmds.listRelatives(segment, parent=True, shapes=False, type="transform") or [None])[0],
                 children=cmds.listConnections(f"{segment}.children"),
-                control=Control(
+                control=None
+            )
+
+            control = cmds.objExists(f"{segment}_FK_CTRL")
+            if control:
+                cvs = cmds.ls(f"{segment}_FK_CTRL.cv[*]", flatten=True)
+                points = [cmds.xform(cv, query=True, objectSpace=True, translation=True) for cv in cvs]
+
+                segment_dict.control = Control(
                     name=segment,
-                    control_shape=None,
-                    control_color=None,
-                    control_scale=None,
+                    control_points=points,
+                    control_rgb=(cmds.getAttr(f"{segment}_FK_CTRL.overrideColorRGB") or [None])[0],
                     parent_control=(cmds.listConnections(f"{segment}.parent_joint") or [None])[0],
                 )
-            )
-            if cmds.attributeQuery("control_shape", node=segment, exists=True):
-                segment_dict.control.control_shape = cmds.getAttr(f"{segment}.control_shape")
-            if cmds.attributeQuery("control_color", node=segment, exists=True):
-                segment_dict.control.control_color = cmds.getAttr(f"{segment}.control_color")
-            if cmds.attributeQuery("control_scale", node=segment, exists=True):
-                segment_dict.control.control_scale = cmds.getAttr(f"{segment}.control_scale")
+
             module_dict.segments.append(segment_dict)
 
         data[module] = module_dict
 
-        retrieve_rig_data(blueprint=module, data=data)
+        retrieve_rig_data(module=module, data=data)
 
     return data

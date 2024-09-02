@@ -1,11 +1,11 @@
 import maya.cmds as cmds
 
 from data.file_handler import get_open_file_name, read_data_from_file
-from data.rig_structure import Module, Rig, Segment
-from ui.actions.build_blueprint import add_default_node_attributes, add_default_segment_attributes
-from ui.actions.tree_view import node_combobox, StandardItem, tree_view
-from helpers.decorators.undoable_action import undoable_action
-from utilities.curve_from_locators import create_visual_connection
+from jade.maya.rig.meta_structure import Module, Rig, Segment
+from jade.decorators import undoable_chunk
+from jade.maya.actions.build_module import add_default_module_attributes, add_default_rig_attributes, \
+    add_default_segment_attributes
+from jade.maya.colors import set_rgb_color
 
 
 def import_rig_data():
@@ -16,14 +16,11 @@ def import_rig_data():
         apply_rig_data(data=rig_instance)
 
 
-@undoable_action
+@undoable_chunk
 def apply_rig_data(data: Rig):
     if not cmds.objExists("master"):
-        cmds.createNode("network", name="master", skipSelect=True)
-        cmds.addAttr("master", niceName="children", longName="children", attributeType="message")
-        cmds.addAttr("master", niceName="component_type", longName="component_type", dataType="string", readable=False,
-                     writable=False, hidden=True)
-        cmds.setAttr("master.component_type", "master", type="string")
+        current_rig = cmds.createNode("network", name="master", skipSelect=True)
+        add_default_rig_attributes(node=current_rig)
 
     for key, module in data.modules.items():
         apply_rig_module(module=module)
@@ -31,21 +28,11 @@ def apply_rig_data(data: Rig):
 
 
 def apply_rig_module(module: Module):
-    root_item = StandardItem(module.name, font_size=12)
-    tree_view.add_item(module.name, root_item, module.parent_node)
-    node_combobox.addItem(module.name)
-
     if cmds.objExists(f"{module.name}"):
         return
 
     current_module = cmds.createNode("network", name=module.name, skipSelect=True)
-    add_default_node_attributes(node=current_module)
-    cmds.setAttr(f"{current_module}.component_type", module.component_type, type="string")
-    cmds.setAttr(f"{current_module}.mirror", module.mirror)
-    cmds.setAttr(f"{current_module}.stretch", module.stretch)
-    cmds.setAttr(f"{current_module}.twist", module.twist)
-    cmds.setAttr(f"{current_module}.twist_joints", module.twist_joints)
-    cmds.setAttr(f"{current_module}.twist_influence", module.twist_influence)
+    add_default_module_attributes(node=current_module, module=module)
 
     if module.parent_node:
         cmds.connectAttr(f"{module.parent_node}.children", f"{current_module}.parent_node")
@@ -54,22 +41,20 @@ def apply_rig_module(module: Module):
 
 
 def apply_rig_segments(current_module: str, segments: list[Segment]):
+    points = [(segment.translateX, segment.translateY, segment.translateZ) for segment in segments]
+    curve = cmds.curve(name=f"{current_module}_curve", point=points, degree=1)
+    set_rgb_color(transform=curve, rgb=(1.0, 1.0, 1.0))
+
     for index, segment in enumerate(segments):
         if cmds.objExists(f"{segment.name}"):
             continue
-        current_segment = cmds.spaceLocator(name=segment.name)[0]
-        add_default_segment_attributes(segment=current_segment)
 
-        if segment.control.control_shape:
-            cmds.setAttr(f"{current_segment}.control_shape", segment.control.control_shape)
-            cmds.setAttr(f"{current_segment}.control_color", segment.control.control_color)
-            cmds.setAttr(f"{current_segment}.control_scale", segment.control.control_scale)
+        current_segment = cmds.spaceLocator(name=segment.name)[0]
+        add_default_segment_attributes(node=current_segment, segment=segment)
 
         if segment.parent_joint:
             cmds.parent(current_segment, segment.parent_joint)
-            cmds.connectAttr(f"{segment.parent_joint}.children", f"{current_segment}.parent_joint")
-            create_visual_connection(from_node=segment.parent_joint, to_node=current_segment)
-            cmds.matchTransform(current_segment, segment.parent_joint)
+            cmds.matchTransform(current_segment, segment.parent_joint, position=True, rotation=True, scale=False)
 
         cmds.move(segment.translateX, segment.translateY, segment.translateZ, current_segment,
                   relative=True, objectSpace=True)
