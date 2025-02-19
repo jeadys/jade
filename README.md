@@ -16,14 +16,7 @@ Mesh + Skeleton           |  Skeleton
 - **Support for Advanced Rigging Techniques**: Incorporate advanced rigging techniques such as IK/FK blending, stretchy limbs, and squash and stretch.
 
 ## TODO
-- Multi limb support
-- modules
-- Modular building blocks
-- Hierarchy tree view of modules
 - Import, export and save rig data
-- Attach and detach modules from each other
-- Ribbon based system
-- UI overhaul
 
 ## Installation
 To install the Maya Rigging Tool, follow these steps:
